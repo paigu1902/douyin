@@ -17,6 +17,7 @@ func init() {
 		log.Println("gorm Init Error : ", err)
 		panic("fail to connect database")
 	}
+	DB = db
 	err = db.AutoMigrate(&UserInfo{})
 	if err != nil {
 		panic("fail to create table")
