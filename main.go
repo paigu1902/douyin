@@ -1,16 +1,14 @@
 package main
 
 import (
- "github.com/gin-gonic/gin"
- "net/http"
+	"github.com/gin-gonic/gin"
+	"paigu1902/douyin/router"
 )
 
 func main() {
 	r := gin.Default()
 
-	r.GET("/", func(context *gin.Context) {
-        context.String(http.StatusOK, "Hello World!")
-    })
+	router.InitRouter(r)
 
 	r.Run()
 }
