@@ -25,3 +25,9 @@ func Register(c *gin.Context) {
 	}
 
 }
+
+//func Login(c *gin.Context) {
+//	username := c.Query("username")
+//	password := c.Query("password")
+//
+//}
