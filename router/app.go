@@ -13,5 +13,6 @@ func InitRouter(r *gin.Engine) {
 
 	// basic apis
 	apiRouter.POST("/user/register/", controller.Register)
+	apiRouter.POST("/user/login/", controller.Login)
 
 }
