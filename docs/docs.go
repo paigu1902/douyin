@@ -62,12 +62,6 @@ const docTemplate = `{
                         "description": "密码",
                         "name": "password",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "确认密码",
-                        "name": "repassword",
-                        "in": "query"
                     }
                 ],
                 "responses": {

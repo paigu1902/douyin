@@ -30,10 +30,6 @@ paths:
         in: query
         name: password
         type: string
-      - description: 确认密码
-        in: query
-        name: repassword
-        type: string
       responses:
         "200":
           description: code","message"}

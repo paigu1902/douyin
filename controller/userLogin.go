@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
-	"paigu1902/douyin/middlewares"
 	"paigu1902/douyin/models"
 	"paigu1902/douyin/utils"
 )
@@ -27,7 +26,7 @@ func Register(c *gin.Context) {
 	if err == gorm.ErrRecordNotFound {
 		user.Password = utils.MD5Encode(password)
 		models.DB.Create(&user)
-		token, err := middlewares.GenerateToken(user.ID, user.UserName)
+		token, err := utils.GenerateToken(user.ID, user.UserName)
 		if err == nil {
 			response := RegisterResponse{
 				StatusCode: 0,

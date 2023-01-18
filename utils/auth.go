@@ -1,10 +1,11 @@
-package middlewares
+package utils
 
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 var myKey = []byte("paigu1902")
@@ -23,6 +24,8 @@ func GenerateToken(id uint, name string) (string, error) {
 		Name:           name,
 		StandardClaims: jwt.StandardClaims{},
 	}
+	// 1小时过期
+	UserClaim.ExpiresAt = time.Now().Add(time.Second * 5).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaim)
 	tokenString, err := token.SignedString(myKey)
 	if err != nil {

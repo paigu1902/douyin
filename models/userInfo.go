@@ -39,6 +39,6 @@ func FindUserBynameAndPwd(name string, password string) UserInfo {
 	return user
 }
 
-func CreateUser(user UserInfo) *gorm.DB {
-	return DB.Create(&user)
+func CreateUser(user UserInfo) error {
+	return DB.Create(&user).Error
 }
