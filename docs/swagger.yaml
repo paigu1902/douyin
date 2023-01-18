@@ -1,0 +1,44 @@
+info:
+  contact: {}
+paths:
+  /douyin/user/login:
+    post:
+      parameters:
+      - description: 用户名
+        in: query
+        name: name
+        type: string
+      - description: 密码
+        in: query
+        name: password
+        type: string
+      responses:
+        "200":
+          description: code","message"}
+          schema:
+            type: string
+      tags:
+      - 用户模块
+  /douyin/user/register:
+    post:
+      parameters:
+      - description: 用户名
+        in: query
+        name: username
+        type: string
+      - description: 密码
+        in: query
+        name: password
+        type: string
+      - description: 确认密码
+        in: query
+        name: repassword
+        type: string
+      responses:
+        "200":
+          description: code","message"}
+          schema:
+            type: string
+      tags:
+      - 用户模块
+swagger: "2.0"
