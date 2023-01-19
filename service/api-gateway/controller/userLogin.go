@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
-	models2 "paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/middlewares"
+	"paigu1902/douyin/service/rpc-user-info/models"
 )
 
 type RegisterLoginResponse struct {
@@ -20,13 +20,13 @@ func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	user := new(models2.UserInfo)
+	user := new(models.UserInfo)
 	user.UserName = username
 
-	err := models2.DB.Where(user).First(&user).Error
+	err := models.DB.Where(user).First(&user).Error
 	if err == gorm.ErrRecordNotFound {
 		user.Password = utils.CalMD5(password)
-		err := models2.DB.Create(&user).Error
+		err := models.DB.Create(&user).Error
 		token, err := middlewares.GenerateToken(user.ID, user.UserName)
 		if err == nil {
 			response := RegisterLoginResponse{
@@ -58,11 +58,11 @@ func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	user := new(models2.UserInfo)
+	user := new(models.UserInfo)
 	user.UserName = username
 	user.Password = utils.CalMD5(password)
 
-	err := models2.DB.Where(user).First(&user).Error
+	err := models.DB.Where(user).First(&user).Error
 	if err != gorm.ErrRecordNotFound {
 		token, err := middlewares.GenerateToken(user.ID, user.UserName)
 		if err == nil {
