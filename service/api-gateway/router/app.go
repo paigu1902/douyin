@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"paigu1902/douyin/controller"
+	"paigu1902/douyin/service/api-gateway/controller"
 )
 
 func InitRouter(r *gin.Engine) {
