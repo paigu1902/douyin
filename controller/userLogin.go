@@ -26,7 +26,7 @@ func Register(c *gin.Context) {
 	err := models.DB.Where(user).First(&user).Error
 	if err == gorm.ErrRecordNotFound {
 		user.Password = utils.CalMD5(password)
-		models.DB.Create(&user)
+		err := models.DB.Create(&user).Error
 		token, err := middlewares.GenerateToken(user.ID, user.UserName)
 		if err == nil {
 			response := RegisterLoginResponse{
