@@ -27,7 +27,7 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterReq) (*pb.Re
 	if err != nil {
 		return nil, err
 	}
-	return &pb.RegisterResp{UserId: uint64(user.ID), Token: token}, nil
+	return &pb.RegisterResp{StatusCode: 1, StatusMsg: "成功", UserId: uint64(user.ID), Token: token}, nil
 }
 func (s *UserService) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginResp, error) {
 	name := req.UserName
@@ -41,5 +41,16 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginRes
 	if err != nil {
 		return nil, err
 	}
-	return &pb.LoginResp{UserId: uint64(int64(user.ID)), Token: token}, nil
+	return &pb.LoginResp{StatusCode: 1, StatusMsg: "成功", UserId: uint64(int64(user.ID)), Token: token}, nil
+}
+
+func (s *UserService) Info(ctx context.Context, req *pb.UserInfoReq) (*pb.UserInfoResp, error) {
+	ID := req.UserId
+	//token := req.Token
+	user := models.FindUserByID(ID)
+	if user.UserName == "" {
+		return nil, errors.New("用户不存在")
+	}
+	userDetail := &pb.User{UserId: uint64(user.ID), UserName: user.UserName, FollowCount: string(user.FollowCount), FollowerCount: string(user.FollowedCount), IsFollow: "true"}
+	return &pb.UserInfoResp{StatusCode: 1, StatusMsg: "成功", User: userDetail}, nil
 }

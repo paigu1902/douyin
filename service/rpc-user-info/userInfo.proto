@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package ="./userInfoPb";
+option go_package = "./userInfoPb";
 
 package userInfoPb;
 
@@ -12,8 +12,10 @@ message RegisterReq {
   string password = 2; //password
 }
 message RegisterResp {
-  uint64 userId = 1; //userId
-  string token = 2; //token
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  uint64 user_id = 3; //userId
+  string token = 4; //token
 }
 
 message LoginReq {
@@ -22,23 +24,29 @@ message LoginReq {
 }
 
 message LoginResp {
-  uint64   user_id = 1;
-  string token = 2; //token
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  uint64   user_id = 3;
+  string token = 4; //token
 }
 
 message User {
   uint64 userId = 1; //userId
   string userName = 2; //name
-  int64 followCount = 3; //followCount
-  int64 followerCount = 4; //followerCount
+  string followCount = 3; //followCount
+  string followerCount = 4; //followerCount
+  string isFollow = 5;
 }
 
 message UserInfoReq {
   uint64 userId = 1; //userId
+  string token = 2; //token
 }
 
 message UserInfoResp {
-  User user = 1;
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  User user = 3;
 }
 
 //message AuthsInfoReq {
@@ -54,6 +62,6 @@ service UserInfo{
   //-----------------------user-----------------------
   rpc Register(RegisterReq) returns (RegisterResp);
   rpc Login(LoginReq) returns (LoginResp);
-//  rpc Info(UserInfoReq) returns (UserInfoResp);
-//  rpc AuthsInfo(AuthsInfoReq) returns (AuthsInfoResp);
+  rpc Info(UserInfoReq) returns (UserInfoResp);
+  //  rpc AuthsInfo(AuthsInfoReq) returns (AuthsInfoResp);
 }

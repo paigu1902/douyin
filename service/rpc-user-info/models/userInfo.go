@@ -1,10 +1,7 @@
 package models
 
 import (
-	"fmt"
 	"gorm.io/gorm"
-	"paigu1902/douyin/common/utils"
-	"time"
 )
 
 type UserInfo struct {
@@ -23,21 +20,25 @@ func (table *UserInfo) TableName() string {
 
 func FindUserByName(name string) UserInfo {
 	user := UserInfo{}
-	fmt.Println("first", user)
 	DB.Where("user_name = ?", name).First(&user)
 	return user
 }
-
-func FindUserBynameAndPwd(name string, password string) UserInfo {
+func FindUserByID(ID uint64) UserInfo {
 	user := UserInfo{}
-	fmt.Println("first", user)
-	DB.Where("name = ? and password=?", name, password).First(&user)
-	//token 加密
-	str := fmt.Sprintf("%d", time.Now().Unix())
-	temp := utils.MD5Encode(str)
-	DB.Model(&user).Where("id = ?", user.ID).Update("identity", temp)
+	DB.Where("id = ?", ID).First(&user)
 	return user
 }
+
+//func FindUserBynameAndPwd(name string, password string) UserInfo {
+//	user := UserInfo{}
+//	fmt.Println("first", user)
+//	DB.Where("name = ? and password=?", name, password).First(&user)
+//	//token 加密
+//	str := fmt.Sprintf("%d", time.Now().Unix())
+//	temp := utils.MD5Encode(str)
+//	DB.Model(&user).Where("id = ?", user.ID).Update("identity", temp)
+//	return user
+//}
 
 func CreateUser(user *UserInfo) error {
 	return DB.Create(user).Error
