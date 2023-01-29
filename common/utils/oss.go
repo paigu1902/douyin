@@ -2,18 +2,19 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"path/filepath"
 )
 
 func Upload(data []byte, filename string) (string, error) {
 	bucketName := "paigu-douyin-videos"
-	endpoint := "https://oss-cn-nanjing.aliyuncs.com"
+	endpoint := "oss-cn-nanjing.aliyuncs.com"
 	accessKeyId := "LTAI5tKz8Jg67pok7LjZ3rus"
 	accessKeySecret := "BUpR46wYSyON68Qpy7aGwEvCSCvzxf"
-	domain := "videos/"
+	domain := "videos"
 
-	client, err := oss.New(endpoint, accessKeyId, accessKeySecret)
+	client, err := oss.New("https://"+endpoint, accessKeyId, accessKeySecret)
 	if err != nil {
 		return "", err
 	}
@@ -26,5 +27,6 @@ func Upload(data []byte, filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(endpoint, domain, filename), nil
+	//https://paigu-douyin-videos.oss-cn-nanjing.aliyuncs.com/videos/0.mp4
+	return fmt.Sprintf("https://%s.%s/%s/%s", bucketName, endpoint, domain, filename), nil
 }

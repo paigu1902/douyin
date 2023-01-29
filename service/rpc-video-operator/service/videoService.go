@@ -19,6 +19,12 @@ func (s *VideoService) Upload(ctx context.Context, req *pb.VideoUploadReq) (*pb.
 	data := req.Data
 	claims, err := utils.AnalyseToken(token)
 	if err != nil {
+		// debug 专用
+		//claims = &utils.UserClaims{
+		//	ID:             0,
+		//	Name:           "wqxtest",
+		//	StandardClaims: jwt.StandardClaims{},
+		//}
 		return nil, err
 	}
 	info := models.VideoInfo{
@@ -27,19 +33,30 @@ func (s *VideoService) Upload(ctx context.Context, req *pb.VideoUploadReq) (*pb.
 		PlayUrl:  "",
 		CoverUrl: "",
 	}
-	err = models.DB.Transaction(func(tx *gorm.DB) error {
-		if err := models.CreateVideoInfo(&info); err != nil {
+	err = uploadTx(&info, data, strconv.FormatInt(int64(claims.ID), 10)+".mp4")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.VideoUploadResp{Status: 1, StatusMsg: "成功"}, nil
+}
+
+func uploadTx(info *models.VideoInfo, data []byte, name string) error {
+	err := models.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(info).Error; err != nil {
 			return err
 		}
-		filename, err := utils.Upload(data, strconv.FormatInt(int64(claims.ID), 10)+".mp4")
+		filename, err := utils.Upload(data, name)
 		if err != nil {
 			return err
 		}
 		info.PlayUrl = filename
-		if err := models.UpdateVideoInfo(&info); err != nil {
+		if err := tx.Model(info).Update("play_url", info.PlayUrl).Error; err != nil {
 			return err
 		}
 		return nil
 	})
-	return &pb.VideoUploadResp{Status: 1, StatusMsg: "成功"}, nil
+	if err != nil {
+		return err
+	}
+	return nil
 }
