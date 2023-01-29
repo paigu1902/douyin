@@ -9,10 +9,10 @@ import (
 )
 
 func Upload(data []byte, filename string) (string, error) {
-	bucketName := constants.BucketName
-	endpoint := constants.Endpoint
-	accessKeyId := constants.AccessKeyId
-	accessKeySecret := constants.AccessKeySecret
+	bucketName := constants.OSSBucketName
+	endpoint := constants.OSSEndpoint
+	accessKeyId := constants.OSSAccessKeyId
+	accessKeySecret := constants.OSSAccessKeySecret
 	domain := "videos"
 
 	client, err := oss.New("https://"+endpoint, accessKeyId, accessKeySecret)
