@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "./videoOperatorPb";
+
+package videoOperatorPb;
+
+message VideoUploadReq {
+  string token = 1;
+  bytes data = 2;
+  string title = 3;
+}
+
+message VideoUploadResp {
+  int32 status = 1;
+  string status_msg = 2;
+}
+
+service VideoOperator {
+  rpc Upload(VideoUploadReq) returns (VideoUploadResp);
+}
+
