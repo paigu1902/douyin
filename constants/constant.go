@@ -2,8 +2,8 @@ package constants
 
 const (
 	VideoOperatorService = ""
-	bucketName           = "paigu-douyin-videos"
-	endpoint             = "oss-cn-nanjing.aliyuncs.com"
-	accessKeyId          = "LTAI5tKz8Jg67pok7LjZ3rus"
-	accessKeySecret      = "BUpR46wYSyON68Qpy7aGwEvCSCvzxf"
+	BucketName           = "paigu-douyin-videos"
+	Endpoint             = "oss-cn-nanjing.aliyuncs.com"
+	AccessKeyId          = "LTAI5tKz8Jg67pok7LjZ3rus"
+	AccessKeySecret      = "BUpR46wYSyON68Qpy7aGwEvCSCvzxf"
 )

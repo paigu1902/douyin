@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"paigu1902/douyin/constants"
 	"path/filepath"
 )
 
 func Upload(data []byte, filename string) (string, error) {
-	bucketName := "paigu-douyin-videos"
-	endpoint := "oss-cn-nanjing.aliyuncs.com"
-	accessKeyId := "LTAI5tKz8Jg67pok7LjZ3rus"
-	accessKeySecret := "BUpR46wYSyON68Qpy7aGwEvCSCvzxf"
+	bucketName := constants.BucketName
+	endpoint := constants.Endpoint
+	accessKeyId := constants.AccessKeyId
+	accessKeySecret := constants.AccessKeySecret
 	domain := "videos"
 
 	client, err := oss.New("https://"+endpoint, accessKeyId, accessKeySecret)
