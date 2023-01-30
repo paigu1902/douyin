@@ -45,11 +45,11 @@ func uploadTx(info *models.VideoInfo, data []byte, name string) error {
 		if err := tx.Create(info).Error; err != nil {
 			return err
 		}
-		filename, err := utils.Upload(data, name)
+		playUrl, err := utils.Upload(data, name)
 		if err != nil {
 			return err
 		}
-		info.PlayUrl = filename
+		info.PlayUrl = playUrl
 		if err := tx.Model(info).Update("play_url", info.PlayUrl).Error; err != nil {
 			return err
 		}
