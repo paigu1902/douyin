@@ -4,19 +4,21 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"log"
 	"paigu1902/douyin/constants"
 	"path/filepath"
 )
 
-func Upload(data []byte, filename string) (string, error) {
+// Upload 上传文件到阿里OSS
+func Upload(data interface{}, filename string, domain string) (string, error) {
 	bucketName := constants.OSSBucketName
 	endpoint := constants.OSSEndpoint
 	accessKeyId := constants.OSSAccessKeyId
 	accessKeySecret := constants.OSSAccessKeySecret
-	domain := "videos"
 
 	client, err := oss.New("https://"+endpoint, accessKeyId, accessKeySecret)
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 
@@ -24,7 +26,14 @@ func Upload(data []byte, filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = bucket.PutObject(filepath.Join(domain, filename), bytes.NewReader(data))
+	if val, ok := data.([]byte); ok {
+		err = bucket.PutObject(filepath.Join(domain, filename), bytes.NewReader(val))
+	} else if val, ok := data.(string); ok {
+		err = bucket.PutObjectFromFile(filepath.Join(domain, filename), val)
+	} else {
+		return "", fmt.Errorf("unsupport upload type")
+	}
+
 	if err != nil {
 		return "", err
 	}
