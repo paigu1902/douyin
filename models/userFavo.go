@@ -34,7 +34,7 @@ func GetLikeUserId(videoId int64) ([]int64, error) {
 
 // 根据用户id查询其点赞的视频id
 // 待改进：区分 no record 和 get record failed
-func GetLikeVideoId(userId int 64) ([]int64, error) {
+func GetLikeVideoId(userId int64) ([]int64, error) {
 	var LikeVideoId []int64
 	err := DB.Model(&UserLike{}).Where("UserId = ? and Status = ?", videoId, 1).
 		Pluck("VideoId", &LikeVideoIdId).Error
@@ -42,14 +42,14 @@ func GetLikeVideoId(userId int 64) ([]int64, error) {
 		log.Println(err.Error())
 		return nil, errors.New("get LikeVideoId failed")
 	} else {
-		return LikeUserId, nil
+		return LikeVideoId, nil
 	}
 }
 
 // 查询用户-视频点赞信息
 // 待改进：区分 no record 和 get record failed
 func GetLikeRecord(userId int64, videoId int64) (UserLike, error) {
-	var likeRecord UserLike;
+	var likeRecord UserLike
 	err := DB.Model(&UserLike{}).Where("UserId = ? and VideoId = ?", userId, videoId).
 		First(&likeRecord).Error
 	if err != nil {
