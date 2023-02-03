@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+option go_package = "userRelationPb";
+
+package userRelationPb;
+
+// ------------------------------------
+// Messages
+// ------------------------------------
+message FollowActionReq {
+  uint64 userID = 1; // 用户id
+  string type = 2; //	1-关注，2-取消关注
+}
+
+message FollowActionResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+}
+
+message User {
+  uint64 userId = 1; //userId
+  string userName = 2; //name
+  string followCount = 3; //followCount
+  string followerCount = 4; //followerCount
+  string isFollow = 5;
+}
+
+message FollowListReq {
+  uint64 userID = 1; // 用户id
+}
+
+message FollowListResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated User user_list = 3;
+}
+
+message FollowerListReq {
+  uint64 userId = 1; //userId
+}
+
+message FollowerListResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated User user_list = 3;
+}
+
+message FriendListReq {
+  uint64 userId = 1; //userId
+}
+
+message FriendListResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated User user_list = 3;
+}
+
+message SendMessageReq {
+  uint64 from_id = 1;
+  uint64 to_id = 2; //userId
+  string type = 3;
+  string context = 4;
+}
+
+message SendMessageResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+}
+
+message MessageContent{
+  uint64 id = 1;
+  string content = 2;
+  string create_time = 3;
+}
+
+message MessageChatReq {
+  uint64 userId = 1; //userId
+}
+
+message MessageChatResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated MessageContent message_list = 3;
+}
+
+service UserRelation{
+
+  rpc FollowAction(FollowActionReq) returns (FollowActionResp);
+  rpc FollowList(FollowListReq) returns (FollowListResp);
+  rpc FollowerList(FollowerListReq) returns (FollowerListResp);
+  rpc FriendList (FriendListReq) returns (FriendListResp);
+  rpc SendMessage (SendMessageReq) returns (SendMessageResp);
+  rpc MessageChat (MessageChatReq) returns (MessageChatResp);
+
+}
