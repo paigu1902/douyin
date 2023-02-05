@@ -24,6 +24,11 @@ func (x *FollowActionReq) FastRead(buf []byte, _type int8, number int32) (offset
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -38,11 +43,16 @@ ReadFieldError:
 }
 
 func (x *FollowActionReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.UserID, offset, err = fastpb.ReadUint64(buf, _type)
+	x.FromId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
 func (x *FollowActionReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.ToId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *FollowActionReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
 	x.Type, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
@@ -143,7 +153,7 @@ func (x *User) fastReadField4(buf []byte, _type int8) (offset int, err error) {
 }
 
 func (x *User) fastReadField5(buf []byte, _type int8) (offset int, err error) {
-	x.IsFollow, offset, err = fastpb.ReadString(buf, _type)
+	x.IsFollow, offset, err = fastpb.ReadBool(buf, _type)
 	return offset, err
 }
 
@@ -168,7 +178,7 @@ ReadFieldError:
 }
 
 func (x *FollowListReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.UserID, offset, err = fastpb.ReadUint64(buf, _type)
+	x.UserId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
@@ -423,7 +433,7 @@ func (x *SendMessageReq) fastReadField3(buf []byte, _type int8) (offset int, err
 }
 
 func (x *SendMessageReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
-	x.Context, offset, err = fastpb.ReadString(buf, _type)
+	x.Content, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -479,6 +489,11 @@ func (x *MessageContent) FastRead(buf []byte, _type int8, number int32) (offset 
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -493,24 +508,34 @@ ReadFieldError:
 }
 
 func (x *MessageContent) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.Id, offset, err = fastpb.ReadUint64(buf, _type)
+	x.FromId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
 func (x *MessageContent) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.Content, offset, err = fastpb.ReadString(buf, _type)
+	x.ToId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
 func (x *MessageContent) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.Content, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *MessageContent) fastReadField4(buf []byte, _type int8) (offset int, err error) {
 	x.CreateTime, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
-func (x *MessageChatReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+func (x *HistoryMessageReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
 		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -524,15 +549,20 @@ func (x *MessageChatReq) FastRead(buf []byte, _type int8, number int32) (offset 
 SkipFieldError:
 	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
 ReadFieldError:
-	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_MessageChatReq[number], err)
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_HistoryMessageReq[number], err)
 }
 
-func (x *MessageChatReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.UserId, offset, err = fastpb.ReadUint64(buf, _type)
+func (x *HistoryMessageReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.FromId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
-func (x *MessageChatResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+func (x *HistoryMessageReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.ToId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *HistoryMessageResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
 		offset, err = x.fastReadField1(buf, _type)
@@ -559,20 +589,20 @@ func (x *MessageChatResp) FastRead(buf []byte, _type int8, number int32) (offset
 SkipFieldError:
 	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
 ReadFieldError:
-	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_MessageChatResp[number], err)
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_HistoryMessageResp[number], err)
 }
 
-func (x *MessageChatResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+func (x *HistoryMessageResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
 	x.StatusCode, offset, err = fastpb.ReadInt32(buf, _type)
 	return offset, err
 }
 
-func (x *MessageChatResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+func (x *HistoryMessageResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
 	x.StatusMsg, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
-func (x *MessageChatResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+func (x *HistoryMessageResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
 	var v MessageContent
 	offset, err = fastpb.ReadMessage(buf, _type, &v)
 	if err != nil {
@@ -588,22 +618,31 @@ func (x *FollowActionReq) FastWrite(buf []byte) (offset int) {
 	}
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
 	return offset
 }
 
 func (x *FollowActionReq) fastWriteField1(buf []byte) (offset int) {
-	if x.UserID == 0 {
+	if x.FromId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteUint64(buf[offset:], 1, x.UserID)
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.FromId)
 	return offset
 }
 
 func (x *FollowActionReq) fastWriteField2(buf []byte) (offset int) {
+	if x.ToId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.ToId)
+	return offset
+}
+
+func (x *FollowActionReq) fastWriteField3(buf []byte) (offset int) {
 	if x.Type == "" {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 2, x.Type)
+	offset += fastpb.WriteString(buf[offset:], 3, x.Type)
 	return offset
 }
 
@@ -677,10 +716,10 @@ func (x *User) fastWriteField4(buf []byte) (offset int) {
 }
 
 func (x *User) fastWriteField5(buf []byte) (offset int) {
-	if x.IsFollow == "" {
+	if !x.IsFollow {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 5, x.IsFollow)
+	offset += fastpb.WriteBool(buf[offset:], 5, x.IsFollow)
 	return offset
 }
 
@@ -693,10 +732,10 @@ func (x *FollowListReq) FastWrite(buf []byte) (offset int) {
 }
 
 func (x *FollowListReq) fastWriteField1(buf []byte) (offset int) {
-	if x.UserID == 0 {
+	if x.UserId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteUint64(buf[offset:], 1, x.UserID)
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.UserId)
 	return offset
 }
 
@@ -876,10 +915,10 @@ func (x *SendMessageReq) fastWriteField3(buf []byte) (offset int) {
 }
 
 func (x *SendMessageReq) fastWriteField4(buf []byte) (offset int) {
-	if x.Context == "" {
+	if x.Content == "" {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 4, x.Context)
+	offset += fastpb.WriteString(buf[offset:], 4, x.Content)
 	return offset
 }
 
@@ -915,50 +954,68 @@ func (x *MessageContent) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
 	return offset
 }
 
 func (x *MessageContent) fastWriteField1(buf []byte) (offset int) {
-	if x.Id == 0 {
+	if x.FromId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteUint64(buf[offset:], 1, x.Id)
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.FromId)
 	return offset
 }
 
 func (x *MessageContent) fastWriteField2(buf []byte) (offset int) {
-	if x.Content == "" {
+	if x.ToId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 2, x.Content)
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.ToId)
 	return offset
 }
 
 func (x *MessageContent) fastWriteField3(buf []byte) (offset int) {
-	if x.CreateTime == "" {
+	if x.Content == "" {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 3, x.CreateTime)
+	offset += fastpb.WriteString(buf[offset:], 3, x.Content)
 	return offset
 }
 
-func (x *MessageChatReq) FastWrite(buf []byte) (offset int) {
+func (x *MessageContent) fastWriteField4(buf []byte) (offset int) {
+	if x.CreateTime == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.CreateTime)
+	return offset
+}
+
+func (x *HistoryMessageReq) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
 	}
 	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
 	return offset
 }
 
-func (x *MessageChatReq) fastWriteField1(buf []byte) (offset int) {
-	if x.UserId == 0 {
+func (x *HistoryMessageReq) fastWriteField1(buf []byte) (offset int) {
+	if x.FromId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteUint64(buf[offset:], 1, x.UserId)
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.FromId)
 	return offset
 }
 
-func (x *MessageChatResp) FastWrite(buf []byte) (offset int) {
+func (x *HistoryMessageReq) fastWriteField2(buf []byte) (offset int) {
+	if x.ToId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.ToId)
+	return offset
+}
+
+func (x *HistoryMessageResp) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
 	}
@@ -968,7 +1025,7 @@ func (x *MessageChatResp) FastWrite(buf []byte) (offset int) {
 	return offset
 }
 
-func (x *MessageChatResp) fastWriteField1(buf []byte) (offset int) {
+func (x *HistoryMessageResp) fastWriteField1(buf []byte) (offset int) {
 	if x.StatusCode == 0 {
 		return offset
 	}
@@ -976,7 +1033,7 @@ func (x *MessageChatResp) fastWriteField1(buf []byte) (offset int) {
 	return offset
 }
 
-func (x *MessageChatResp) fastWriteField2(buf []byte) (offset int) {
+func (x *HistoryMessageResp) fastWriteField2(buf []byte) (offset int) {
 	if x.StatusMsg == "" {
 		return offset
 	}
@@ -984,7 +1041,7 @@ func (x *MessageChatResp) fastWriteField2(buf []byte) (offset int) {
 	return offset
 }
 
-func (x *MessageChatResp) fastWriteField3(buf []byte) (offset int) {
+func (x *HistoryMessageResp) fastWriteField3(buf []byte) (offset int) {
 	if x.MessageList == nil {
 		return offset
 	}
@@ -1000,22 +1057,31 @@ func (x *FollowActionReq) Size() (n int) {
 	}
 	n += x.sizeField1()
 	n += x.sizeField2()
+	n += x.sizeField3()
 	return n
 }
 
 func (x *FollowActionReq) sizeField1() (n int) {
-	if x.UserID == 0 {
+	if x.FromId == 0 {
 		return n
 	}
-	n += fastpb.SizeUint64(1, x.UserID)
+	n += fastpb.SizeUint64(1, x.FromId)
 	return n
 }
 
 func (x *FollowActionReq) sizeField2() (n int) {
+	if x.ToId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(2, x.ToId)
+	return n
+}
+
+func (x *FollowActionReq) sizeField3() (n int) {
 	if x.Type == "" {
 		return n
 	}
-	n += fastpb.SizeString(2, x.Type)
+	n += fastpb.SizeString(3, x.Type)
 	return n
 }
 
@@ -1089,10 +1155,10 @@ func (x *User) sizeField4() (n int) {
 }
 
 func (x *User) sizeField5() (n int) {
-	if x.IsFollow == "" {
+	if !x.IsFollow {
 		return n
 	}
-	n += fastpb.SizeString(5, x.IsFollow)
+	n += fastpb.SizeBool(5, x.IsFollow)
 	return n
 }
 
@@ -1105,10 +1171,10 @@ func (x *FollowListReq) Size() (n int) {
 }
 
 func (x *FollowListReq) sizeField1() (n int) {
-	if x.UserID == 0 {
+	if x.UserId == 0 {
 		return n
 	}
-	n += fastpb.SizeUint64(1, x.UserID)
+	n += fastpb.SizeUint64(1, x.UserId)
 	return n
 }
 
@@ -1288,10 +1354,10 @@ func (x *SendMessageReq) sizeField3() (n int) {
 }
 
 func (x *SendMessageReq) sizeField4() (n int) {
-	if x.Context == "" {
+	if x.Content == "" {
 		return n
 	}
-	n += fastpb.SizeString(4, x.Context)
+	n += fastpb.SizeString(4, x.Content)
 	return n
 }
 
@@ -1327,50 +1393,68 @@ func (x *MessageContent) Size() (n int) {
 	n += x.sizeField1()
 	n += x.sizeField2()
 	n += x.sizeField3()
+	n += x.sizeField4()
 	return n
 }
 
 func (x *MessageContent) sizeField1() (n int) {
-	if x.Id == 0 {
+	if x.FromId == 0 {
 		return n
 	}
-	n += fastpb.SizeUint64(1, x.Id)
+	n += fastpb.SizeUint64(1, x.FromId)
 	return n
 }
 
 func (x *MessageContent) sizeField2() (n int) {
-	if x.Content == "" {
+	if x.ToId == 0 {
 		return n
 	}
-	n += fastpb.SizeString(2, x.Content)
+	n += fastpb.SizeUint64(2, x.ToId)
 	return n
 }
 
 func (x *MessageContent) sizeField3() (n int) {
-	if x.CreateTime == "" {
+	if x.Content == "" {
 		return n
 	}
-	n += fastpb.SizeString(3, x.CreateTime)
+	n += fastpb.SizeString(3, x.Content)
 	return n
 }
 
-func (x *MessageChatReq) Size() (n int) {
+func (x *MessageContent) sizeField4() (n int) {
+	if x.CreateTime == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.CreateTime)
+	return n
+}
+
+func (x *HistoryMessageReq) Size() (n int) {
 	if x == nil {
 		return n
 	}
 	n += x.sizeField1()
+	n += x.sizeField2()
 	return n
 }
 
-func (x *MessageChatReq) sizeField1() (n int) {
-	if x.UserId == 0 {
+func (x *HistoryMessageReq) sizeField1() (n int) {
+	if x.FromId == 0 {
 		return n
 	}
-	n += fastpb.SizeUint64(1, x.UserId)
+	n += fastpb.SizeUint64(1, x.FromId)
 	return n
 }
 
-func (x *MessageChatResp) Size() (n int) {
+func (x *HistoryMessageReq) sizeField2() (n int) {
+	if x.ToId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(2, x.ToId)
+	return n
+}
+
+func (x *HistoryMessageResp) Size() (n int) {
 	if x == nil {
 		return n
 	}
@@ -1380,7 +1464,7 @@ func (x *MessageChatResp) Size() (n int) {
 	return n
 }
 
-func (x *MessageChatResp) sizeField1() (n int) {
+func (x *HistoryMessageResp) sizeField1() (n int) {
 	if x.StatusCode == 0 {
 		return n
 	}
@@ -1388,7 +1472,7 @@ func (x *MessageChatResp) sizeField1() (n int) {
 	return n
 }
 
-func (x *MessageChatResp) sizeField2() (n int) {
+func (x *HistoryMessageResp) sizeField2() (n int) {
 	if x.StatusMsg == "" {
 		return n
 	}
@@ -1396,7 +1480,7 @@ func (x *MessageChatResp) sizeField2() (n int) {
 	return n
 }
 
-func (x *MessageChatResp) sizeField3() (n int) {
+func (x *HistoryMessageResp) sizeField3() (n int) {
 	if x.MessageList == nil {
 		return n
 	}
@@ -1407,8 +1491,9 @@ func (x *MessageChatResp) sizeField3() (n int) {
 }
 
 var fieldIDToName_FollowActionReq = map[int32]string{
-	1: "UserID",
-	2: "Type",
+	1: "FromId",
+	2: "ToId",
+	3: "Type",
 }
 
 var fieldIDToName_FollowActionResp = map[int32]string{
@@ -1425,7 +1510,7 @@ var fieldIDToName_User = map[int32]string{
 }
 
 var fieldIDToName_FollowListReq = map[int32]string{
-	1: "UserID",
+	1: "UserId",
 }
 
 var fieldIDToName_FollowListResp = map[int32]string{
@@ -1458,7 +1543,7 @@ var fieldIDToName_SendMessageReq = map[int32]string{
 	1: "FromId",
 	2: "ToId",
 	3: "Type",
-	4: "Context",
+	4: "Content",
 }
 
 var fieldIDToName_SendMessageResp = map[int32]string{
@@ -1467,16 +1552,18 @@ var fieldIDToName_SendMessageResp = map[int32]string{
 }
 
 var fieldIDToName_MessageContent = map[int32]string{
-	1: "Id",
-	2: "Content",
-	3: "CreateTime",
+	1: "FromId",
+	2: "ToId",
+	3: "Content",
+	4: "CreateTime",
 }
 
-var fieldIDToName_MessageChatReq = map[int32]string{
-	1: "UserId",
+var fieldIDToName_HistoryMessageReq = map[int32]string{
+	1: "FromId",
+	2: "ToId",
 }
 
-var fieldIDToName_MessageChatResp = map[int32]string{
+var fieldIDToName_HistoryMessageResp = map[int32]string{
 	1: "StatusCode",
 	2: "StatusMsg",
 	3: "MessageList",

@@ -22,12 +22,12 @@ func NewServiceInfo() *kitex.ServiceInfo {
 	serviceName := "UserRelation"
 	handlerType := (*userRelationPb.UserRelation)(nil)
 	methods := map[string]kitex.MethodInfo{
-		"FollowAction": kitex.NewMethodInfo(followActionHandler, newFollowActionArgs, newFollowActionResult, false),
-		"FollowList":   kitex.NewMethodInfo(followListHandler, newFollowListArgs, newFollowListResult, false),
-		"FollowerList": kitex.NewMethodInfo(followerListHandler, newFollowerListArgs, newFollowerListResult, false),
-		"FriendList":   kitex.NewMethodInfo(friendListHandler, newFriendListArgs, newFriendListResult, false),
-		"SendMessage":  kitex.NewMethodInfo(sendMessageHandler, newSendMessageArgs, newSendMessageResult, false),
-		"MessageChat":  kitex.NewMethodInfo(messageChatHandler, newMessageChatArgs, newMessageChatResult, false),
+		"FollowAction":   kitex.NewMethodInfo(followActionHandler, newFollowActionArgs, newFollowActionResult, false),
+		"FollowList":     kitex.NewMethodInfo(followListHandler, newFollowListArgs, newFollowListResult, false),
+		"FollowerList":   kitex.NewMethodInfo(followerListHandler, newFollowerListArgs, newFollowerListResult, false),
+		"FriendList":     kitex.NewMethodInfo(friendListHandler, newFriendListArgs, newFriendListResult, false),
+		"SendMessage":    kitex.NewMethodInfo(sendMessageHandler, newSendMessageArgs, newSendMessageResult, false),
+		"HistoryMessage": kitex.NewMethodInfo(historyMessageHandler, newHistoryMessageArgs, newHistoryMessageResult, false),
 	}
 	extra := map[string]interface{}{
 		"PackageName": "userRelationPb",
@@ -768,73 +768,73 @@ func (p *SendMessageResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func messageChatHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+func historyMessageHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	switch s := arg.(type) {
 	case *streaming.Args:
 		st := s.Stream
-		req := new(userRelationPb.MessageChatReq)
+		req := new(userRelationPb.HistoryMessageReq)
 		if err := st.RecvMsg(req); err != nil {
 			return err
 		}
-		resp, err := handler.(userRelationPb.UserRelation).MessageChat(ctx, req)
+		resp, err := handler.(userRelationPb.UserRelation).HistoryMessage(ctx, req)
 		if err != nil {
 			return err
 		}
 		if err := st.SendMsg(resp); err != nil {
 			return err
 		}
-	case *MessageChatArgs:
-		success, err := handler.(userRelationPb.UserRelation).MessageChat(ctx, s.Req)
+	case *HistoryMessageArgs:
+		success, err := handler.(userRelationPb.UserRelation).HistoryMessage(ctx, s.Req)
 		if err != nil {
 			return err
 		}
-		realResult := result.(*MessageChatResult)
+		realResult := result.(*HistoryMessageResult)
 		realResult.Success = success
 	}
 	return nil
 }
-func newMessageChatArgs() interface{} {
-	return &MessageChatArgs{}
+func newHistoryMessageArgs() interface{} {
+	return &HistoryMessageArgs{}
 }
 
-func newMessageChatResult() interface{} {
-	return &MessageChatResult{}
+func newHistoryMessageResult() interface{} {
+	return &HistoryMessageResult{}
 }
 
-type MessageChatArgs struct {
-	Req *userRelationPb.MessageChatReq
+type HistoryMessageArgs struct {
+	Req *userRelationPb.HistoryMessageReq
 }
 
-func (p *MessageChatArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+func (p *HistoryMessageArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
 	if !p.IsSetReq() {
-		p.Req = new(userRelationPb.MessageChatReq)
+		p.Req = new(userRelationPb.HistoryMessageReq)
 	}
 	return p.Req.FastRead(buf, _type, number)
 }
 
-func (p *MessageChatArgs) FastWrite(buf []byte) (n int) {
+func (p *HistoryMessageArgs) FastWrite(buf []byte) (n int) {
 	if !p.IsSetReq() {
 		return 0
 	}
 	return p.Req.FastWrite(buf)
 }
 
-func (p *MessageChatArgs) Size() (n int) {
+func (p *HistoryMessageArgs) Size() (n int) {
 	if !p.IsSetReq() {
 		return 0
 	}
 	return p.Req.Size()
 }
 
-func (p *MessageChatArgs) Marshal(out []byte) ([]byte, error) {
+func (p *HistoryMessageArgs) Marshal(out []byte) ([]byte, error) {
 	if !p.IsSetReq() {
-		return out, fmt.Errorf("No req in MessageChatArgs")
+		return out, fmt.Errorf("No req in HistoryMessageArgs")
 	}
 	return proto.Marshal(p.Req)
 }
 
-func (p *MessageChatArgs) Unmarshal(in []byte) error {
-	msg := new(userRelationPb.MessageChatReq)
+func (p *HistoryMessageArgs) Unmarshal(in []byte) error {
+	msg := new(userRelationPb.HistoryMessageReq)
 	if err := proto.Unmarshal(in, msg); err != nil {
 		return err
 	}
@@ -842,55 +842,55 @@ func (p *MessageChatArgs) Unmarshal(in []byte) error {
 	return nil
 }
 
-var MessageChatArgs_Req_DEFAULT *userRelationPb.MessageChatReq
+var HistoryMessageArgs_Req_DEFAULT *userRelationPb.HistoryMessageReq
 
-func (p *MessageChatArgs) GetReq() *userRelationPb.MessageChatReq {
+func (p *HistoryMessageArgs) GetReq() *userRelationPb.HistoryMessageReq {
 	if !p.IsSetReq() {
-		return MessageChatArgs_Req_DEFAULT
+		return HistoryMessageArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-func (p *MessageChatArgs) IsSetReq() bool {
+func (p *HistoryMessageArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-type MessageChatResult struct {
-	Success *userRelationPb.MessageChatResp
+type HistoryMessageResult struct {
+	Success *userRelationPb.HistoryMessageResp
 }
 
-var MessageChatResult_Success_DEFAULT *userRelationPb.MessageChatResp
+var HistoryMessageResult_Success_DEFAULT *userRelationPb.HistoryMessageResp
 
-func (p *MessageChatResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+func (p *HistoryMessageResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
 	if !p.IsSetSuccess() {
-		p.Success = new(userRelationPb.MessageChatResp)
+		p.Success = new(userRelationPb.HistoryMessageResp)
 	}
 	return p.Success.FastRead(buf, _type, number)
 }
 
-func (p *MessageChatResult) FastWrite(buf []byte) (n int) {
+func (p *HistoryMessageResult) FastWrite(buf []byte) (n int) {
 	if !p.IsSetSuccess() {
 		return 0
 	}
 	return p.Success.FastWrite(buf)
 }
 
-func (p *MessageChatResult) Size() (n int) {
+func (p *HistoryMessageResult) Size() (n int) {
 	if !p.IsSetSuccess() {
 		return 0
 	}
 	return p.Success.Size()
 }
 
-func (p *MessageChatResult) Marshal(out []byte) ([]byte, error) {
+func (p *HistoryMessageResult) Marshal(out []byte) ([]byte, error) {
 	if !p.IsSetSuccess() {
-		return out, fmt.Errorf("No req in MessageChatResult")
+		return out, fmt.Errorf("No req in HistoryMessageResult")
 	}
 	return proto.Marshal(p.Success)
 }
 
-func (p *MessageChatResult) Unmarshal(in []byte) error {
-	msg := new(userRelationPb.MessageChatResp)
+func (p *HistoryMessageResult) Unmarshal(in []byte) error {
+	msg := new(userRelationPb.HistoryMessageResp)
 	if err := proto.Unmarshal(in, msg); err != nil {
 		return err
 	}
@@ -898,18 +898,18 @@ func (p *MessageChatResult) Unmarshal(in []byte) error {
 	return nil
 }
 
-func (p *MessageChatResult) GetSuccess() *userRelationPb.MessageChatResp {
+func (p *HistoryMessageResult) GetSuccess() *userRelationPb.HistoryMessageResp {
 	if !p.IsSetSuccess() {
-		return MessageChatResult_Success_DEFAULT
+		return HistoryMessageResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-func (p *MessageChatResult) SetSuccess(x interface{}) {
-	p.Success = x.(*userRelationPb.MessageChatResp)
+func (p *HistoryMessageResult) SetSuccess(x interface{}) {
+	p.Success = x.(*userRelationPb.HistoryMessageResp)
 }
 
-func (p *MessageChatResult) IsSetSuccess() bool {
+func (p *HistoryMessageResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
@@ -973,11 +973,11 @@ func (p *kClient) SendMessage(ctx context.Context, Req *userRelationPb.SendMessa
 	return _result.GetSuccess(), nil
 }
 
-func (p *kClient) MessageChat(ctx context.Context, Req *userRelationPb.MessageChatReq) (r *userRelationPb.MessageChatResp, err error) {
-	var _args MessageChatArgs
+func (p *kClient) HistoryMessage(ctx context.Context, Req *userRelationPb.HistoryMessageReq) (r *userRelationPb.HistoryMessageResp, err error) {
+	var _args HistoryMessageArgs
 	_args.Req = Req
-	var _result MessageChatResult
-	if err = p.c.Call(ctx, "MessageChat", &_args, &_result); err != nil {
+	var _result HistoryMessageResult
+	if err = p.c.Call(ctx, "HistoryMessage", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

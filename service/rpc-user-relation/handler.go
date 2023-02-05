@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	userRelationPb "paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
+	"paigu1902/douyin/service/rpc-user-relation/logic"
 )
 
 // UserRelationImpl implements the last service interface defined in the IDL.
@@ -35,11 +36,11 @@ func (s *UserRelationImpl) FriendList(ctx context.Context, req *userRelationPb.F
 // SendMessage implements the UserRelationImpl interface.
 func (s *UserRelationImpl) SendMessage(ctx context.Context, req *userRelationPb.SendMessageReq) (resp *userRelationPb.SendMessageResp, err error) {
 	// TODO: Your code here...
-	return
+	return logic.SendMessage(req)
 }
 
-// MessageChat implements the UserRelationImpl interface.
-func (s *UserRelationImpl) MessageChat(ctx context.Context, req *userRelationPb.MessageChatReq) (resp *userRelationPb.MessageChatResp, err error) {
+// HistoryMessage implements the UserRelationImpl interface.
+func (s *UserRelationImpl) HistoryMessage(ctx context.Context, req *userRelationPb.HistoryMessageReq) (resp *userRelationPb.HistoryMessageResp, err error) {
 	// TODO: Your code here...
-	return
+	return logic.HistoryMessage(req)
 }

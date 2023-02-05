@@ -16,7 +16,7 @@ type Client interface {
 	FollowerList(ctx context.Context, Req *userRelationPb.FollowerListReq, callOptions ...callopt.Option) (r *userRelationPb.FollowerListResp, err error)
 	FriendList(ctx context.Context, Req *userRelationPb.FriendListReq, callOptions ...callopt.Option) (r *userRelationPb.FriendListResp, err error)
 	SendMessage(ctx context.Context, Req *userRelationPb.SendMessageReq, callOptions ...callopt.Option) (r *userRelationPb.SendMessageResp, err error)
-	MessageChat(ctx context.Context, Req *userRelationPb.MessageChatReq, callOptions ...callopt.Option) (r *userRelationPb.MessageChatResp, err error)
+	HistoryMessage(ctx context.Context, Req *userRelationPb.HistoryMessageReq, callOptions ...callopt.Option) (r *userRelationPb.HistoryMessageResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -73,7 +73,7 @@ func (p *kUserRelationClient) SendMessage(ctx context.Context, Req *userRelation
 	return p.kClient.SendMessage(ctx, Req)
 }
 
-func (p *kUserRelationClient) MessageChat(ctx context.Context, Req *userRelationPb.MessageChatReq, callOptions ...callopt.Option) (r *userRelationPb.MessageChatResp, err error) {
+func (p *kUserRelationClient) HistoryMessage(ctx context.Context, Req *userRelationPb.HistoryMessageReq, callOptions ...callopt.Option) (r *userRelationPb.HistoryMessageResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
-	return p.kClient.MessageChat(ctx, Req)
+	return p.kClient.HistoryMessage(ctx, Req)
 }

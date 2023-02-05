@@ -8,8 +8,9 @@ package userRelationPb;
 // Messages
 // ------------------------------------
 message FollowActionReq {
-  uint64 userID = 1; // 用户id
-  string type = 2; //	1-关注，2-取消关注
+  uint64 from_id = 1; // 用户id
+  uint64 to_id = 2;
+  string type = 3; //	1-关注，2-取消关注
 }
 
 message FollowActionResp {
@@ -22,11 +23,11 @@ message User {
   string userName = 2; //name
   string followCount = 3; //followCount
   string followerCount = 4; //followerCount
-  string isFollow = 5;
+  bool isFollow = 5;
 }
 
 message FollowListReq {
-  uint64 userID = 1; // 用户id
+  uint64 userId = 1; // 用户id
 }
 
 message FollowListResp {
@@ -59,7 +60,7 @@ message SendMessageReq {
   uint64 from_id = 1;
   uint64 to_id = 2; //userId
   string type = 3;
-  string context = 4;
+  string content = 4;
 }
 
 message SendMessageResp {
@@ -68,16 +69,18 @@ message SendMessageResp {
 }
 
 message MessageContent{
-  uint64 id = 1;
-  string content = 2;
-  string create_time = 3;
+  uint64 from_id = 1;
+  uint64 to_id = 2;
+  string content = 3;
+  string create_time = 4;
 }
 
-message MessageChatReq {
-  uint64 userId = 1; //userId
+message HistoryMessageReq {
+  uint64 from_id = 1; //userId
+  uint64 to_id = 2;
 }
 
-message MessageChatResp {
+message HistoryMessageResp {
   int32 status_code = 1; //状态码，0-成功，其他值-失败
   string status_msg = 2; //返回状态描述
   repeated MessageContent message_list = 3;
@@ -90,6 +93,6 @@ service UserRelation{
   rpc FollowerList(FollowerListReq) returns (FollowerListResp);
   rpc FriendList (FriendListReq) returns (FriendListResp);
   rpc SendMessage (SendMessageReq) returns (SendMessageResp);
-  rpc MessageChat (MessageChatReq) returns (MessageChatResp);
+  rpc HistoryMessage (HistoryMessageReq) returns (HistoryMessageResp);
 
 }
