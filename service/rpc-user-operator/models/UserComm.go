@@ -4,16 +4,19 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"log"
+	"paigu1902/douyin/service/rpc-user-info/models"
 )
 
 var Db *gorm.DB
 
 type UserComm struct {
-	gorm.Model        // 继承ID, 创建时间, 修改时间
-	UserName   string `gorm:"not null;"`          // 评论者
-	VideoId    int64  `gorm:"not null"`           // 视频id
-	Status     int32  `gorm:"not null;default:1"` // 评论状态 默认1有效
-	CommText   string `gorm:"not null"`           // 评论内容
+	gorm.Model                 // 继承ID, 创建时间, 修改时间
+	UserName   string          `gorm:"not null;"`          // 评论者
+	VideoId    int64           `gorm:"not null"`           // 视频id
+	Status     int32           `gorm:"not null;default:1"` // 评论状态 默认1有效
+	CommText   string          `gorm:"not null"`           // 评论内容
+	User       models.UserInfo `gorm:"-"`                  //只用于前端
+
 }
 
 // 查询当前表的名称
@@ -36,15 +39,15 @@ func GetCommentList(VideoId int64) ([]string, error) {
 
 // 发表评论
 
-func InsertComment(Comment UserComm) (UserComm, error) {
+func InsertComment(Comment UserComm) error {
 	log.Println("running-Post Comment:", Comment)
 	err := Db.Model(UserComm{}).Create(&Comment).Error
 	if err != nil {
 		log.Println("Comment Insert failed")
-		return Comment, errors.New("create comment failed")
+		return errors.New("Insert Failed")
 	}
 	log.Println("Post Comment success")
-	return Comment, nil
+	return nil
 }
 
 // 通过评论id 删除评论
