@@ -11,6 +11,37 @@ import (
 // rpc FollowerList(FollowerListReq) returns (FollowerListResp);
 // rpc FriendList (FriendListReq) returns (FriendListResp);
 
+func followIds(id uint64) (ids []uint64, err error) {
+	result := make([]models.Relation, 0)
+	err = models.DB.Where(&models.Relation{From_id: id}).Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	ids = make([]uint64, len(result))
+	for i, v := range result {
+		ids[i] = v.To_id
+	}
+	return ids, nil
+}
+
+func followerIds(id uint64) (ids []uint64, err error) {
+	result := make([]models.Relation, 0)
+	err = models.DB.Where(&models.Relation{To_id: id}).Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	ids = make([]uint64, len(result))
+	for i, v := range result {
+		ids[i] = v.From_id
+	}
+	return ids, nil
+}
+
+func isFollow(followMap map[uint64]struct{}, id uint64) bool {
+	_, ok := followMap[id]
+	return ok
+}
+
 func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
 	resp = new(userRelationPb.FollowActionResp)
 	if req.FromId == req.ToId {
@@ -40,25 +71,20 @@ func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.Fol
 
 func FollowList(req *userRelationPb.FollowListReq) (resp *userRelationPb.FollowListResp, err error) {
 	resp = new(userRelationPb.FollowListResp)
-	result := make([]models.Relation, 0)
-	err = models.DB.Where(&models.Relation{From_id: req.UserId}).Find(&result).Error
+	ids, err := followIds(req.UserId)
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
-	ids := make([]uint64, len(result))
-	for i, v := range result {
-		ids[i] = v.To_id
-	}
-	userInfos := make([]models.UserInfo, len(result))
+	userInfos := make([]models.UserInfo, len(ids))
 	err = models.DB.Where(&ids).Find(&userInfos).Error
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
-	userList := make([]*userRelationPb.User, len(result))
+	userList := make([]*userRelationPb.User, len(ids))
 	for i, v := range userInfos {
 		userList[i] = &userRelationPb.User{
 			UserId:        uint64(v.ID),
@@ -76,25 +102,78 @@ func FollowList(req *userRelationPb.FollowListReq) (resp *userRelationPb.FollowL
 
 func FollowerList(req *userRelationPb.FollowerListReq) (resp *userRelationPb.FollowerListResp, err error) {
 	resp = new(userRelationPb.FollowerListResp)
-	result := make([]models.Relation, 0)
-	err = models.DB.Where(&models.Relation{To_id: req.UserId}).Find(&result).Error
+	ids, err := followerIds(req.UserId)
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
-	ids := make([]uint64, len(result))
-	for i, v := range result {
-		ids[i] = v.From_id
-	}
-	userInfos := make([]models.UserInfo, len(result))
+	userInfos := make([]models.UserInfo, len(ids))
 	err = models.DB.Where(&ids).Find(&userInfos).Error
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
-	userList := make([]*userRelationPb.User, len(result))
+	followIds, err := followIds(req.UserId)
+	if err != nil {
+		resp.StatusCode = 1
+		resp.StatusMsg = "获取失败"
+		return resp, err
+	}
+	followMap := make(map[uint64]struct{}, len(followIds))
+	for _, v := range followIds {
+		followMap[v] = struct{}{}
+	}
+	userList := make([]*userRelationPb.User, len(ids))
+	for i, v := range userInfos {
+		userList[i] = &userRelationPb.User{
+			UserId:        uint64(v.ID),
+			UserName:      v.UserName,
+			FollowCount:   fmt.Sprint(v.FollowCount),
+			FollowerCount: fmt.Sprint(v.FollowedCount),
+			IsFollow:      isFollow(followMap, uint64(v.ID)),
+		}
+	}
+	resp.StatusCode = 0
+	resp.StatusMsg = "操作成功"
+	resp.UserList = userList
+	return resp, nil
+}
+
+func FriendList(req *userRelationPb.FriendListReq) (resp *userRelationPb.FriendListResp, err error) {
+	resp = new(userRelationPb.FriendListResp)
+	followerIds, err := followerIds(req.UserId)
+	if err != nil {
+		resp.StatusCode = 1
+		resp.StatusMsg = "获取失败"
+		return resp, err
+	}
+
+	followIds, err := followIds(req.UserId)
+	if err != nil {
+		resp.StatusCode = 1
+		resp.StatusMsg = "获取失败"
+		return resp, err
+	}
+	followMap := make(map[uint64]struct{}, len(followIds))
+
+	friendIds := make([]uint64, 0)
+	for _, v := range followerIds {
+		if isFollow(followMap, v) {
+			friendIds = append(friendIds, v)
+		}
+	}
+
+	userInfos := make([]models.UserInfo, len(friendIds))
+	err = models.DB.Where(&friendIds).Find(&userInfos).Error
+	if err != nil {
+		resp.StatusCode = 1
+		resp.StatusMsg = "获取失败"
+		return resp, err
+	}
+
+	userList := make([]*userRelationPb.User, len(friendIds))
 	for i, v := range userInfos {
 		userList[i] = &userRelationPb.User{
 			UserId:        uint64(v.ID),

@@ -10,4 +10,5 @@ type Relation struct{
 	UpdatedAt time.Time
 	From_id uint64 `gorm:"not null;index:idx_fromTo,unique"`
 	To_id  uint64 `gorm:"not null;index:idx_fromTo,unique"`
+	Is_friend bool `gorm:"not null"`
 }

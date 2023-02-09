@@ -12,25 +12,25 @@ type UserRelationImpl struct{}
 // FollowAction implements the UserRelationImpl interface.
 func (s *UserRelationImpl) FollowAction(ctx context.Context, req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
 	// TODO: Your code here...
-	return
+	return logic.FollowAction(req)
 }
 
 // FollowList implements the UserRelationImpl interface.
 func (s *UserRelationImpl) FollowList(ctx context.Context, req *userRelationPb.FollowListReq) (resp *userRelationPb.FollowListResp, err error) {
 	// TODO: Your code here...
-	return
+	return logic.FollowList(req)
 }
 
 // FollowerList implements the UserRelationImpl interface.
 func (s *UserRelationImpl) FollowerList(ctx context.Context, req *userRelationPb.FollowerListReq) (resp *userRelationPb.FollowerListResp, err error) {
 	// TODO: Your code here...
-	return
+	return logic.FollowerList(req)
 }
 
 // FriendList implements the UserRelationImpl interface.
 func (s *UserRelationImpl) FriendList(ctx context.Context, req *userRelationPb.FriendListReq) (resp *userRelationPb.FriendListResp, err error) {
 	// TODO: Your code here...
-	return
+	return logic.FriendList(req)
 }
 
 // SendMessage implements the UserRelationImpl interface.
