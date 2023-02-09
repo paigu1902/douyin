@@ -253,7 +253,7 @@ func (x *User) fastReadField4(buf []byte, _type int8) (offset int, err error) {
 }
 
 func (x *User) fastReadField5(buf []byte, _type int8) (offset int, err error) {
-	x.IsFollow, offset, err = fastpb.ReadString(buf, _type)
+	x.Is_Follow, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -340,6 +340,86 @@ func (x *UserInfoResp) fastReadField3(buf []byte, _type int8) (offset int, err e
 	}
 	x.User = &v
 	return offset, nil
+}
+
+func (x *ActionDBReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ActionDBReq[number], err)
+}
+
+func (x *ActionDBReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Type, offset, err = fastpb.ReadInt32(buf, _type)
+	return offset, err
+}
+
+func (x *ActionDBReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.FromId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *ActionDBReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.ToId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *ActionDBResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ActionDBResp[number], err)
+}
+
+func (x *ActionDBResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.StatusCode, offset, err = fastpb.ReadInt32(buf, _type)
+	return offset, err
+}
+
+func (x *ActionDBResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.StatusMsg, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
 }
 
 func (x *RegisterReq) FastWrite(buf []byte) (offset int) {
@@ -523,10 +603,10 @@ func (x *User) fastWriteField4(buf []byte) (offset int) {
 }
 
 func (x *User) fastWriteField5(buf []byte) (offset int) {
-	if x.IsFollow == "" {
+	if x.Is_Follow == "" {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 5, x.IsFollow)
+	offset += fastpb.WriteString(buf[offset:], 5, x.Is_Follow)
 	return offset
 }
 
@@ -586,6 +666,65 @@ func (x *UserInfoResp) fastWriteField3(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteMessage(buf[offset:], 3, x.User)
+	return offset
+}
+
+func (x *ActionDBReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	return offset
+}
+
+func (x *ActionDBReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Type == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 1, x.Type)
+	return offset
+}
+
+func (x *ActionDBReq) fastWriteField2(buf []byte) (offset int) {
+	if x.FromId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.FromId)
+	return offset
+}
+
+func (x *ActionDBReq) fastWriteField3(buf []byte) (offset int) {
+	if x.ToId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 3, x.ToId)
+	return offset
+}
+
+func (x *ActionDBResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *ActionDBResp) fastWriteField1(buf []byte) (offset int) {
+	if x.StatusCode == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 1, x.StatusCode)
+	return offset
+}
+
+func (x *ActionDBResp) fastWriteField2(buf []byte) (offset int) {
+	if x.StatusMsg == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.StatusMsg)
 	return offset
 }
 
@@ -770,10 +909,10 @@ func (x *User) sizeField4() (n int) {
 }
 
 func (x *User) sizeField5() (n int) {
-	if x.IsFollow == "" {
+	if x.Is_Follow == "" {
 		return n
 	}
-	n += fastpb.SizeString(5, x.IsFollow)
+	n += fastpb.SizeString(5, x.Is_Follow)
 	return n
 }
 
@@ -836,6 +975,65 @@ func (x *UserInfoResp) sizeField3() (n int) {
 	return n
 }
 
+func (x *ActionDBReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	return n
+}
+
+func (x *ActionDBReq) sizeField1() (n int) {
+	if x.Type == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(1, x.Type)
+	return n
+}
+
+func (x *ActionDBReq) sizeField2() (n int) {
+	if x.FromId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(2, x.FromId)
+	return n
+}
+
+func (x *ActionDBReq) sizeField3() (n int) {
+	if x.ToId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(3, x.ToId)
+	return n
+}
+
+func (x *ActionDBResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *ActionDBResp) sizeField1() (n int) {
+	if x.StatusCode == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(1, x.StatusCode)
+	return n
+}
+
+func (x *ActionDBResp) sizeField2() (n int) {
+	if x.StatusMsg == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.StatusMsg)
+	return n
+}
+
 var fieldIDToName_RegisterReq = map[int32]string{
 	1: "UserName",
 	2: "Password",
@@ -865,7 +1063,7 @@ var fieldIDToName_User = map[int32]string{
 	2: "UserName",
 	3: "FollowCount",
 	4: "FollowerCount",
-	5: "IsFollow",
+	5: "Is_Follow",
 }
 
 var fieldIDToName_UserInfoReq = map[int32]string{
@@ -877,4 +1075,15 @@ var fieldIDToName_UserInfoResp = map[int32]string{
 	1: "StatusCode",
 	2: "StatusMsg",
 	3: "User",
+}
+
+var fieldIDToName_ActionDBReq = map[int32]string{
+	1: "Type",
+	2: "FromId",
+	3: "ToId",
+}
+
+var fieldIDToName_ActionDBResp = map[int32]string{
+	1: "StatusCode",
+	2: "StatusMsg",
 }

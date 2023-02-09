@@ -25,6 +25,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"Register": kitex.NewMethodInfo(registerHandler, newRegisterArgs, newRegisterResult, false),
 		"Login":    kitex.NewMethodInfo(loginHandler, newLoginArgs, newLoginResult, false),
 		"Info":     kitex.NewMethodInfo(infoHandler, newInfoArgs, newInfoResult, false),
+		"ActionDB": kitex.NewMethodInfo(actionDBHandler, newActionDBArgs, newActionDBResult, false),
 	}
 	extra := map[string]interface{}{
 		"PackageName": "userInfoPb",
@@ -475,6 +476,151 @@ func (p *InfoResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
+func actionDBHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(userInfoPb.ActionDBReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(userInfoPb.UserInfo).ActionDB(ctx, req)
+		if err != nil {
+			return err
+		}
+		if err := st.SendMsg(resp); err != nil {
+			return err
+		}
+	case *ActionDBArgs:
+		success, err := handler.(userInfoPb.UserInfo).ActionDB(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*ActionDBResult)
+		realResult.Success = success
+	}
+	return nil
+}
+func newActionDBArgs() interface{} {
+	return &ActionDBArgs{}
+}
+
+func newActionDBResult() interface{} {
+	return &ActionDBResult{}
+}
+
+type ActionDBArgs struct {
+	Req *userInfoPb.ActionDBReq
+}
+
+func (p *ActionDBArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(userInfoPb.ActionDBReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *ActionDBArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *ActionDBArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *ActionDBArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, fmt.Errorf("No req in ActionDBArgs")
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *ActionDBArgs) Unmarshal(in []byte) error {
+	msg := new(userInfoPb.ActionDBReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var ActionDBArgs_Req_DEFAULT *userInfoPb.ActionDBReq
+
+func (p *ActionDBArgs) GetReq() *userInfoPb.ActionDBReq {
+	if !p.IsSetReq() {
+		return ActionDBArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *ActionDBArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+type ActionDBResult struct {
+	Success *userInfoPb.ActionDBResp
+}
+
+var ActionDBResult_Success_DEFAULT *userInfoPb.ActionDBResp
+
+func (p *ActionDBResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(userInfoPb.ActionDBResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *ActionDBResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *ActionDBResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *ActionDBResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, fmt.Errorf("No req in ActionDBResult")
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *ActionDBResult) Unmarshal(in []byte) error {
+	msg := new(userInfoPb.ActionDBResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *ActionDBResult) GetSuccess() *userInfoPb.ActionDBResp {
+	if !p.IsSetSuccess() {
+		return ActionDBResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *ActionDBResult) SetSuccess(x interface{}) {
+	p.Success = x.(*userInfoPb.ActionDBResp)
+}
+
+func (p *ActionDBResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -510,6 +656,16 @@ func (p *kClient) Info(ctx context.Context, Req *userInfoPb.UserInfoReq) (r *use
 	_args.Req = Req
 	var _result InfoResult
 	if err = p.c.Call(ctx, "Info", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) ActionDB(ctx context.Context, Req *userInfoPb.ActionDBReq) (r *userInfoPb.ActionDBResp, err error) {
+	var _args ActionDBArgs
+	_args.Req = Req
+	var _result ActionDBResult
+	if err = p.c.Call(ctx, "ActionDB", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

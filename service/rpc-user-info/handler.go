@@ -57,6 +57,26 @@ func (s *UserInfoImpl) Info(ctx context.Context, req *userInfoPb.UserInfoReq) (r
 	if user.UserName == "" {
 		return nil, errors.New("用户不存在")
 	}
-	userDetail := &userInfoPb.User{UserId: uint64(user.ID), UserName: user.UserName, FollowCount: string(user.FollowCount), FollowerCount: string(user.FollowedCount), IsFollow: "true"}
+	userDetail := &userInfoPb.User{UserId: uint64(user.ID), UserName: user.UserName, FollowCount: string(user.FollowCount), FollowerCount: string(user.FollowedCount), Is_Follow: "false"}
 	return &userInfoPb.UserInfoResp{StatusCode: 1, StatusMsg: "成功", User: userDetail}, nil
+}
+
+// ActionDB implements the UserInfoImpl interface.
+func (s *UserInfoImpl) ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoPb.ActionDBResp, err error) {
+	// TODO: Your code here...
+	fromId := req.FromId
+	toId := req.ToId
+	actionType := req.Type
+	switch actionType {
+	case 0:
+		err = models.AddActcion(fromId, toId)
+	case 1:
+		err = models.DeleteActcion(fromId, toId)
+	default:
+		return nil, errors.New("用户操作异常")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &userInfoPb.ActionDBResp{StatusCode: 1, StatusMsg: "成功"}, nil
 }
