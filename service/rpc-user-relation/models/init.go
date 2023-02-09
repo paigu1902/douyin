@@ -1,9 +1,10 @@
 package models
 
 import (
+	"log"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
 )
 
 var DB *gorm.DB
@@ -19,6 +20,16 @@ func init() {
 	}
 	DB = db
 	err = db.AutoMigrate(&UserInfo{})
+	if err != nil {
+		panic("fail to create table")
+	}
+
+	err = db.AutoMigrate(&Message{})
+	if err != nil {
+		panic("fail to create table")
+	}
+
+	err = db.AutoMigrate(&Relation{})
 	if err != nil {
 		panic("fail to create table")
 	}

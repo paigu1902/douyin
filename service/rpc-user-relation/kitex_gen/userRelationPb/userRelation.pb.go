@@ -685,7 +685,7 @@ type MessageContent struct {
 	FromId     uint64 `protobuf:"varint,1,opt,name=from_id,json=fromId,proto3" json:"from_id,omitempty"`
 	ToId       uint64 `protobuf:"varint,2,opt,name=to_id,json=toId,proto3" json:"to_id,omitempty"`
 	Content    string `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
-	CreateTime string `protobuf:"bytes,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	CreateTime string `protobuf:"bytes,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty" gorm:"column:created_at"`
 }
 
 func (x *MessageContent) Reset() {

@@ -21,8 +21,8 @@ func SendMessage(req *userRelationPb.SendMessageReq) (resp *userRelationPb.SendM
 
 func HistoryMessage(req *userRelationPb.HistoryMessageReq) (resp *userRelationPb.HistoryMessageResp, err error) {
 	resp = new(userRelationPb.HistoryMessageResp)
-	messageList := make([]*userRelationPb.MessageContent,0)
-	err = models.DB.Where(&models.Message{From_id: req.FromId, To_id: req.ToId}).Find(messageList).Error
+	messageList := make([]*userRelationPb.MessageContent, 0)
+	err = models.DB.Model(&models.Message{}).Where(&models.Message{From_id: req.FromId, To_id: req.ToId}).Find(&messageList).Error
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "查询失败"

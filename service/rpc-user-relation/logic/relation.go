@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"errors"
 	"fmt"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-user-relation/models"
@@ -37,6 +38,14 @@ func followerIds(id uint64) (ids []uint64, err error) {
 	return ids, nil
 }
 
+func idsToMap(ids []uint64) map[uint64]struct{} {
+	idMap := make(map[uint64]struct{}, len(ids))
+	for _, v := range ids {
+		idMap[v] = struct{}{}
+	}
+	return idMap
+}
+
 func isFollow(followMap map[uint64]struct{}, id uint64) bool {
 	_, ok := followMap[id]
 	return ok
@@ -56,13 +65,17 @@ func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.Fol
 			resp.StatusMsg = "关注失败"
 			return resp, err
 		}
-	} else {
+	} else if req.Type == "0" {
 		err = models.DB.Where(&models.Relation{From_id: req.FromId, To_id: req.ToId}).Delete(&models.Relation{}).Error
 		if err != nil {
 			resp.StatusCode = 1
 			resp.StatusMsg = "取消关注失败"
 			return resp, err
 		}
+	} else {
+		resp.StatusCode = 1
+		resp.StatusMsg = "未知操作"
+		return resp, errors.New("unknown action type")
 	}
 	resp.StatusCode = 0
 	resp.StatusMsg = "操作成功"
@@ -108,6 +121,13 @@ func FollowerList(req *userRelationPb.FollowerListReq) (resp *userRelationPb.Fol
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
+	userList := make([]*userRelationPb.User, len(ids))
+	if len(ids) == 0 {
+		resp.StatusCode = 0
+		resp.StatusMsg = "操作成功"
+		resp.UserList = userList
+		return resp, nil
+	}
 	userInfos := make([]models.UserInfo, len(ids))
 	err = models.DB.Where(&ids).Find(&userInfos).Error
 	if err != nil {
@@ -121,11 +141,7 @@ func FollowerList(req *userRelationPb.FollowerListReq) (resp *userRelationPb.Fol
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
-	followMap := make(map[uint64]struct{}, len(followIds))
-	for _, v := range followIds {
-		followMap[v] = struct{}{}
-	}
-	userList := make([]*userRelationPb.User, len(ids))
+	followMap := idsToMap(followIds)
 	for i, v := range userInfos {
 		userList[i] = &userRelationPb.User{
 			UserId:        uint64(v.ID),
@@ -156,7 +172,7 @@ func FriendList(req *userRelationPb.FriendListReq) (resp *userRelationPb.FriendL
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
-	followMap := make(map[uint64]struct{}, len(followIds))
+	followMap := idsToMap(followIds)
 
 	friendIds := make([]uint64, 0)
 	for _, v := range followerIds {
