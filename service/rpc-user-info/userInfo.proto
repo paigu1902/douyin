@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+option go_package = "userInfoPb";
+
+package userInfoPb;
+
+// ------------------------------------
+// Messages
+// ------------------------------------
+message RegisterReq {
+  string userName = 1; //name
+  string password = 2; //password
+}
+message RegisterResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  uint64 user_id = 3; //userId
+  string token = 4; //token
+}
+
+message LoginReq {
+  string userName = 1; //userName
+  string password = 2; //password
+}
+
+message LoginResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  uint64   user_id = 3;
+  string token = 4; //token
+}
+
+message User {
+  uint64 userId = 1; //userId
+  string userName = 2; //name
+  string followCount = 3; //followCount
+  string followerCount = 4; //followerCount
+  string is_Follow = 5;
+}
+
+message UserInfoReq {
+  uint64 userId = 1; //userId
+  string token = 2; //token
+}
+
+message UserInfoResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  User user = 3;
+}
+
+message actionDBReq {
+  int32 type = 1; // 操作类型，0-关注，1-取关
+  uint64 fromId = 2; //需要关注的用户id
+  uint64 toId = 3; //被关注的用户id
+}
+
+message actionDBResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+}
+service UserInfo {
+  //-----------------------user-----------------------
+  rpc Register(RegisterReq) returns (RegisterResp);
+  rpc Login(LoginReq) returns (LoginResp);
+  rpc Info(UserInfoReq) returns (UserInfoResp);
+  rpc ActionDB(actionDBReq) returns (actionDBResp);
+}
