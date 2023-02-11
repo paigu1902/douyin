@@ -8,6 +8,7 @@ import (
 	"paigu1902/douyin/common/utils"
 	userInfoPb "paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-info/models"
+	"strconv"
 )
 
 // UserInfoImpl implements the last service interface defined in the IDL.
@@ -52,12 +53,14 @@ func (s *UserInfoImpl) Login(ctx context.Context, req *userInfoPb.LoginReq) (res
 func (s *UserInfoImpl) Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.UserInfoResp, err error) {
 	// TODO: Your code here...
 	ID := req.UserId
-	//token := req.Token
-	user := models.FindUserByID(ID)
+	user, err := models.InfoRDB(ID)
+	if err != nil {
+		return nil, err
+	}
 	if user.UserName == "" {
 		return nil, errors.New("用户不存在")
 	}
-	userDetail := &userInfoPb.User{UserId: uint64(user.ID), UserName: user.UserName, FollowCount: string(user.FollowCount), FollowerCount: string(user.FollowedCount), Is_Follow: "false"}
+	userDetail := &userInfoPb.User{UserId: uint64(user.ID), UserName: user.UserName, FollowCount: strconv.Itoa(int(user.FollowCount)), FollowerCount: strconv.Itoa(int(user.FollowedCount))}
 	return &userInfoPb.UserInfoResp{StatusCode: 1, StatusMsg: "成功", User: userDetail}, nil
 }
 
@@ -69,9 +72,9 @@ func (s *UserInfoImpl) ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq
 	actionType := req.Type
 	switch actionType {
 	case 0:
-		err = models.AddActcion(fromId, toId)
+		err = models.Actcion(fromId, toId, "+")
 	case 1:
-		err = models.DeleteActcion(fromId, toId)
+		err = models.Actcion(fromId, toId, "-")
 	default:
 		return nil, errors.New("用户操作异常")
 	}

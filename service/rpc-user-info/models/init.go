@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
@@ -8,7 +9,7 @@ import (
 
 var DB *gorm.DB
 
-//var RDB = InitRedisDB()
+var RDB = InitRedisDB()
 
 func init() {
 	dsn := "root:123456@tcp(127.0.0.1:3306)/douyin?charset=utf8mb4&parseTime=True&loc=Local"
@@ -26,10 +27,10 @@ func init() {
 
 }
 
-//func InitRedisDB() *redis.Client {
-//	return redis.NewClient(&redis.Options{
-//		Addr:     "localhost:6379",
-//		Password: "", // no password set
-//		DB:       0,  // use default DB
-//	})
-//}
+func InitRedisDB() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+}
