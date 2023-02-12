@@ -86,6 +86,15 @@ message HistoryMessageResp {
   repeated MessageContent message_list = 3;
 }
 
+message IsFollowReq{
+  uint64 from_id = 1;
+  uint64 to_id = 2;
+}
+
+message IsFollowResp{
+  bool is_follow = 1;
+}
+
 service UserRelation{
 
   rpc FollowAction(FollowActionReq) returns (FollowActionResp);
@@ -94,5 +103,6 @@ service UserRelation{
   rpc FriendList (FriendListReq) returns (FriendListResp);
   rpc SendMessage (SendMessageReq) returns (SendMessageResp);
   rpc HistoryMessage (HistoryMessageReq) returns (HistoryMessageResp);
+  rpc IsFollow(IsFollowReq) returns (IsFollowResp);
 
 }

@@ -28,6 +28,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"FriendList":     kitex.NewMethodInfo(friendListHandler, newFriendListArgs, newFriendListResult, false),
 		"SendMessage":    kitex.NewMethodInfo(sendMessageHandler, newSendMessageArgs, newSendMessageResult, false),
 		"HistoryMessage": kitex.NewMethodInfo(historyMessageHandler, newHistoryMessageArgs, newHistoryMessageResult, false),
+		"IsFollow":       kitex.NewMethodInfo(isFollowHandler, newIsFollowArgs, newIsFollowResult, false),
 	}
 	extra := map[string]interface{}{
 		"PackageName": "userRelationPb",
@@ -913,6 +914,151 @@ func (p *HistoryMessageResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
+func isFollowHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(userRelationPb.IsFollowReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(userRelationPb.UserRelation).IsFollow(ctx, req)
+		if err != nil {
+			return err
+		}
+		if err := st.SendMsg(resp); err != nil {
+			return err
+		}
+	case *IsFollowArgs:
+		success, err := handler.(userRelationPb.UserRelation).IsFollow(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*IsFollowResult)
+		realResult.Success = success
+	}
+	return nil
+}
+func newIsFollowArgs() interface{} {
+	return &IsFollowArgs{}
+}
+
+func newIsFollowResult() interface{} {
+	return &IsFollowResult{}
+}
+
+type IsFollowArgs struct {
+	Req *userRelationPb.IsFollowReq
+}
+
+func (p *IsFollowArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(userRelationPb.IsFollowReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *IsFollowArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *IsFollowArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *IsFollowArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, fmt.Errorf("No req in IsFollowArgs")
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *IsFollowArgs) Unmarshal(in []byte) error {
+	msg := new(userRelationPb.IsFollowReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var IsFollowArgs_Req_DEFAULT *userRelationPb.IsFollowReq
+
+func (p *IsFollowArgs) GetReq() *userRelationPb.IsFollowReq {
+	if !p.IsSetReq() {
+		return IsFollowArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *IsFollowArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+type IsFollowResult struct {
+	Success *userRelationPb.IsFollowResp
+}
+
+var IsFollowResult_Success_DEFAULT *userRelationPb.IsFollowResp
+
+func (p *IsFollowResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(userRelationPb.IsFollowResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *IsFollowResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *IsFollowResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *IsFollowResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, fmt.Errorf("No req in IsFollowResult")
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *IsFollowResult) Unmarshal(in []byte) error {
+	msg := new(userRelationPb.IsFollowResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *IsFollowResult) GetSuccess() *userRelationPb.IsFollowResp {
+	if !p.IsSetSuccess() {
+		return IsFollowResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *IsFollowResult) SetSuccess(x interface{}) {
+	p.Success = x.(*userRelationPb.IsFollowResp)
+}
+
+func (p *IsFollowResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -978,6 +1124,16 @@ func (p *kClient) HistoryMessage(ctx context.Context, Req *userRelationPb.Histor
 	_args.Req = Req
 	var _result HistoryMessageResult
 	if err = p.c.Call(ctx, "HistoryMessage", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) IsFollow(ctx context.Context, Req *userRelationPb.IsFollowReq) (r *userRelationPb.IsFollowResp, err error) {
+	var _args IsFollowArgs
+	_args.Req = Req
+	var _result IsFollowResult
+	if err = p.c.Call(ctx, "IsFollow", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

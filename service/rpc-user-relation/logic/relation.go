@@ -3,8 +3,9 @@ package logic
 import (
 	"errors"
 	"fmt"
+	"gorm.io/gorm"
+	models2 "paigu1902/douyin/common/models"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
-	"paigu1902/douyin/service/rpc-user-relation/models"
 )
 
 // rpc FollowAction(FollowActionReq) returns (FollowActionResp);
@@ -13,27 +14,27 @@ import (
 // rpc FriendList (FriendListReq) returns (FriendListResp);
 
 func followIds(id uint64) (ids []uint64, err error) {
-	result := make([]models.Relation, 0)
-	err = models.DB.Where(&models.Relation{From_id: id}).Find(&result).Error
+	result := make([]models2.Relation, 0)
+	err = models2.DB.Where(&models2.Relation{FromId: id}).Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
 	ids = make([]uint64, len(result))
 	for i, v := range result {
-		ids[i] = v.To_id
+		ids[i] = v.ToId
 	}
 	return ids, nil
 }
 
 func followerIds(id uint64) (ids []uint64, err error) {
-	result := make([]models.Relation, 0)
-	err = models.DB.Where(&models.Relation{To_id: id}).Find(&result).Error
+	result := make([]models2.Relation, 0)
+	err = models2.DB.Where(&models2.Relation{ToId: id}).Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
 	ids = make([]uint64, len(result))
 	for i, v := range result {
-		ids[i] = v.From_id
+		ids[i] = v.FromId
 	}
 	return ids, nil
 }
@@ -51,6 +52,26 @@ func isFollow(followMap map[uint64]struct{}, id uint64) bool {
 	return ok
 }
 
+func IsFollow(req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowResp, err error) {
+	resp = new(userRelationPb.IsFollowResp)
+	if req.FromId == req.ToId {
+		resp.IsFollow = false
+		return resp, nil
+	}
+	result := new(models2.Relation)
+
+	err = models2.DB.Where(&models2.Relation{FromId: req.FromId, ToId: req.ToId}).First(result).Error
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		resp.IsFollow = false
+		return resp, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	resp.IsFollow = true
+	return resp, nil
+}
+
 func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
 	resp = new(userRelationPb.FollowActionResp)
 	if req.FromId == req.ToId {
@@ -59,14 +80,14 @@ func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.Fol
 		return resp, err
 	}
 	if req.Type == "1" {
-		err = models.DB.Create(&models.Relation{From_id: req.FromId, To_id: req.ToId}).Error
+		err = models2.DB.Create(&models2.Relation{FromId: req.FromId, ToId: req.ToId}).Error
 		if err != nil {
 			resp.StatusCode = 1
 			resp.StatusMsg = "关注失败"
 			return resp, err
 		}
 	} else if req.Type == "0" {
-		err = models.DB.Where(&models.Relation{From_id: req.FromId, To_id: req.ToId}).Delete(&models.Relation{}).Error
+		err = models2.DB.Where(&models2.Relation{FromId: req.FromId, ToId: req.ToId}).Delete(&models2.Relation{}).Error
 		if err != nil {
 			resp.StatusCode = 1
 			resp.StatusMsg = "取消关注失败"
@@ -90,8 +111,8 @@ func FollowList(req *userRelationPb.FollowListReq) (resp *userRelationPb.FollowL
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
-	userInfos := make([]models.UserInfo, len(ids))
-	err = models.DB.Where(&ids).Find(&userInfos).Error
+	userInfos := make([]models2.UserInfo, len(ids))
+	err = models2.DB.Where(&ids).Find(&userInfos).Error
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"
@@ -128,8 +149,8 @@ func FollowerList(req *userRelationPb.FollowerListReq) (resp *userRelationPb.Fol
 		resp.UserList = userList
 		return resp, nil
 	}
-	userInfos := make([]models.UserInfo, len(ids))
-	err = models.DB.Where(&ids).Find(&userInfos).Error
+	userInfos := make([]models2.UserInfo, len(ids))
+	err = models2.DB.Where(&ids).Find(&userInfos).Error
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"
@@ -181,8 +202,8 @@ func FriendList(req *userRelationPb.FriendListReq) (resp *userRelationPb.FriendL
 		}
 	}
 
-	userInfos := make([]models.UserInfo, len(friendIds))
-	err = models.DB.Where(&friendIds).Find(&userInfos).Error
+	userInfos := make([]models2.UserInfo, len(friendIds))
+	err = models2.DB.Where(&friendIds).Find(&userInfos).Error
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"

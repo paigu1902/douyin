@@ -44,3 +44,9 @@ func (s *UserRelationImpl) HistoryMessage(ctx context.Context, req *userRelation
 	// TODO: Your code here...
 	return logic.HistoryMessage(req)
 }
+
+// IsFollow implements the UserRelationImpl interface.
+func (s *UserRelationImpl) IsFollow(ctx context.Context, req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowResp, err error) {
+	// TODO: Your code here...
+	return logic.IsFollow(req)
+}
