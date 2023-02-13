@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"context"
+	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"paigu1902/douyin/common/utils"
@@ -10,12 +12,12 @@ type Auth struct {
 	Token string `json:"token"`
 }
 
-func AuthUserCheck() gin.HandlerFunc {
-	return func(c *gin.Context) {
+func AuthUserCheck() app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
 		token, ok := c.GetQuery("token")
 		if !ok {
 			auth := new(Auth)
-			err := c.BindJSON(auth)
+			err := c.Bind(auth)
 			if err != nil {
 				c.Abort()
 				c.JSON(http.StatusOK, gin.H{
@@ -44,6 +46,6 @@ func AuthUserCheck() gin.HandlerFunc {
 			return
 		}
 		c.Set("user_claims", userClaim)
-		c.Next()
+		c.Next(ctx)
 	}
 }
