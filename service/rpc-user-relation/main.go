@@ -3,17 +3,14 @@ package main
 import (
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
-	"github.com/kitex-contrib/registry-nacos/registry"
 	"log"
 	"net"
+	"paigu1902/douyin/common/nacos"
 	UserRelationPb "paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userRelation"
 )
 
 func main() {
-	r, err := registry.NewDefaultNacosRegistry()
-	if err != nil {
-		panic(err)
-	}
+	r := nacos.KitexServerRegistry()
 	svr := UserRelationPb.NewServer(
 		new(UserRelationImpl),
 		server.WithServiceAddr(&net.TCPAddr{Port: 50052}),
