@@ -3,6 +3,7 @@ module paigu1902/douyin
 go 1.19
 
 require (
+	github.com/aliyun/aliyun-oss-go-sdk v2.2.6+incompatible
 	github.com/cloudwego/fastpb v0.0.3
 	github.com/cloudwego/hertz v0.5.2
 	github.com/cloudwego/kitex v0.4.4
@@ -10,6 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/kitex-contrib/registry-nacos v0.0.1
 	github.com/swaggo/swag v1.8.9
+	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/gorm v1.24.3
@@ -79,6 +81,7 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
