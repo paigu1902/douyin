@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
-	models2 "paigu1902/douyin/common/models"
+	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 )
 
@@ -14,8 +14,8 @@ import (
 // rpc FriendList (FriendListReq) returns (FriendListResp);
 
 func followIds(id uint64) (ids []uint64, err error) {
-	result := make([]models2.Relation, 0)
-	err = models2.DB.Where(&models2.Relation{FromId: id}).Find(&result).Error
+	result := make([]models.Relation, 0)
+	err = models.DB.Where(&models.Relation{FromId: id}).Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
@@ -27,8 +27,8 @@ func followIds(id uint64) (ids []uint64, err error) {
 }
 
 func followerIds(id uint64) (ids []uint64, err error) {
-	result := make([]models2.Relation, 0)
-	err = models2.DB.Where(&models2.Relation{ToId: id}).Find(&result).Error
+	result := make([]models.Relation, 0)
+	err = models.DB.Where(&models.Relation{ToId: id}).Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +58,9 @@ func IsFollow(req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowRes
 		resp.IsFollow = false
 		return resp, nil
 	}
-	result := new(models2.Relation)
+	result := new(models.Relation)
 
-	err = models2.DB.Where(&models2.Relation{FromId: req.FromId, ToId: req.ToId}).First(result).Error
+	err = models.DB.Where(&models.Relation{FromId: req.FromId, ToId: req.ToId}).First(result).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		resp.IsFollow = false
 		return resp, nil
@@ -80,14 +80,27 @@ func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.Fol
 		return resp, err
 	}
 	if req.Type == "1" {
-		err = models2.DB.Create(&models2.Relation{FromId: req.FromId, ToId: req.ToId}).Error
+		err = models.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Create(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Error; err != nil {
+				return err
+			}
+
+			return nil
+		})
 		if err != nil {
 			resp.StatusCode = 1
 			resp.StatusMsg = "关注失败"
 			return resp, err
 		}
+
 	} else if req.Type == "0" {
-		err = models2.DB.Where(&models2.Relation{FromId: req.FromId, ToId: req.ToId}).Delete(&models2.Relation{}).Error
+		err = models.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Where(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Delete(&models.Relation{}).Error; err != nil {
+				return err
+			}
+
+			return nil
+		})
 		if err != nil {
 			resp.StatusCode = 1
 			resp.StatusMsg = "取消关注失败"
@@ -111,8 +124,8 @@ func FollowList(req *userRelationPb.FollowListReq) (resp *userRelationPb.FollowL
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
-	userInfos := make([]models2.UserInfo, len(ids))
-	err = models2.DB.Where(&ids).Find(&userInfos).Error
+	userInfos := make([]models.UserInfo, len(ids))
+	err = models.DB.Where(&ids).Find(&userInfos).Error
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"
@@ -149,8 +162,8 @@ func FollowerList(req *userRelationPb.FollowerListReq) (resp *userRelationPb.Fol
 		resp.UserList = userList
 		return resp, nil
 	}
-	userInfos := make([]models2.UserInfo, len(ids))
-	err = models2.DB.Where(&ids).Find(&userInfos).Error
+	userInfos := make([]models.UserInfo, len(ids))
+	err = models.DB.Where(&ids).Find(&userInfos).Error
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"
@@ -202,8 +215,8 @@ func FriendList(req *userRelationPb.FriendListReq) (resp *userRelationPb.FriendL
 		}
 	}
 
-	userInfos := make([]models2.UserInfo, len(friendIds))
-	err = models2.DB.Where(&friendIds).Find(&userInfos).Error
+	userInfos := make([]models.UserInfo, len(friendIds))
+	err = models.DB.Where(&friendIds).Find(&userInfos).Error
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "获取失败"
