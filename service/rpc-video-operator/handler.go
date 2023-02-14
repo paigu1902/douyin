@@ -13,7 +13,7 @@ import (
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userrelation"
-	videoOperatorPb "paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
+	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -173,7 +173,7 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
 			StatusCode: 1,
-			StatusMsg:  "author_id 错误",
+			StatusMsg:  "author_id 不存在",
 		}
 		return resp, nil
 	}
@@ -183,8 +183,6 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 	if err != nil {
 		return nil, err
 	}
-	//followCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowCount(), 10, 64)
-	//followerCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowerCount(), 10, 64)
 	followCnt := authorInfo.User.GetFollowCount()
 	followerCnt := authorInfo.User.GetFollowerCount()
 	relationClient := userrelation.MustNewClient("userRelationImpl",
@@ -233,13 +231,12 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 func (s *VideoOperatorImpl) VideoList(ctx context.Context, req *videoOperatorPb.VideoListReq) (resp *videoOperatorPb.VideoListResp, err error) {
 	videoIdList := req.GetVideoId()
 	var videos []models.VideoInfo
-	err = models.GetVideosByIds(videoIdList, &videos)
-	if err != nil {
+	if err = models.GetVideosByIds(videoIdList, &videos); err != nil {
 		resp = &videoOperatorPb.VideoListResp{
 			StatusCode: 1,
 			StatusMsg:  "失败",
 		}
-		return resp, nil
+		return resp, err
 	}
 	var videoList []*videoOperatorPb.Video
 	for _, v := range videos {
