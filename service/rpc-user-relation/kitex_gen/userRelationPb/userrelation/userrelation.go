@@ -29,6 +29,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"SendMessage":    kitex.NewMethodInfo(sendMessageHandler, newSendMessageArgs, newSendMessageResult, false),
 		"HistoryMessage": kitex.NewMethodInfo(historyMessageHandler, newHistoryMessageArgs, newHistoryMessageResult, false),
 		"IsFollow":       kitex.NewMethodInfo(isFollowHandler, newIsFollowArgs, newIsFollowResult, false),
+		"IsFollowList":   kitex.NewMethodInfo(isFollowListHandler, newIsFollowListArgs, newIsFollowListResult, false),
 	}
 	extra := map[string]interface{}{
 		"PackageName": "userRelationPb",
@@ -1059,6 +1060,151 @@ func (p *IsFollowResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
+func isFollowListHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(userRelationPb.IsFollowListReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(userRelationPb.UserRelation).IsFollowList(ctx, req)
+		if err != nil {
+			return err
+		}
+		if err := st.SendMsg(resp); err != nil {
+			return err
+		}
+	case *IsFollowListArgs:
+		success, err := handler.(userRelationPb.UserRelation).IsFollowList(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*IsFollowListResult)
+		realResult.Success = success
+	}
+	return nil
+}
+func newIsFollowListArgs() interface{} {
+	return &IsFollowListArgs{}
+}
+
+func newIsFollowListResult() interface{} {
+	return &IsFollowListResult{}
+}
+
+type IsFollowListArgs struct {
+	Req *userRelationPb.IsFollowListReq
+}
+
+func (p *IsFollowListArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(userRelationPb.IsFollowListReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *IsFollowListArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *IsFollowListArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *IsFollowListArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, fmt.Errorf("No req in IsFollowListArgs")
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *IsFollowListArgs) Unmarshal(in []byte) error {
+	msg := new(userRelationPb.IsFollowListReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var IsFollowListArgs_Req_DEFAULT *userRelationPb.IsFollowListReq
+
+func (p *IsFollowListArgs) GetReq() *userRelationPb.IsFollowListReq {
+	if !p.IsSetReq() {
+		return IsFollowListArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *IsFollowListArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+type IsFollowListResult struct {
+	Success *userRelationPb.IsFollowListResp
+}
+
+var IsFollowListResult_Success_DEFAULT *userRelationPb.IsFollowListResp
+
+func (p *IsFollowListResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(userRelationPb.IsFollowListResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *IsFollowListResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *IsFollowListResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *IsFollowListResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, fmt.Errorf("No req in IsFollowListResult")
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *IsFollowListResult) Unmarshal(in []byte) error {
+	msg := new(userRelationPb.IsFollowListResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *IsFollowListResult) GetSuccess() *userRelationPb.IsFollowListResp {
+	if !p.IsSetSuccess() {
+		return IsFollowListResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *IsFollowListResult) SetSuccess(x interface{}) {
+	p.Success = x.(*userRelationPb.IsFollowListResp)
+}
+
+func (p *IsFollowListResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -1134,6 +1280,16 @@ func (p *kClient) IsFollow(ctx context.Context, Req *userRelationPb.IsFollowReq)
 	_args.Req = Req
 	var _result IsFollowResult
 	if err = p.c.Call(ctx, "IsFollow", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) IsFollowList(ctx context.Context, Req *userRelationPb.IsFollowListReq) (r *userRelationPb.IsFollowListResp, err error) {
+	var _args IsFollowListArgs
+	_args.Req = Req
+	var _result IsFollowListResult
+	if err = p.c.Call(ctx, "IsFollowList", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
