@@ -11,6 +11,8 @@ import (
 	"paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
+	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
+	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userrelation"
 	videoOperatorPb "paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
 	"strconv"
@@ -103,8 +105,8 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 		author := videoOperatorPb.User{
 			Id:            videoInfo.AuthorId,
 			Name:          authorInfo.User.UserName,
-			FollowCount:   followCount,
-			FollowerCount: followerCount,
+			FollowCount:   authorInfo.User.FollowerCount,
+			FollowerCount: authorInfo.User.FollowerCount,
 			IsFollow:      false,
 		}
 		videoRespList = append(videoRespList, &videoOperatorPb.Video{
@@ -181,8 +183,10 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 	if err != nil {
 		return nil, err
 	}
-	followCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowCount(), 10, 64)
-	followerCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowerCount(), 10, 64)
+	//followCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowCount(), 10, 64)
+	//followerCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowerCount(), 10, 64)
+	followCnt := authorInfo.User.GetFollowCount()
+	followerCnt := authorInfo.User.GetFollowerCount()
 	relationClient := userrelation.MustNewClient("userRelationImpl",
 		client.WithResolver(r),
 		client.WithRPCTimeout(time.Second*5),

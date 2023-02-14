@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"math/rand"
+	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
@@ -93,16 +94,16 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 
 func Actcion(fromId uint64, toId uint64, actionType string) error {
 	var err error
-	err = models.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
-	err = models.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
+	err = cache.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
+	err = cache.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
 	if err != nil {
 		return errors.New("删除缓存失败")
 	}
 	defer func() {
 		go func() {
 			time.Sleep(time.Second * 3)
-			err = models.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
-			err = models.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
+			err = cache.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
+			err = cache.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
 		}()
 	}()
 
@@ -133,7 +134,7 @@ func InfoRDB(ctx context.Context, userId uint64, token string) (*models.UserInfo
 	if err != nil {
 		return &userinfo, false, err
 	}
-	userCache, err := models.RDB.Do(context.Background(), "get", userId).Text()
+	userCache, err := cache.RDB.Do(context.Background(), "get", userId).Text()
 	if err == nil {
 		err := json.Unmarshal([]byte(userCache), &userinfo)
 		if err == nil {
@@ -142,7 +143,7 @@ func InfoRDB(ctx context.Context, userId uint64, token string) (*models.UserInfo
 	}
 	err = models.DB.Where("id = ?", userId).First(&userinfo).Error
 	u, _ := json.Marshal(userinfo)
-	err = models.RDB.Do(ctx, "setex", userinfo.ID, 1000, string(u)).Err()
+	err = cache.RDB.Do(ctx, "setex", userinfo.ID, 1000, string(u)).Err()
 	if err != nil {
 		return &userinfo, isFollowResp.GetIsFollow(), errors.New("写入异常")
 	}
