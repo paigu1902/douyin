@@ -7,13 +7,12 @@ import (
 	"github.com/kitex-contrib/registry-nacos/resolver"
 	"os"
 	"os/exec"
+	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
 	videoOperatorPb "paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
-	"paigu1902/douyin/service/rpc-video-operator/models"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -100,13 +99,11 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 		if err != nil {
 			return nil, err
 		}
-		followCount, _ := strconv.ParseInt(authorInfo.User.FollowCount, 10, 16)
-		followerCount, _ := strconv.ParseInt(authorInfo.User.FollowerCount, 10, 16)
 		author := videoOperatorPb.User{
 			Id:            videoInfo.AuthorId,
 			Name:          authorInfo.User.UserName,
-			FollowCount:   followCount,
-			FollowerCount: followerCount,
+			FollowCount:   authorInfo.User.FollowCount,
+			FollowerCount: authorInfo.User.FollowerCount,
 			IsFollow:      false,
 		}
 		videoRespList = append(videoRespList, &videoOperatorPb.Video{
