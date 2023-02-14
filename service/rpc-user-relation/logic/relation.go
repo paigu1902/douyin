@@ -1,10 +1,14 @@
 package logic
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"gorm.io/gorm"
+	"paigu1902/douyin/common/models"
+	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
+	"paigu1902/douyin/service/rpc-user-relation/client"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
-	"paigu1902/douyin/service/rpc-user-relation/models"
 )
 
 // rpc FollowAction(FollowActionReq) returns (FollowActionResp);
@@ -14,26 +18,26 @@ import (
 
 func followIds(id uint64) (ids []uint64, err error) {
 	result := make([]models.Relation, 0)
-	err = models.DB.Where(&models.Relation{From_id: id}).Find(&result).Error
+	err = models.DB.Where(&models.Relation{FromId: id}).Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
 	ids = make([]uint64, len(result))
 	for i, v := range result {
-		ids[i] = v.To_id
+		ids[i] = v.ToId
 	}
 	return ids, nil
 }
 
 func followerIds(id uint64) (ids []uint64, err error) {
 	result := make([]models.Relation, 0)
-	err = models.DB.Where(&models.Relation{To_id: id}).Find(&result).Error
+	err = models.DB.Where(&models.Relation{ToId: id}).Find(&result).Error
 	if err != nil {
 		return nil, err
 	}
 	ids = make([]uint64, len(result))
 	for i, v := range result {
-		ids[i] = v.From_id
+		ids[i] = v.FromId
 	}
 	return ids, nil
 }
@@ -51,7 +55,52 @@ func isFollow(followMap map[uint64]struct{}, id uint64) bool {
 	return ok
 }
 
-func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
+func IsFollow(req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowResp, err error) {
+	resp = new(userRelationPb.IsFollowResp)
+	if req.FromId == req.ToId {
+		resp.IsFollow = false
+		return resp, nil
+	}
+	result := new(models.Relation)
+
+	err = models.DB.Where(&models.Relation{FromId: req.FromId, ToId: req.ToId}).First(result).Error
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		resp.IsFollow = false
+		return resp, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	resp.IsFollow = true
+	return resp, nil
+}
+
+func IsFollowList(ctx context.Context, req *userRelationPb.IsFollowListReq) (resp *userRelationPb.IsFollowListResp, err error) {
+	resp = new(userRelationPb.IsFollowListResp)
+	relations := make([]models.Relation, 0)
+	err = models.DB.Where("(from_id = ? AND to_id IN ?", req.FromId, req.ToId).Find(relations).Error
+	if err != nil {
+		return nil, err
+	}
+	relationMap := make(map[uint64]struct{}, 0)
+	for _, v := range relations {
+		relationMap[v.ToId] = struct{}{}
+	}
+
+	res := make([]bool, len(req.ToId))
+	for i, v := range req.ToId {
+		if _, ok := relationMap[v]; ok == true {
+			res[i] = true
+		} else {
+			res[i] = false
+		}
+	}
+
+	resp.IsFollow = res
+	return resp, nil
+}
+
+func FollowAction(ctx context.Context, req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
 	resp = new(userRelationPb.FollowActionResp)
 	if req.FromId == req.ToId {
 		resp.StatusCode = 1
@@ -59,14 +108,33 @@ func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.Fol
 		return resp, err
 	}
 	if req.Type == "1" {
-		err = models.DB.Create(&models.Relation{From_id: req.FromId, To_id: req.ToId}).Error
+		err = models.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Create(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Error; err != nil {
+				return err
+			}
+			_, err2 := client.UserInfoClient.ActionDB(ctx, &userInfoPb.ActionDBReq{FromId: req.FromId, ToId: req.ToId, Type: 1})
+			if err2 != nil {
+				return err2
+			}
+			return nil
+		})
 		if err != nil {
 			resp.StatusCode = 1
 			resp.StatusMsg = "关注失败"
 			return resp, err
 		}
+
 	} else if req.Type == "0" {
-		err = models.DB.Where(&models.Relation{From_id: req.FromId, To_id: req.ToId}).Delete(&models.Relation{}).Error
+		err = models.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Where(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Delete(&models.Relation{}).Error; err != nil {
+				return err
+			}
+			_, err2 := client.UserInfoClient.ActionDB(ctx, &userInfoPb.ActionDBReq{FromId: req.FromId, ToId: req.ToId, Type: 0})
+			if err2 != nil {
+				return err2
+			}
+			return nil
+		})
 		if err != nil {
 			resp.StatusCode = 1
 			resp.StatusMsg = "取消关注失败"

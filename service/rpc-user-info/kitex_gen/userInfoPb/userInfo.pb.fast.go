@@ -243,17 +243,17 @@ func (x *User) fastReadField2(buf []byte, _type int8) (offset int, err error) {
 }
 
 func (x *User) fastReadField3(buf []byte, _type int8) (offset int, err error) {
-	x.FollowCount, offset, err = fastpb.ReadString(buf, _type)
+	x.FollowCount, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
 func (x *User) fastReadField4(buf []byte, _type int8) (offset int, err error) {
-	x.FollowerCount, offset, err = fastpb.ReadString(buf, _type)
+	x.FollowerCount, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
 func (x *User) fastReadField5(buf []byte, _type int8) (offset int, err error) {
-	x.Is_Follow, offset, err = fastpb.ReadString(buf, _type)
+	x.IsFollow, offset, err = fastpb.ReadBool(buf, _type)
 	return offset, err
 }
 
@@ -422,6 +422,100 @@ func (x *ActionDBResp) fastReadField2(buf []byte, _type int8) (offset int, err e
 	return offset, err
 }
 
+func (x *BatchUserReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_BatchUserReq[number], err)
+}
+
+func (x *BatchUserReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	offset, err = fastpb.ReadList(buf, _type,
+		func(buf []byte, _type int8) (n int, err error) {
+			var v uint64
+			v, offset, err = fastpb.ReadUint64(buf, _type)
+			if err != nil {
+				return offset, err
+			}
+			x.Batchids = append(x.Batchids, v)
+			return offset, err
+		})
+	return offset, err
+}
+
+func (x *BatchUserReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.Fromid, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *BtachUserResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_BtachUserResp[number], err)
+}
+
+func (x *BtachUserResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.StatusCode, offset, err = fastpb.ReadInt32(buf, _type)
+	return offset, err
+}
+
+func (x *BtachUserResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.StatusMsg, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *BtachUserResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	var v User
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.Batchusers = append(x.Batchusers, &v)
+	return offset, nil
+}
+
 func (x *RegisterReq) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -587,26 +681,26 @@ func (x *User) fastWriteField2(buf []byte) (offset int) {
 }
 
 func (x *User) fastWriteField3(buf []byte) (offset int) {
-	if x.FollowCount == "" {
+	if x.FollowCount == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 3, x.FollowCount)
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.FollowCount)
 	return offset
 }
 
 func (x *User) fastWriteField4(buf []byte) (offset int) {
-	if x.FollowerCount == "" {
+	if x.FollowerCount == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 4, x.FollowerCount)
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.FollowerCount)
 	return offset
 }
 
 func (x *User) fastWriteField5(buf []byte) (offset int) {
-	if x.Is_Follow == "" {
+	if !x.IsFollow {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 5, x.Is_Follow)
+	offset += fastpb.WriteBool(buf[offset:], 5, x.IsFollow)
 	return offset
 }
 
@@ -725,6 +819,72 @@ func (x *ActionDBResp) fastWriteField2(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteString(buf[offset:], 2, x.StatusMsg)
+	return offset
+}
+
+func (x *BatchUserReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *BatchUserReq) fastWriteField1(buf []byte) (offset int) {
+	if len(x.Batchids) == 0 {
+		return offset
+	}
+	offset += fastpb.WriteListPacked(buf[offset:], 1, len(x.Batchids),
+		func(buf []byte, numTagOrKey, numIdxOrVal int32) int {
+			offset := 0
+			offset += fastpb.WriteUint64(buf[offset:], numTagOrKey, x.Batchids[numIdxOrVal])
+			return offset
+		})
+	return offset
+}
+
+func (x *BatchUserReq) fastWriteField2(buf []byte) (offset int) {
+	if x.Fromid == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.Fromid)
+	return offset
+}
+
+func (x *BtachUserResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	return offset
+}
+
+func (x *BtachUserResp) fastWriteField1(buf []byte) (offset int) {
+	if x.StatusCode == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 1, x.StatusCode)
+	return offset
+}
+
+func (x *BtachUserResp) fastWriteField2(buf []byte) (offset int) {
+	if x.StatusMsg == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.StatusMsg)
+	return offset
+}
+
+func (x *BtachUserResp) fastWriteField3(buf []byte) (offset int) {
+	if x.Batchusers == nil {
+		return offset
+	}
+	for i := range x.Batchusers {
+		offset += fastpb.WriteMessage(buf[offset:], 3, x.Batchusers[i])
+	}
 	return offset
 }
 
@@ -893,26 +1053,26 @@ func (x *User) sizeField2() (n int) {
 }
 
 func (x *User) sizeField3() (n int) {
-	if x.FollowCount == "" {
+	if x.FollowCount == 0 {
 		return n
 	}
-	n += fastpb.SizeString(3, x.FollowCount)
+	n += fastpb.SizeInt64(3, x.FollowCount)
 	return n
 }
 
 func (x *User) sizeField4() (n int) {
-	if x.FollowerCount == "" {
+	if x.FollowerCount == 0 {
 		return n
 	}
-	n += fastpb.SizeString(4, x.FollowerCount)
+	n += fastpb.SizeInt64(4, x.FollowerCount)
 	return n
 }
 
 func (x *User) sizeField5() (n int) {
-	if x.Is_Follow == "" {
+	if !x.IsFollow {
 		return n
 	}
-	n += fastpb.SizeString(5, x.Is_Follow)
+	n += fastpb.SizeBool(5, x.IsFollow)
 	return n
 }
 
@@ -1034,6 +1194,72 @@ func (x *ActionDBResp) sizeField2() (n int) {
 	return n
 }
 
+func (x *BatchUserReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *BatchUserReq) sizeField1() (n int) {
+	if len(x.Batchids) == 0 {
+		return n
+	}
+	n += fastpb.SizeListPacked(1, len(x.Batchids),
+		func(numTagOrKey, numIdxOrVal int32) int {
+			n := 0
+			n += fastpb.SizeUint64(numTagOrKey, x.Batchids[numIdxOrVal])
+			return n
+		})
+	return n
+}
+
+func (x *BatchUserReq) sizeField2() (n int) {
+	if x.Fromid == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(2, x.Fromid)
+	return n
+}
+
+func (x *BtachUserResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	return n
+}
+
+func (x *BtachUserResp) sizeField1() (n int) {
+	if x.StatusCode == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(1, x.StatusCode)
+	return n
+}
+
+func (x *BtachUserResp) sizeField2() (n int) {
+	if x.StatusMsg == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.StatusMsg)
+	return n
+}
+
+func (x *BtachUserResp) sizeField3() (n int) {
+	if x.Batchusers == nil {
+		return n
+	}
+	for i := range x.Batchusers {
+		n += fastpb.SizeMessage(3, x.Batchusers[i])
+	}
+	return n
+}
+
 var fieldIDToName_RegisterReq = map[int32]string{
 	1: "UserName",
 	2: "Password",
@@ -1063,7 +1289,7 @@ var fieldIDToName_User = map[int32]string{
 	2: "UserName",
 	3: "FollowCount",
 	4: "FollowerCount",
-	5: "Is_Follow",
+	5: "IsFollow",
 }
 
 var fieldIDToName_UserInfoReq = map[int32]string{
@@ -1086,4 +1312,15 @@ var fieldIDToName_ActionDBReq = map[int32]string{
 var fieldIDToName_ActionDBResp = map[int32]string{
 	1: "StatusCode",
 	2: "StatusMsg",
+}
+
+var fieldIDToName_BatchUserReq = map[int32]string{
+	1: "Batchids",
+	2: "Fromid",
+}
+
+var fieldIDToName_BtachUserResp = map[int32]string{
+	1: "StatusCode",
+	2: "StatusMsg",
+	3: "Batchusers",
 }

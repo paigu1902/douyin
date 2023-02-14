@@ -12,7 +12,7 @@ type UserRelationImpl struct{}
 // FollowAction implements the UserRelationImpl interface.
 func (s *UserRelationImpl) FollowAction(ctx context.Context, req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
 	// TODO: Your code here...
-	return logic.FollowAction(req)
+	return logic.FollowAction(ctx, req)
 }
 
 // FollowList implements the UserRelationImpl interface.
@@ -43,4 +43,16 @@ func (s *UserRelationImpl) SendMessage(ctx context.Context, req *userRelationPb.
 func (s *UserRelationImpl) HistoryMessage(ctx context.Context, req *userRelationPb.HistoryMessageReq) (resp *userRelationPb.HistoryMessageResp, err error) {
 	// TODO: Your code here...
 	return logic.HistoryMessage(req)
+}
+
+// IsFollow implements the UserRelationImpl interface.
+func (s *UserRelationImpl) IsFollow(ctx context.Context, req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowResp, err error) {
+	// TODO: Your code here...
+	return logic.IsFollow(req)
+}
+
+// IsFollowList implements the UserRelationImpl interface.
+func (s *UserRelationImpl) IsFollowList(ctx context.Context, req *userRelationPb.IsFollowListReq) (resp *userRelationPb.IsFollowListResp, err error) {
+	// TODO: Your code here...
+	return logic.IsFollowList(ctx, req)
 }

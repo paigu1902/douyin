@@ -612,6 +612,144 @@ func (x *HistoryMessageResp) fastReadField3(buf []byte, _type int8) (offset int,
 	return offset, nil
 }
 
+func (x *IsFollowReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_IsFollowReq[number], err)
+}
+
+func (x *IsFollowReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.FromId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *IsFollowReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.ToId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *IsFollowResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_IsFollowResp[number], err)
+}
+
+func (x *IsFollowResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.IsFollow, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *IsFollowListReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_IsFollowListReq[number], err)
+}
+
+func (x *IsFollowListReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.FromId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *IsFollowListReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	offset, err = fastpb.ReadList(buf, _type,
+		func(buf []byte, _type int8) (n int, err error) {
+			var v uint64
+			v, offset, err = fastpb.ReadUint64(buf, _type)
+			if err != nil {
+				return offset, err
+			}
+			x.ToId = append(x.ToId, v)
+			return offset, err
+		})
+	return offset, err
+}
+
+func (x *IsFollowListResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_IsFollowListResp[number], err)
+}
+
+func (x *IsFollowListResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	offset, err = fastpb.ReadList(buf, _type,
+		func(buf []byte, _type int8) (n int, err error) {
+			var v bool
+			v, offset, err = fastpb.ReadBool(buf, _type)
+			if err != nil {
+				return offset, err
+			}
+			x.IsFollow = append(x.IsFollow, v)
+			return offset, err
+		})
+	return offset, err
+}
+
 func (x *FollowActionReq) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -1048,6 +1186,98 @@ func (x *HistoryMessageResp) fastWriteField3(buf []byte) (offset int) {
 	for i := range x.MessageList {
 		offset += fastpb.WriteMessage(buf[offset:], 3, x.MessageList[i])
 	}
+	return offset
+}
+
+func (x *IsFollowReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *IsFollowReq) fastWriteField1(buf []byte) (offset int) {
+	if x.FromId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.FromId)
+	return offset
+}
+
+func (x *IsFollowReq) fastWriteField2(buf []byte) (offset int) {
+	if x.ToId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.ToId)
+	return offset
+}
+
+func (x *IsFollowResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *IsFollowResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.IsFollow {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.IsFollow)
+	return offset
+}
+
+func (x *IsFollowListReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *IsFollowListReq) fastWriteField1(buf []byte) (offset int) {
+	if x.FromId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.FromId)
+	return offset
+}
+
+func (x *IsFollowListReq) fastWriteField2(buf []byte) (offset int) {
+	if len(x.ToId) == 0 {
+		return offset
+	}
+	offset += fastpb.WriteListPacked(buf[offset:], 2, len(x.ToId),
+		func(buf []byte, numTagOrKey, numIdxOrVal int32) int {
+			offset := 0
+			offset += fastpb.WriteUint64(buf[offset:], numTagOrKey, x.ToId[numIdxOrVal])
+			return offset
+		})
+	return offset
+}
+
+func (x *IsFollowListResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *IsFollowListResp) fastWriteField1(buf []byte) (offset int) {
+	if len(x.IsFollow) == 0 {
+		return offset
+	}
+	offset += fastpb.WriteListPacked(buf[offset:], 1, len(x.IsFollow),
+		func(buf []byte, numTagOrKey, numIdxOrVal int32) int {
+			offset := 0
+			offset += fastpb.WriteBool(buf[offset:], numTagOrKey, x.IsFollow[numIdxOrVal])
+			return offset
+		})
 	return offset
 }
 
@@ -1490,6 +1720,98 @@ func (x *HistoryMessageResp) sizeField3() (n int) {
 	return n
 }
 
+func (x *IsFollowReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *IsFollowReq) sizeField1() (n int) {
+	if x.FromId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(1, x.FromId)
+	return n
+}
+
+func (x *IsFollowReq) sizeField2() (n int) {
+	if x.ToId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(2, x.ToId)
+	return n
+}
+
+func (x *IsFollowResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *IsFollowResp) sizeField1() (n int) {
+	if !x.IsFollow {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.IsFollow)
+	return n
+}
+
+func (x *IsFollowListReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *IsFollowListReq) sizeField1() (n int) {
+	if x.FromId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(1, x.FromId)
+	return n
+}
+
+func (x *IsFollowListReq) sizeField2() (n int) {
+	if len(x.ToId) == 0 {
+		return n
+	}
+	n += fastpb.SizeListPacked(2, len(x.ToId),
+		func(numTagOrKey, numIdxOrVal int32) int {
+			n := 0
+			n += fastpb.SizeUint64(numTagOrKey, x.ToId[numIdxOrVal])
+			return n
+		})
+	return n
+}
+
+func (x *IsFollowListResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *IsFollowListResp) sizeField1() (n int) {
+	if len(x.IsFollow) == 0 {
+		return n
+	}
+	n += fastpb.SizeListPacked(1, len(x.IsFollow),
+		func(numTagOrKey, numIdxOrVal int32) int {
+			n := 0
+			n += fastpb.SizeBool(numTagOrKey, x.IsFollow[numIdxOrVal])
+			return n
+		})
+	return n
+}
+
 var fieldIDToName_FollowActionReq = map[int32]string{
 	1: "FromId",
 	2: "ToId",
@@ -1567,4 +1889,22 @@ var fieldIDToName_HistoryMessageResp = map[int32]string{
 	1: "StatusCode",
 	2: "StatusMsg",
 	3: "MessageList",
+}
+
+var fieldIDToName_IsFollowReq = map[int32]string{
+	1: "FromId",
+	2: "ToId",
+}
+
+var fieldIDToName_IsFollowResp = map[int32]string{
+	1: "IsFollow",
+}
+
+var fieldIDToName_IsFollowListReq = map[int32]string{
+	1: "FromId",
+	2: "ToId",
+}
+
+var fieldIDToName_IsFollowListResp = map[int32]string{
+	1: "IsFollow",
 }

@@ -17,6 +17,8 @@ type Client interface {
 	FriendList(ctx context.Context, Req *userRelationPb.FriendListReq, callOptions ...callopt.Option) (r *userRelationPb.FriendListResp, err error)
 	SendMessage(ctx context.Context, Req *userRelationPb.SendMessageReq, callOptions ...callopt.Option) (r *userRelationPb.SendMessageResp, err error)
 	HistoryMessage(ctx context.Context, Req *userRelationPb.HistoryMessageReq, callOptions ...callopt.Option) (r *userRelationPb.HistoryMessageResp, err error)
+	IsFollow(ctx context.Context, Req *userRelationPb.IsFollowReq, callOptions ...callopt.Option) (r *userRelationPb.IsFollowResp, err error)
+	IsFollowList(ctx context.Context, Req *userRelationPb.IsFollowListReq, callOptions ...callopt.Option) (r *userRelationPb.IsFollowListResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -76,4 +78,14 @@ func (p *kUserRelationClient) SendMessage(ctx context.Context, Req *userRelation
 func (p *kUserRelationClient) HistoryMessage(ctx context.Context, Req *userRelationPb.HistoryMessageReq, callOptions ...callopt.Option) (r *userRelationPb.HistoryMessageResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.HistoryMessage(ctx, Req)
+}
+
+func (p *kUserRelationClient) IsFollow(ctx context.Context, Req *userRelationPb.IsFollowReq, callOptions ...callopt.Option) (r *userRelationPb.IsFollowResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.IsFollow(ctx, Req)
+}
+
+func (p *kUserRelationClient) IsFollowList(ctx context.Context, Req *userRelationPb.IsFollowListReq, callOptions ...callopt.Option) (r *userRelationPb.IsFollowListResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.IsFollowList(ctx, Req)
 }

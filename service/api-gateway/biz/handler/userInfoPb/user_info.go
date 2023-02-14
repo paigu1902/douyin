@@ -14,6 +14,19 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
+type User struct {
+	Id            uint64 `json:"id"`
+	Name          string `json:"name"`
+	FollowCount   int64  `json:"follow_count"`
+	FollowerCount int64  `json:"follower_count"`
+	IsFollow      bool   `json:"is_follow"`
+}
+type InfoResp struct {
+	StatusCode int32  `json:"status_code"`
+	StatusMsg  string `json:"status_msg"`
+	User       User   `json:"user"`
+}
+
 func LoginMethod(ctx context.Context, c *app.RequestContext) {
 	r, err := resolver.NewDefaultNacosResolver()
 	if err != nil {
@@ -22,7 +35,7 @@ func LoginMethod(ctx context.Context, c *app.RequestContext) {
 	newClient := userinfo.MustNewClient(
 		"userInfoImpl",
 		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*3),
+		client.WithRPCTimeout(time.Second*5),
 	)
 	var req userInfoPb.LoginReq
 	err = c.BindAndValidate(&req)
@@ -32,13 +45,10 @@ func LoginMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	resp, err := newClient.Login(context.Background(), &userInfoPb.LoginReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
-		log.Fatal(err)
+		c.String(400, err.Error())
+		return
 	}
 	log.Println("resp", resp)
-
-	// 你可以修改整个函数的逻辑，而不仅仅局限于当前模板
-	//resp.StatusMsg = "ok" // 添加的逻辑
-
 	c.JSON(200, resp)
 
 }
@@ -61,12 +71,40 @@ func RegisterMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	resp, err := newClient.Register(context.Background(), &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
-		log.Fatal(err)
+		c.String(400, err.Error())
+		return
 	}
 	log.Println("resp", resp)
-
-	// 你可以修改整个函数的逻辑，而不仅仅局限于当前模板
-	//resp.StatusMsg = "ok" // 添加的逻辑
-
 	c.JSON(200, resp)
+}
+
+func InfoMethod(ctx context.Context, c *app.RequestContext) {
+	// TODO:构建一个结构体来承接传来的resp，需要优化
+	inforesp := new(InfoResp)
+	r, err := resolver.NewDefaultNacosResolver()
+	if err != nil {
+		panic(err)
+	}
+	newClient := userinfo.MustNewClient(
+		"userInfoImpl",
+		client.WithResolver(r),
+		client.WithRPCTimeout(time.Second*3),
+	)
+	var req userInfoPb.UserInfoReq
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+	resp, err := newClient.Info(context.Background(), &userInfoPb.UserInfoReq{UserId: req.UserId, Token: req.Token})
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+	userDetail := User{Id: resp.GetUser().GetUserId(), Name: resp.GetUser().GetUserName(), FollowerCount: resp.GetUser().GetFollowerCount(), FollowCount: resp.GetUser().GetFollowCount(), IsFollow: resp.GetUser().GetIsFollow()}
+	inforesp.StatusCode = resp.GetStatusCode()
+	inforesp.StatusMsg = resp.GetStatusMsg()
+	inforesp.User = userDetail
+	log.Println("resp", inforesp)
+	c.JSON(200, inforesp)
 }

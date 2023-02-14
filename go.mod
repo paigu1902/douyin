@@ -8,8 +8,9 @@ require (
 	github.com/cloudwego/kitex v0.4.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.8.2
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/kitex-contrib/registry-nacos v0.0.1
+	github.com/nacos-group/nacos-sdk-go v1.1.4
+	github.com/redis/go-redis/v9 v9.0.2
 	github.com/swaggo/swag v1.8.9
 	google.golang.org/protobuf v1.28.1
 	gorm.io/driver/mysql v1.4.5
@@ -27,7 +28,7 @@ require (
 	github.com/bytedance/go-tagexpr/v2 v2.9.6 // indirect
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6 // indirect
 	github.com/bytedance/sonic v1.7.0 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/chenzhuoyu/iasm v0.0.0-20220818063314-28c361dae733 // indirect
 	github.com/choleraehyq/pid v0.0.15 // indirect
@@ -45,11 +46,13 @@ require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.11.1 // indirect
+	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/goccy/go-json v0.9.11 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/pprof v0.0.0-20220608213341-c488b8fa1db3 // indirect
 	github.com/henrylee2cn/ameda v1.5.1 // indirect
+	github.com/hertz-contrib/registry/nacos v0.0.0-20230207051619-7ff71fed629c // indirect
 	github.com/jhump/protoreflect v1.8.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -62,7 +65,6 @@ require (
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/nacos-group/nacos-sdk-go v1.1.4 // indirect
 	github.com/nyaruka/phonenumbers v1.1.5 // indirect
 	github.com/oleiade/lane v1.0.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b // indirect
