@@ -1,10 +1,13 @@
 package logic
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
 	"paigu1902/douyin/common/models"
+	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
+	"paigu1902/douyin/service/rpc-user-relation/client"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 )
 
@@ -72,7 +75,32 @@ func IsFollow(req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowRes
 	return resp, nil
 }
 
-func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
+func IsFollowList(ctx context.Context, req *userRelationPb.IsFollowListReq) (resp *userRelationPb.IsFollowListResp, err error) {
+	resp = new(userRelationPb.IsFollowListResp)
+	relations := make([]models.Relation, 0)
+	err = models.DB.Where("(from_id = ? AND to_id IN ?", req.FromId, req.ToId).Find(relations).Error
+	if err != nil {
+		return nil, err
+	}
+	relationMap := make(map[uint64]struct{}, 0)
+	for _, v := range relations {
+		relationMap[v.ToId] = struct{}{}
+	}
+
+	res := make([]bool, len(req.ToId))
+	for i, v := range req.ToId {
+		if _, ok := relationMap[v]; ok == true {
+			res[i] = true
+		} else {
+			res[i] = false
+		}
+	}
+
+	resp.IsFollow = res
+	return resp, nil
+}
+
+func FollowAction(ctx context.Context, req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
 	resp = new(userRelationPb.FollowActionResp)
 	if req.FromId == req.ToId {
 		resp.StatusCode = 1
@@ -84,7 +112,10 @@ func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.Fol
 			if err := tx.Create(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Error; err != nil {
 				return err
 			}
-
+			_, err2 := client.UserInfoClient.ActionDB(ctx, &userInfoPb.ActionDBReq{FromId: req.FromId, ToId: req.ToId, Type: 1})
+			if err2 != nil {
+				return err2
+			}
 			return nil
 		})
 		if err != nil {
@@ -98,7 +129,10 @@ func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.Fol
 			if err := tx.Where(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Delete(&models.Relation{}).Error; err != nil {
 				return err
 			}
-
+			_, err2 := client.UserInfoClient.ActionDB(ctx, &userInfoPb.ActionDBReq{FromId: req.FromId, ToId: req.ToId, Type: 0})
+			if err2 != nil {
+				return err2
+			}
 			return nil
 		})
 		if err != nil {
