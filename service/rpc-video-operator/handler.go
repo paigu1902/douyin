@@ -150,7 +150,7 @@ func extractCover(playUrl string) (string, error) {
 
 // PublishList implements the VideoOperatorImpl interface.
 func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorPb.PublishListReq) (resp *videoOperatorPb.PublishListResp, err error) {
-	// TODO: Your code here...
+	//1. 根据user_id,获取author的信息
 	r, err := resolver.NewDefaultNacosResolver()
 	if err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 		}
 		return resp, nil
 	}
-
+	// 2.根据author信息，查询发布的视频
 	var videoList []models.VideoInfo
 	err = models.GetVideoListByAuthorId(authorInfo.GetUser().GetUserId(), &videoList)
 	if err != nil {
@@ -231,7 +231,6 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 
 // VideoList implements the VideoOperatorImpl interface.
 func (s *VideoOperatorImpl) VideoList(ctx context.Context, req *videoOperatorPb.VideoListReq) (resp *videoOperatorPb.VideoListResp, err error) {
-	// TODO: Your code here...
 	videoIdList := req.GetVideoId()
 	var videos []models.VideoInfo
 	err = models.GetVideosByIds(videoIdList, &videos)
@@ -243,8 +242,19 @@ func (s *VideoOperatorImpl) VideoList(ctx context.Context, req *videoOperatorPb.
 		return resp, nil
 	}
 	var videoList []*videoOperatorPb.Video
-	for _, v := range videoList {
-		videoList = append(videoList, v)
+	for _, v := range videos {
+		videoList = append(videoList, &videoOperatorPb.Video{
+			Id:            uint64(v.ID),
+			CoverUrl:      v.CoverUrl,
+			PlayUrl:       v.PlayUrl,
+			CommentCount:  v.CommentCount,
+			FavoriteCount: v.FavoriteCount,
+			Title:         v.Title,
+			IsFavorite:    false,
+			Author: &videoOperatorPb.User{
+				Id: v.AuthorId,
+			},
+		})
 	}
 	resp = &videoOperatorPb.VideoListResp{
 		StatusCode: 0,
