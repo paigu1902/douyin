@@ -54,5 +54,5 @@ func (s *UserRelationImpl) IsFollow(ctx context.Context, req *userRelationPb.IsF
 // IsFollowList implements the UserRelationImpl interface.
 func (s *UserRelationImpl) IsFollowList(ctx context.Context, req *userRelationPb.IsFollowListReq) (resp *userRelationPb.IsFollowListResp, err error) {
 	// TODO: Your code here...
-	return
+	return logic.IsFollowList(ctx, req)
 }

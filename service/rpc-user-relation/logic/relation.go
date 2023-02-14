@@ -75,6 +75,31 @@ func IsFollow(req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowRes
 	return resp, nil
 }
 
+func IsFollowList(ctx context.Context, req *userRelationPb.IsFollowListReq) (resp *userRelationPb.IsFollowListResp, err error) {
+	resp = new(userRelationPb.IsFollowListResp)
+	relations := make([]models.Relation, 0)
+	err = models.DB.Where("(from_id = ? AND to_id IN ?", req.FromId, req.ToId).Find(relations).Error
+	if err != nil {
+		return nil, err
+	}
+	relationMap := make(map[uint64]struct{}, 0)
+	for _, v := range relations {
+		relationMap[v.ToId] = struct{}{}
+	}
+
+	res := make([]bool, len(req.ToId))
+	for i, v := range req.ToId {
+		if _, ok := relationMap[v]; ok == true {
+			res[i] = true
+		} else {
+			res[i] = false
+		}
+	}
+
+	resp.IsFollow = res
+	return resp, nil
+}
+
 func FollowAction(ctx context.Context, req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
 	resp = new(userRelationPb.FollowActionResp)
 	if req.FromId == req.ToId {
