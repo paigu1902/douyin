@@ -45,7 +45,8 @@ func LoginMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	resp, err := newClient.Login(context.Background(), &userInfoPb.LoginReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
-		log.Fatal(err)
+		c.String(400, err.Error())
+		return
 	}
 	log.Println("resp", resp)
 	c.JSON(200, resp)
@@ -70,7 +71,8 @@ func RegisterMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	resp, err := newClient.Register(context.Background(), &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
-		log.Fatal(err)
+		c.String(400, err.Error())
+		return
 	}
 	log.Println("resp", resp)
 	c.JSON(200, resp)
@@ -96,7 +98,8 @@ func InfoMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	resp, err := newClient.Info(context.Background(), &userInfoPb.UserInfoReq{UserId: req.UserId, Token: req.Token})
 	if err != nil {
-		log.Fatal(err)
+		c.String(400, err.Error())
+		return
 	}
 	userDetail := User{Id: resp.GetUser().GetUserId(), Name: resp.GetUser().GetUserName(), FollowerCount: resp.GetUser().GetFollowerCount(), FollowCount: resp.GetUser().GetFollowCount(), IsFollow: resp.GetUser().GetIsFollow()}
 	inforesp.StatusCode = resp.GetStatusCode()

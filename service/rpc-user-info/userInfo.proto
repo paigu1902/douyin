@@ -59,10 +59,22 @@ message actionDBResp {
   int32 status_code = 1; //状态码，0-成功，其他值-失败
   string status_msg = 2; //返回状态描述
 }
+
+message BatchUserReq {
+  repeated uint64 batchids = 1; //批量id切片
+  uint64 fromid = 2; //请求id
+}
+
+message BtachUserResp{
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated User batchusers = 3; //批量用户信息
+}
 service UserInfo {
   //-----------------------user-----------------------
   rpc Register(RegisterReq) returns (RegisterResp);
   rpc Login(LoginReq) returns (LoginResp);
   rpc Info(UserInfoReq) returns (UserInfoResp);
   rpc ActionDB(actionDBReq) returns (actionDBResp);
+  rpc BatchInfo(BatchUserReq) returns (BtachUserResp);
 }

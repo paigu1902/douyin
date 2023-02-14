@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"math/rand"
+	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
@@ -93,19 +94,18 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 
 func Actcion(fromId uint64, toId uint64, actionType string) error {
 	var err error
-	err = models.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
-	err = models.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
+	err = cache.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
+	err = cache.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
 	if err != nil {
 		return errors.New("删除缓存失败")
 	}
 	defer func() {
 		go func() {
 			time.Sleep(time.Second * 3)
-			err = models.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
-			err = models.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
+			err = cache.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
+			err = cache.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
 		}()
 	}()
-
 	err = models.DB.Transaction(func(tx *gorm.DB) error {
 		// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
 		if err := tx.Model(&models.UserInfo{}).Where("id", fromId).Update("follow_count", gorm.Expr("follow_count"+actionType+"?", 1)).Error; err != nil {
@@ -118,7 +118,6 @@ func Actcion(fromId uint64, toId uint64, actionType string) error {
 		// 返回 nil 提交事务
 		return nil
 	})
-
 	return err
 }
 
@@ -128,12 +127,13 @@ func InfoRDB(ctx context.Context, userId uint64, token string) (*models.UserInfo
 	userClaim, _ := utils.AnalyseToken(token)
 	fromId := uint64(userClaim.ID)
 	// TODO：需要改造成nacos解析格式
-	client, err := userrelation.NewClient("UserRelationImpl", client.WithHostPorts("0.0.0.0:8888"))
+	// 不需要吧？走grpc协议，直接访问rpc请求，速度更快
+	client, err := userrelation.NewClient("UserRelationImpl", client.WithHostPorts("0.0.0.0:50052"))
 	isFollowResp, err := client.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: userId}, callopt.WithRPCTimeout(3*time.Second))
 	if err != nil {
 		return &userinfo, false, err
 	}
-	userCache, err := models.RDB.Do(context.Background(), "get", userId).Text()
+	userCache, err := cache.RDB.Do(context.Background(), "get", userId).Text()
 	if err == nil {
 		err := json.Unmarshal([]byte(userCache), &userinfo)
 		if err == nil {
@@ -142,7 +142,7 @@ func InfoRDB(ctx context.Context, userId uint64, token string) (*models.UserInfo
 	}
 	err = models.DB.Where("id = ?", userId).First(&userinfo).Error
 	u, _ := json.Marshal(userinfo)
-	err = models.RDB.Do(ctx, "setex", userinfo.ID, 1000, string(u)).Err()
+	err = cache.RDB.Do(ctx, "setex", userinfo.ID, 1000, string(u)).Err()
 	if err != nil {
 		return &userinfo, isFollowResp.GetIsFollow(), errors.New("写入异常")
 	}
@@ -165,4 +165,51 @@ func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoP
 		return nil, err
 	}
 	return &userInfoPb.ActionDBResp{StatusCode: 1, StatusMsg: "成功"}, nil
+}
+
+func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInfoPb.BtachUserResp, err error) {
+	isfollows := make(map[uint64]bool)
+	resp = new(userInfoPb.BtachUserResp)
+	batchIds := req.Batchids
+	var userinfo userInfoPb.User
+	var limitids []uint64
+	var userinfors []*models.UserInfo
+	client, err := userrelation.NewClient("UserRelationImpl", client.WithHostPorts("0.0.0.0:50052"))
+	for _, id := range batchIds {
+		u, err := cache.RDB.Do(ctx, "get", strconv.Itoa(int(id))).Text()
+		isfollowresp, err := client.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: req.Fromid, ToId: id})
+		isfollows[id] = isfollowresp.GetIsFollow()
+		if err == nil {
+			err := json.Unmarshal([]byte(u), &userinfo)
+			if err == nil {
+				resp.Batchusers = append(resp.Batchusers, &userInfoPb.User{
+					UserId:        userinfo.GetUserId(),
+					UserName:      userinfo.GetUserName(),
+					FollowCount:   userinfo.GetFollowCount(),
+					FollowerCount: userinfo.GetFollowerCount(),
+					IsFollow:      isfollows[id],
+				})
+				continue
+			}
+		}
+		limitids = append(limitids, id)
+	}
+	err = models.DB.Where("id IN ?", limitids).Find(&userinfors).Error
+	for _, user := range userinfors {
+		u, _ := json.Marshal(user)
+		err = cache.RDB.Do(ctx, "setex", user.ID, 1000, string(u)).Err()
+		if err != nil {
+			return resp, errors.New("异常")
+		}
+		userdetail := &userInfoPb.User{
+			UserId:        uint64(user.ID),
+			UserName:      user.UserName,
+			FollowCount:   user.FollowCount,
+			FollowerCount: user.FollowedCount,
+			IsFollow:      isfollows[uint64(user.ID)],
+		}
+		resp.Batchusers = append(resp.Batchusers, userdetail)
+	}
+	log.Println("resp", resp)
+	return resp, nil
 }

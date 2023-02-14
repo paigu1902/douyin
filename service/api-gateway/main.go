@@ -4,21 +4,47 @@ package main
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/hertz-contrib/registry/nacos"
+	"github.com/nacos-group/nacos-sdk-go/clients"
+	"github.com/nacos-group/nacos-sdk-go/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/vo"
 	"paigu1902/douyin/service/api-gateway/router"
 )
 
 func main() {
-	// TODO:暂时没有研究hertz将网关也注册上去
-	svr := server.New(
-		server.WithHostPorts(":3002"),
-		//server.WithRegistry(r),
-	)
-	router.Register(svr)
-	//v1 := svr.Group("/v1")
-	//v1.POST("/login", userInfo.LoginMethod)
-	//v1.POST("/register", userInfo.RegisterMethod)
-	//v2 := svr.Group("/v2")
-	//v2.Use(middlewares.AuthUserCheck())
-	//v2.GET("/info", userInfo.InfoMethod)
-	svr.Spin()
+	sc := []constant.ServerConfig{
+		*constant.NewServerConfig("127.0.0.1", 8848),
+	}
+	cc := constant.ClientConfig{
+		NamespaceId:         "", //命名空间
+		TimeoutMs:           5000,
+		NotLoadCacheAtStart: true,
+		LogDir:              "/tmp/nacos/log",
+		CacheDir:            "/tmp/nacos/cache",
+		LogLevel:            "info",
+	}
+
+	cli, err := clients.NewNamingClient(
+		vo.NacosClientParam{
+			ClientConfig:  &cc,
+			ServerConfigs: sc,
+		})
+	if err != nil {
+		panic(err)
+	}
+	addr := "127.0.0.1:3002"
+	r := nacos.NewNacosRegistry(cli)
+	h := server.Default(
+		server.WithHostPorts(addr),
+		server.WithRegistry(r, &registry.Info{
+			ServiceName: "gateway",
+			Addr:        utils.NewNetAddr("tcp", addr),
+			Weight:      10,
+			Tags:        nil,
+		}))
+
+	router.Register(h)
+	h.Spin()
 }
