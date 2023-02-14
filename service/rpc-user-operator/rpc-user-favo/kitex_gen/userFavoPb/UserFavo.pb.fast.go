@@ -29,11 +29,6 @@ func (x *FavoActionReq) FastRead(buf []byte, _type int8, number int32) (offset i
 		if err != nil {
 			goto ReadFieldError
 		}
-	case 4:
-		offset, err = x.fastReadField4(buf, _type)
-		if err != nil {
-			goto ReadFieldError
-		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -53,16 +48,11 @@ func (x *FavoActionReq) fastReadField1(buf []byte, _type int8) (offset int, err 
 }
 
 func (x *FavoActionReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.Token, offset, err = fastpb.ReadString(buf, _type)
-	return offset, err
-}
-
-func (x *FavoActionReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
 	x.VideoId, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
-func (x *FavoActionReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+func (x *FavoActionReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
 	x.Type, offset, err = fastpb.ReadInt32(buf, _type)
 	return offset, err
 }
@@ -109,11 +99,6 @@ func (x *FavoListReq) FastRead(buf []byte, _type int8, number int32) (offset int
 		if err != nil {
 			goto ReadFieldError
 		}
-	case 2:
-		offset, err = x.fastReadField2(buf, _type)
-		if err != nil {
-			goto ReadFieldError
-		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -129,11 +114,6 @@ ReadFieldError:
 
 func (x *FavoListReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
 	x.UserId, offset, err = fastpb.ReadInt64(buf, _type)
-	return offset, err
-}
-
-func (x *FavoListReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.Token, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -359,7 +339,6 @@ func (x *FavoActionReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
-	offset += x.fastWriteField4(buf[offset:])
 	return offset
 }
 
@@ -372,26 +351,18 @@ func (x *FavoActionReq) fastWriteField1(buf []byte) (offset int) {
 }
 
 func (x *FavoActionReq) fastWriteField2(buf []byte) (offset int) {
-	if x.Token == "" {
+	if x.VideoId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 2, x.Token)
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.VideoId)
 	return offset
 }
 
 func (x *FavoActionReq) fastWriteField3(buf []byte) (offset int) {
-	if x.VideoId == 0 {
-		return offset
-	}
-	offset += fastpb.WriteInt64(buf[offset:], 3, x.VideoId)
-	return offset
-}
-
-func (x *FavoActionReq) fastWriteField4(buf []byte) (offset int) {
 	if x.Type == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt32(buf[offset:], 4, x.Type)
+	offset += fastpb.WriteInt32(buf[offset:], 3, x.Type)
 	return offset
 }
 
@@ -425,7 +396,6 @@ func (x *FavoListReq) FastWrite(buf []byte) (offset int) {
 		return offset
 	}
 	offset += x.fastWriteField1(buf[offset:])
-	offset += x.fastWriteField2(buf[offset:])
 	return offset
 }
 
@@ -434,14 +404,6 @@ func (x *FavoListReq) fastWriteField1(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteInt64(buf[offset:], 1, x.UserId)
-	return offset
-}
-
-func (x *FavoListReq) fastWriteField2(buf []byte) (offset int) {
-	if x.Token == "" {
-		return offset
-	}
-	offset += fastpb.WriteString(buf[offset:], 2, x.Token)
 	return offset
 }
 
@@ -617,7 +579,6 @@ func (x *FavoActionReq) Size() (n int) {
 	n += x.sizeField1()
 	n += x.sizeField2()
 	n += x.sizeField3()
-	n += x.sizeField4()
 	return n
 }
 
@@ -630,26 +591,18 @@ func (x *FavoActionReq) sizeField1() (n int) {
 }
 
 func (x *FavoActionReq) sizeField2() (n int) {
-	if x.Token == "" {
+	if x.VideoId == 0 {
 		return n
 	}
-	n += fastpb.SizeString(2, x.Token)
+	n += fastpb.SizeInt64(2, x.VideoId)
 	return n
 }
 
 func (x *FavoActionReq) sizeField3() (n int) {
-	if x.VideoId == 0 {
-		return n
-	}
-	n += fastpb.SizeInt64(3, x.VideoId)
-	return n
-}
-
-func (x *FavoActionReq) sizeField4() (n int) {
 	if x.Type == 0 {
 		return n
 	}
-	n += fastpb.SizeInt32(4, x.Type)
+	n += fastpb.SizeInt32(3, x.Type)
 	return n
 }
 
@@ -683,7 +636,6 @@ func (x *FavoListReq) Size() (n int) {
 		return n
 	}
 	n += x.sizeField1()
-	n += x.sizeField2()
 	return n
 }
 
@@ -692,14 +644,6 @@ func (x *FavoListReq) sizeField1() (n int) {
 		return n
 	}
 	n += fastpb.SizeInt64(1, x.UserId)
-	return n
-}
-
-func (x *FavoListReq) sizeField2() (n int) {
-	if x.Token == "" {
-		return n
-	}
-	n += fastpb.SizeString(2, x.Token)
 	return n
 }
 
@@ -870,9 +814,8 @@ func (x *User) sizeField5() (n int) {
 
 var fieldIDToName_FavoActionReq = map[int32]string{
 	1: "UserId",
-	2: "Token",
-	3: "VideoId",
-	4: "Type",
+	2: "VideoId",
+	3: "Type",
 }
 
 var fieldIDToName_FavoActionResp = map[int32]string{
@@ -882,7 +825,6 @@ var fieldIDToName_FavoActionResp = map[int32]string{
 
 var fieldIDToName_FavoListReq = map[int32]string{
 	1: "UserId",
-	2: "Token",
 }
 
 var fieldIDToName_FavoListResp = map[int32]string{

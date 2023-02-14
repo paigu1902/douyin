@@ -9,9 +9,8 @@ option go_package = "userFavoPb";
 // ------------------------------------
 message FavoActionReq{
     int64 userId = 1; // 用户id
-    string token = 2; // 用户鉴权token
-    int64 videoId = 3; // 视频id
-    int32 type = 4; // 1-点赞，2-取消点赞
+    int64 videoId = 2; // 视频id
+    int32 type = 3; // 1-点赞，2-取消点赞
 }
 
 message FavoActionResp {
@@ -21,7 +20,6 @@ message FavoActionResp {
 
 message FavoListReq{
     int64 userId = 1; // 用户id
-    string token = 2; // 用户鉴权token
 }
 
 message FavoListResp {

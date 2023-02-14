@@ -3,8 +3,8 @@
 package userfavorpc
 
 import (
+	userFavoPb "douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	server "github.com/cloudwego/kitex/server"
-	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 )
 
 // NewInvoker creates a server.Invoker with the given handler and options.

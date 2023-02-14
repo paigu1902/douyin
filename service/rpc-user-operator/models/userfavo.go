@@ -6,6 +6,8 @@ import (
 	"log"
 )
 
+var DB *gorm.DB
+
 type UserLike struct {
 	gorm.Model
 	UserId   int64  `gorm:"not null;default:0"` //用户id
@@ -24,14 +26,14 @@ func GetLikeUserId(videoId int64) ([]int64, error) {
 	err := DB.Model(&UserLike{}).Where("VideoId = ? and Status = ?", videoId, 1).
 		Pluck("UserId", &LikeUserId).Error
 	if err != nil {
-        if err.Error() == "record not found" {
-            log.Println("The video hasn't been liked.")
-            return nil, err
-        } else {
-		    log.Println(err.Error())
-		    return nil, errors.New("Get LikeUserId Failed")
-        }
-    } else {
+		if err.Error() == "record not found" {
+			log.Println("The video hasn't been liked.")
+			return nil, err
+		} else {
+			log.Println(err.Error())
+			return nil, errors.New("Get LikeUserId Failed")
+		}
+	} else {
 		return LikeUserId, nil
 	}
 }
@@ -42,14 +44,14 @@ func GetLikeVideoId(userId int64) ([]int64, error) {
 	err := DB.Model(&UserLike{}).Where("UserId = ? and Status = ?", videoId, 1).
 		Pluck("VideoId", &LikeVideoId).Error
 	if err != nil {
-        if err.Error() == "record not found" {
-            log.Println("The user hasn't liked any video.")
-            return nil, err
-        } else {
-		    log.Println(err.Error())
-		    return nil, errors.New("Get LikeVideoId Failed")
-        }
-    } else {
+		if err.Error() == "record not found" {
+			log.Println("The user hasn't liked any video.")
+			return nil, err
+		} else {
+			log.Println(err.Error())
+			return nil, errors.New("Get LikeVideoId Failed")
+		}
+	} else {
 		return LikeVideoId, nil
 	}
 }
@@ -60,14 +62,14 @@ func GetLikeRecord(userId int64, videoId int64) (UserLike, error) {
 	err := DB.Model(&UserLike{}).Where("UserId = ? and VideoId = ?", userId, videoId).
 		First(&likeRecord).Error
 	if err != nil {
-        if err.Error() == "record not found" {
-            log.Println("The user hasn't like this video.")
-            return nil, err
-        } else {
-            log.Println(err.Error())
-		    return nil, errors.New("Get LikeRecord Failed")
-	    }
-    } else {
+		if err.Error() == "record not found" {
+			log.Println("The user hasn't like this video.")
+			return nil, err
+		} else {
+			log.Println(err.Error())
+			return nil, errors.New("Get LikeRecord Failed")
+		}
+	} else {
 		return likeRecord, nil
 	}
 }
@@ -86,7 +88,7 @@ func UpdateLikeStatus(userId int64, videoId int64, status int32) error {
 
 // 创建点赞记录
 func CreateLikeRecord(userId int64, videoId int64) error {
-	likeRecord := UserLike{UserId: userId, VideoId: videoId, Status:1}
+	likeRecord := UserLike{UserId: userId, VideoId: videoId, Status: 1}
 	err := DB.Model(&UserLike{}).Create(&likeRecord).Error
 	if err != nil {
 		log.Println(err.Error())
@@ -95,3 +97,4 @@ func CreateLikeRecord(userId int64, videoId int64) error {
 		return nil
 	}
 }
+

@@ -4,9 +4,9 @@ package userfavorpc
 
 import (
 	"context"
+	userFavoPb "douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	client "github.com/cloudwego/kitex/client"
 	callopt "github.com/cloudwego/kitex/client/callopt"
-	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 )
 
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
