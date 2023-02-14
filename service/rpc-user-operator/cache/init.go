@@ -10,17 +10,16 @@ var RdbFavoVideo *redis.Client //key:VideoId,value:UserId
 func InitRedis() {
 	RdbFavoUser = redis.NewClient(
 		&redis.Options{
-			//待定
+			//TODO
 			Addr:     "0.0.0.0",
 			Password: "",
 			DB:       0,
 		})
 	RdbFavoVideo = redis.NewClient(
 		&redis.Options{
-			//待定
+			//TODO
 			Addr:     "0.0.0.0",
 			Password: "",
 			DB:       0,
 		})
 }
-

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"paigu1902/douyin/service/rpc-user-operator/cache"
 	"paigu1902/douyin/service/rpc-user-operator/models"
+	"paigu1902/douyin/service/rpc-user-operator/rabbitmq"
 	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	"strconv"
 	"strings"
@@ -46,9 +47,9 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 	video := fmt.Sprintf("%s", req.VideoId)
 	msg := strings.Builder{}
 	msg.WriteString(user)
-	msg.WriteString("-")
+	msg.WriteString(" ")
 	msg.WriteString((video))
-	if req.Type == 1 {	//点赞操作
+	if req.Type == 1 { //点赞操作
 		ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
 		if err != nil {
 			return nil, err
@@ -58,7 +59,6 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 			if err != nil {
 				return nil, err
 			} else { //为避免脏数据 仅当cache操作成功后再操作MySQL
-				//TODO
 				//mq优化
 				rabbitmq.RmqFavoAdd.Publish(msg.String())
 			}
@@ -69,13 +69,13 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 				return nil, err
 			}
 			//设置数据有效期
-			_, errT := cache.RdbFavoUser.Expire((context.Background(), user, time.Duration(30)*time.Second).Result()
-			if errT !=nil {
+			_, errT := cache.RdbFavoUser.Expire(context.Background(), user, time.Duration(30)*time.Second).Result()
+			if errT != nil {
 				cache.RdbFavoUser.Del(context.Background(), user)
 				return nil, errT
 			}
 			//查询MySQL原有视频信息 加入cache
-			videoIdList, err := models.GetLikeVideoId(req.UserId)
+			videoIdList, err := models.GetFavoVideoId(req.UserId)
 			if err != nil {
 				return nil, err
 			}
@@ -92,12 +92,11 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 				cache.RdbFavoUser.Del(context.Background(), user)
 				return nil, errA
 			} else {
-				//TODO
 				//mq优化
-				rabbitmq.RmqLikeAdd.Publish(msg.String())
+				rabbitmq.RmqFavoAdd.Publish(msg.String())
 			}
 		}
-	} else {	//取消点赞
+	} else { //取消点赞
 		extU, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
 		if err != nil {
 			return nil, err
@@ -107,7 +106,6 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 			if err != nil {
 				return nil, err
 			} else { //为避免脏数据 仅当cache操作成功后再操作MySQL
-				//TODO
 				//mq优化
 				rabbitmq.RmqFavoDel.Publish(msg.String())
 			}
@@ -118,13 +116,13 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 				return nil, err
 			}
 			//设置数据有效期
-			_, errT := cache.RdbFavoUser.Expire((context.Background(), user, time.Duration(30)*time.Second).Result()
-			if errT !=nil {
+			_, errT := cache.RdbFavoUser.Expire(context.Background(), user, time.Duration(30)*time.Second).Result()
+			if errT != nil {
 				cache.RdbFavoUser.Del(context.Background(), user)
 				return nil, errT
 			}
 			//查询MySQL原有视频信息 加入cache
-			videoIdList, err := models.GetLikeVideoId(req.UserId)
+			videoIdList, err := models.GetFavoVideoId(req.UserId)
 			if err != nil {
 				return nil, err
 			}
@@ -141,9 +139,8 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 				cache.RdbFavoUser.Del(context.Background(), user)
 				return nil, errD
 			} else {
-				//TODO
 				//mq优化
-				rabbitmq.RmqLikeDel.Publish(msg.String())
+				rabbitmq.RmqFavoDel.Publish(msg.String())
 			}
 		}
 		//查询 RdbFavoVideo key:VideoId-value:UderId 中是否缓存此信息
@@ -163,13 +160,13 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 				return nil, err
 			}
 			//设置数据有效期
-			_, errT := cache.RdbFavoVideo.Expire((context.Background(), user, time.Duration(30)*time.Second).Result()
-			if errT !=nil {
+			_, errT := cache.RdbFavoVideo.Expire(context.Background(), user, time.Duration(30)*time.Second).Result()
+			if errT != nil {
 				cache.RdbFavoVideo.Del(context.Background(), video)
 				return nil, errT
 			}
 			//查询MySQL原有视频信息 加入cache
-			UserIdList, err := models.GetLikeUserId(req.UserId)
+			UserIdList, err := models.GetFavoUserId(req.UserId)
 			if err != nil {
 				return nil, err
 			}
@@ -198,7 +195,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 	//	if req.UserId == 0 {
 	//		return nil, errors.New("Parameter Error")
 	//	}
-	//	videoIdList, err := models.GetLikeVideoId(req.UserId)
+	//	videoIdList, err := models.GetFavoVideoId(req.UserId)
 	//	if err != nil {
 	//		if err.Error() == "record not found" {
 	//			return nil, err
@@ -219,7 +216,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 		}
 		//用协程实现高并发查询Video类型对象并返回
 		favoVideoList := new([]userFavoPb.Video)
-		size := len(videoIdList) - 1	//去除DefaultValue
+		size := len(videoIdList) - 1 //去除DefaultValue
 		var wg sync.WaitGroup
 		wg.Add(size)
 		for i := 0; i <= size; i++ {
@@ -244,7 +241,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 			return nil, errT
 		}
 		//查询MySQL原有视频信息 加入cache
-		videoIdList, errV := models.GetLikeVideoId(req.UserId)
+		videoIdList, errV := models.GetFavoVideoId(req.UserId)
 		if errV != nil {
 			cache.RdbFavoUser.Del(context.Background(), user)
 			return nil, errV
@@ -258,7 +255,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 		}
 		//用协程实现高并发查询Video类型对象并返回
 		favoVideoList := new([]userFavoPb.Video)
-		size := len(videoIdList) - 1	//去除DefaultValue
+		size := len(videoIdList) - 1 //去除DefaultValue
 		var wg sync.WaitGroup
 		wg.Add(size)
 		for i := 0; i <= size; i++ {
@@ -272,6 +269,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 	}
 }
 
+// TODO
 // 在用户点赞视频列表中添加视频对象
 func (s *UserFavoRpcImpl) AddVideo(userId int64, videoId int64, favoVideoList *[]userFavoPb.Video, wg *sync.WaitGroup) (bool, error) {
 	defer wg.Done()
@@ -323,7 +321,7 @@ func (s *UserFavoRpcImpl) FavoStatus(userId int64, videoId int64) (bool, error) 
 				return false, errT
 			}
 			//将数据查询结果加入cache
-			videoList, err := models.GetLikeVideoId(userId)
+			videoList, err := models.GetFavoVideoId(userId)
 			if err != nil {
 				return false, err
 			}
@@ -369,7 +367,7 @@ func (s *UserFavoRpcImpl) FavoCount(videoId int64) (int64, error) {
 			return 0, errT
 		}
 		//将数据查询结果加入cache
-		userList, err := models.GetLikeUserId(videoId)
+		userList, err := models.GetFavoUserId(videoId)
 		if err != nil {
 			return 0, err
 		}
@@ -385,4 +383,3 @@ func (s *UserFavoRpcImpl) FavoCount(videoId int64) (int64, error) {
 		return res - 1, nil //减去 default value
 	}
 }
-
