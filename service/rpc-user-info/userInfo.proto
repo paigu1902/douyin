@@ -33,9 +33,9 @@ message LoginResp {
 message User {
   uint64 userId = 1; //userId
   string userName = 2; //name
-  string followCount = 3; //followCount
-  string followerCount = 4; //followerCount
-  string is_Follow = 5;
+  int64 followCount = 3; //followCount
+  int64 followerCount = 4; //followerCount
+  bool isFollow=5;//isFollow
 }
 
 message UserInfoReq {

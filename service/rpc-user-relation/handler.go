@@ -12,7 +12,7 @@ type UserRelationImpl struct{}
 // FollowAction implements the UserRelationImpl interface.
 func (s *UserRelationImpl) FollowAction(ctx context.Context, req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
 	// TODO: Your code here...
-	return logic.FollowAction(req)
+	return logic.FollowAction(ctx, req)
 }
 
 // FollowList implements the UserRelationImpl interface.

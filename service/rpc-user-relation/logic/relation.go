@@ -1,12 +1,20 @@
 package logic
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
 	"paigu1902/douyin/common/models"
+	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
+	"paigu1902/douyin/service/rpc-user-relation/client"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 )
+
+// rpc FollowAction(FollowActionReq) returns (FollowActionResp);
+// rpc FollowList(FollowListReq) returns (FollowListResp);
+// rpc FollowerList(FollowerListReq) returns (FollowerListResp);
+// rpc FriendList (FriendListReq) returns (FriendListResp);
 
 func followIds(id uint64) (ids []uint64, err error) {
 	result := make([]models.Relation, 0)
@@ -67,7 +75,7 @@ func IsFollow(req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowRes
 	return resp, nil
 }
 
-func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
+func FollowAction(ctx context.Context, req *userRelationPb.FollowActionReq) (resp *userRelationPb.FollowActionResp, err error) {
 	resp = new(userRelationPb.FollowActionResp)
 	if req.FromId == req.ToId {
 		resp.StatusCode = 1
@@ -79,7 +87,10 @@ func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.Fol
 			if err := tx.Create(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Error; err != nil {
 				return err
 			}
-
+			_, err2 := client.UserInfoClient.ActionDB(ctx, &userInfoPb.ActionDBReq{FromId: req.FromId, ToId: req.ToId, Type: 1})
+			if err2 != nil {
+				return err2
+			}
 			return nil
 		})
 		if err != nil {
@@ -93,7 +104,10 @@ func FollowAction(req *userRelationPb.FollowActionReq) (resp *userRelationPb.Fol
 			if err := tx.Where(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Delete(&models.Relation{}).Error; err != nil {
 				return err
 			}
-
+			_, err2 := client.UserInfoClient.ActionDB(ctx, &userInfoPb.ActionDBReq{FromId: req.FromId, ToId: req.ToId, Type: 0})
+			if err2 != nil {
+				return err2
+			}
 			return nil
 		})
 		if err != nil {

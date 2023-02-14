@@ -4,7 +4,7 @@ package main
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
-	userInfo "paigu1902/douyin/service/api-gateway/biz/handler/userInfoPb"
+	"paigu1902/douyin/service/api-gateway/router"
 )
 
 func main() {
@@ -12,10 +12,13 @@ func main() {
 	svr := server.New(
 		server.WithHostPorts(":3002"),
 		//server.WithRegistry(r),
-
 	)
-	v1 := svr.Group("/v1")
-	v1.GET("/login", userInfo.LoginMethod)
-	v1.GET("/register", userInfo.RegisterMethod)
+	router.Register(svr)
+	//v1 := svr.Group("/v1")
+	//v1.POST("/login", userInfo.LoginMethod)
+	//v1.POST("/register", userInfo.RegisterMethod)
+	//v2 := svr.Group("/v2")
+	//v2.Use(middlewares.AuthUserCheck())
+	//v2.GET("/info", userInfo.InfoMethod)
 	svr.Spin()
 }
