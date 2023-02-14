@@ -13,7 +13,7 @@ import (
 func main() {
 	svr := UserRelationPb.NewServer(
 		new(UserRelationImpl),
-		server.WithServiceAddr(&net.TCPAddr{Port: 50052}),
+		server.WithServiceAddr(&net.TCPAddr{Port: 50052, IP: net.IPv4(127, 0, 0, 1)}),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "userRelation"}),
 		server.WithRegistry(registry.NewNacosRegistry(nacos.Cli)),
 	)
