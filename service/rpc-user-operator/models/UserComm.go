@@ -4,18 +4,17 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"log"
-	"paigu1902/douyin/service/rpc-user-info/models"
 )
 
 var Db *gorm.DB
 
 type UserComm struct {
-	gorm.Model                 // 继承ID, 创建时间, 修改时间
-	UserName   string          `gorm:"not null;"`          // 评论者
-	VideoId    int64           `gorm:"not null"`           // 视频id
-	Status     int32           `gorm:"not null;default:1"` // 评论状态 默认1有效
-	CommText   string          `gorm:"not null"`           // 评论内容
-	User       models.UserInfo `gorm:"-"`                  //只用于前端
+	gorm.Model        // 继承ID, 创建时间, 修改时间
+	UserName   string `gorm:"not null;"`          // 评论者
+	VideoId    int64  `gorm:"not null"`           // 视频id
+	Status     int32  `gorm:"not null;default:1"` // 评论状态 默认1有效
+	CommText   string `gorm:"not null"`           // 评论内容
+	UserId     uint64 `gorm:"not null"`           //用户id
 
 }
 
@@ -29,7 +28,7 @@ func (UserComm) TableName() string {
 func GetCommentList(VideoId int64) ([]string, error) {
 	log.Println("Running-Get CommentList By VideoId: ", VideoId)
 	var CommentList []string
-	err := Db.Model(UserComm{}).Select("ID").Where("VideoId = ?", VideoId).Find(&CommentList).Error
+	err := Db.Model(UserComm{}).Select("ID").Where("VideoId = ? and Status = ?", VideoId, 1).Find(&CommentList).Error
 	if err != nil {
 		log.Println("GetCommentList: ", err)
 		return nil, err
@@ -87,4 +86,20 @@ func GetCommentsByVideo(VideoId int64) ([]UserComm, error) {
 	}
 	log.Println("Get Comment success")
 	return CommentList, nil
+}
+
+// 获取评论数量
+
+func GetCommentsNumByVideo(VideoId int64) (int64, error) {
+	log.Println("running-Get Comment by VideoId:", VideoId)
+	var count int64
+	err := Db.Model(UserComm{}).Where("VideoId = ? and Status = ?", VideoId, 1).Count(&count).Error
+
+	if err != nil {
+		log.Println(err.Error())
+		log.Println("Get Comment number failed")
+		return -1, errors.New("get comment number error")
+	}
+	log.Println("Get Comment number success")
+	return count, nil
 }

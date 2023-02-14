@@ -22,8 +22,9 @@ func NewServiceInfo() *kitex.ServiceInfo {
 	serviceName := "UserCommRpc"
 	handlerType := (*UserCommPb.UserCommRpc)(nil)
 	methods := map[string]kitex.MethodInfo{
-		"InsertComment":      kitex.NewMethodInfo(insertCommentHandler, newInsertCommentArgs, newInsertCommentResult, false),
-		"GetCommentsByVideo": kitex.NewMethodInfo(getCommentsByVideoHandler, newGetCommentsByVideoArgs, newGetCommentsByVideoResult, false),
+		"CommentAction":           kitex.NewMethodInfo(commentActionHandler, newCommentActionArgs, newCommentActionResult, false),
+		"GetCommentsByVideo":      kitex.NewMethodInfo(getCommentsByVideoHandler, newGetCommentsByVideoArgs, newGetCommentsByVideoResult, false),
+		"GetCommentNumberByVideo": kitex.NewMethodInfo(getCommentNumberByVideoHandler, newGetCommentNumberByVideoArgs, newGetCommentNumberByVideoResult, false),
 	}
 	extra := map[string]interface{}{
 		"PackageName": "UserCommPb",
@@ -39,7 +40,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 	return svcInfo
 }
 
-func insertCommentHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+func commentActionHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	switch s := arg.(type) {
 	case *streaming.Args:
 		st := s.Stream
@@ -47,64 +48,64 @@ func insertCommentHandler(ctx context.Context, handler interface{}, arg, result 
 		if err := st.RecvMsg(req); err != nil {
 			return err
 		}
-		resp, err := handler.(UserCommPb.UserCommRpc).InsertComment(ctx, req)
+		resp, err := handler.(UserCommPb.UserCommRpc).CommentAction(ctx, req)
 		if err != nil {
 			return err
 		}
 		if err := st.SendMsg(resp); err != nil {
 			return err
 		}
-	case *InsertCommentArgs:
-		success, err := handler.(UserCommPb.UserCommRpc).InsertComment(ctx, s.Req)
+	case *CommentActionArgs:
+		success, err := handler.(UserCommPb.UserCommRpc).CommentAction(ctx, s.Req)
 		if err != nil {
 			return err
 		}
-		realResult := result.(*InsertCommentResult)
+		realResult := result.(*CommentActionResult)
 		realResult.Success = success
 	}
 	return nil
 }
-func newInsertCommentArgs() interface{} {
-	return &InsertCommentArgs{}
+func newCommentActionArgs() interface{} {
+	return &CommentActionArgs{}
 }
 
-func newInsertCommentResult() interface{} {
-	return &InsertCommentResult{}
+func newCommentActionResult() interface{} {
+	return &CommentActionResult{}
 }
 
-type InsertCommentArgs struct {
+type CommentActionArgs struct {
 	Req *UserCommPb.DouyinCommentActionRequest
 }
 
-func (p *InsertCommentArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+func (p *CommentActionArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
 	if !p.IsSetReq() {
 		p.Req = new(UserCommPb.DouyinCommentActionRequest)
 	}
 	return p.Req.FastRead(buf, _type, number)
 }
 
-func (p *InsertCommentArgs) FastWrite(buf []byte) (n int) {
+func (p *CommentActionArgs) FastWrite(buf []byte) (n int) {
 	if !p.IsSetReq() {
 		return 0
 	}
 	return p.Req.FastWrite(buf)
 }
 
-func (p *InsertCommentArgs) Size() (n int) {
+func (p *CommentActionArgs) Size() (n int) {
 	if !p.IsSetReq() {
 		return 0
 	}
 	return p.Req.Size()
 }
 
-func (p *InsertCommentArgs) Marshal(out []byte) ([]byte, error) {
+func (p *CommentActionArgs) Marshal(out []byte) ([]byte, error) {
 	if !p.IsSetReq() {
-		return out, fmt.Errorf("No req in InsertCommentArgs")
+		return out, fmt.Errorf("No req in CommentActionArgs")
 	}
 	return proto.Marshal(p.Req)
 }
 
-func (p *InsertCommentArgs) Unmarshal(in []byte) error {
+func (p *CommentActionArgs) Unmarshal(in []byte) error {
 	msg := new(UserCommPb.DouyinCommentActionRequest)
 	if err := proto.Unmarshal(in, msg); err != nil {
 		return err
@@ -113,54 +114,54 @@ func (p *InsertCommentArgs) Unmarshal(in []byte) error {
 	return nil
 }
 
-var InsertCommentArgs_Req_DEFAULT *UserCommPb.DouyinCommentActionRequest
+var CommentActionArgs_Req_DEFAULT *UserCommPb.DouyinCommentActionRequest
 
-func (p *InsertCommentArgs) GetReq() *UserCommPb.DouyinCommentActionRequest {
+func (p *CommentActionArgs) GetReq() *UserCommPb.DouyinCommentActionRequest {
 	if !p.IsSetReq() {
-		return InsertCommentArgs_Req_DEFAULT
+		return CommentActionArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-func (p *InsertCommentArgs) IsSetReq() bool {
+func (p *CommentActionArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-type InsertCommentResult struct {
+type CommentActionResult struct {
 	Success *UserCommPb.DouyinCommentActionResponse
 }
 
-var InsertCommentResult_Success_DEFAULT *UserCommPb.DouyinCommentActionResponse
+var CommentActionResult_Success_DEFAULT *UserCommPb.DouyinCommentActionResponse
 
-func (p *InsertCommentResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+func (p *CommentActionResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
 	if !p.IsSetSuccess() {
 		p.Success = new(UserCommPb.DouyinCommentActionResponse)
 	}
 	return p.Success.FastRead(buf, _type, number)
 }
 
-func (p *InsertCommentResult) FastWrite(buf []byte) (n int) {
+func (p *CommentActionResult) FastWrite(buf []byte) (n int) {
 	if !p.IsSetSuccess() {
 		return 0
 	}
 	return p.Success.FastWrite(buf)
 }
 
-func (p *InsertCommentResult) Size() (n int) {
+func (p *CommentActionResult) Size() (n int) {
 	if !p.IsSetSuccess() {
 		return 0
 	}
 	return p.Success.Size()
 }
 
-func (p *InsertCommentResult) Marshal(out []byte) ([]byte, error) {
+func (p *CommentActionResult) Marshal(out []byte) ([]byte, error) {
 	if !p.IsSetSuccess() {
-		return out, fmt.Errorf("No req in InsertCommentResult")
+		return out, fmt.Errorf("No req in CommentActionResult")
 	}
 	return proto.Marshal(p.Success)
 }
 
-func (p *InsertCommentResult) Unmarshal(in []byte) error {
+func (p *CommentActionResult) Unmarshal(in []byte) error {
 	msg := new(UserCommPb.DouyinCommentActionResponse)
 	if err := proto.Unmarshal(in, msg); err != nil {
 		return err
@@ -169,18 +170,18 @@ func (p *InsertCommentResult) Unmarshal(in []byte) error {
 	return nil
 }
 
-func (p *InsertCommentResult) GetSuccess() *UserCommPb.DouyinCommentActionResponse {
+func (p *CommentActionResult) GetSuccess() *UserCommPb.DouyinCommentActionResponse {
 	if !p.IsSetSuccess() {
-		return InsertCommentResult_Success_DEFAULT
+		return CommentActionResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-func (p *InsertCommentResult) SetSuccess(x interface{}) {
+func (p *CommentActionResult) SetSuccess(x interface{}) {
 	p.Success = x.(*UserCommPb.DouyinCommentActionResponse)
 }
 
-func (p *InsertCommentResult) IsSetSuccess() bool {
+func (p *CommentActionResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
@@ -329,6 +330,151 @@ func (p *GetCommentsByVideoResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
+func getCommentNumberByVideoHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(UserCommPb.DouyinCommentNumberRequest)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(UserCommPb.UserCommRpc).GetCommentNumberByVideo(ctx, req)
+		if err != nil {
+			return err
+		}
+		if err := st.SendMsg(resp); err != nil {
+			return err
+		}
+	case *GetCommentNumberByVideoArgs:
+		success, err := handler.(UserCommPb.UserCommRpc).GetCommentNumberByVideo(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetCommentNumberByVideoResult)
+		realResult.Success = success
+	}
+	return nil
+}
+func newGetCommentNumberByVideoArgs() interface{} {
+	return &GetCommentNumberByVideoArgs{}
+}
+
+func newGetCommentNumberByVideoResult() interface{} {
+	return &GetCommentNumberByVideoResult{}
+}
+
+type GetCommentNumberByVideoArgs struct {
+	Req *UserCommPb.DouyinCommentNumberRequest
+}
+
+func (p *GetCommentNumberByVideoArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(UserCommPb.DouyinCommentNumberRequest)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *GetCommentNumberByVideoArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *GetCommentNumberByVideoArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *GetCommentNumberByVideoArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, fmt.Errorf("No req in GetCommentNumberByVideoArgs")
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetCommentNumberByVideoArgs) Unmarshal(in []byte) error {
+	msg := new(UserCommPb.DouyinCommentNumberRequest)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetCommentNumberByVideoArgs_Req_DEFAULT *UserCommPb.DouyinCommentNumberRequest
+
+func (p *GetCommentNumberByVideoArgs) GetReq() *UserCommPb.DouyinCommentNumberRequest {
+	if !p.IsSetReq() {
+		return GetCommentNumberByVideoArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetCommentNumberByVideoArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+type GetCommentNumberByVideoResult struct {
+	Success *UserCommPb.DouyinCommentNumberResponse
+}
+
+var GetCommentNumberByVideoResult_Success_DEFAULT *UserCommPb.DouyinCommentNumberResponse
+
+func (p *GetCommentNumberByVideoResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(UserCommPb.DouyinCommentNumberResponse)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *GetCommentNumberByVideoResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *GetCommentNumberByVideoResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *GetCommentNumberByVideoResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, fmt.Errorf("No req in GetCommentNumberByVideoResult")
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetCommentNumberByVideoResult) Unmarshal(in []byte) error {
+	msg := new(UserCommPb.DouyinCommentNumberResponse)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetCommentNumberByVideoResult) GetSuccess() *UserCommPb.DouyinCommentNumberResponse {
+	if !p.IsSetSuccess() {
+		return GetCommentNumberByVideoResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetCommentNumberByVideoResult) SetSuccess(x interface{}) {
+	p.Success = x.(*UserCommPb.DouyinCommentNumberResponse)
+}
+
+func (p *GetCommentNumberByVideoResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -339,11 +485,11 @@ func newServiceClient(c client.Client) *kClient {
 	}
 }
 
-func (p *kClient) InsertComment(ctx context.Context, Req *UserCommPb.DouyinCommentActionRequest) (r *UserCommPb.DouyinCommentActionResponse, err error) {
-	var _args InsertCommentArgs
+func (p *kClient) CommentAction(ctx context.Context, Req *UserCommPb.DouyinCommentActionRequest) (r *UserCommPb.DouyinCommentActionResponse, err error) {
+	var _args CommentActionArgs
 	_args.Req = Req
-	var _result InsertCommentResult
-	if err = p.c.Call(ctx, "InsertComment", &_args, &_result); err != nil {
+	var _result CommentActionResult
+	if err = p.c.Call(ctx, "CommentAction", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
@@ -354,6 +500,16 @@ func (p *kClient) GetCommentsByVideo(ctx context.Context, Req *UserCommPb.Douyin
 	_args.Req = Req
 	var _result GetCommentsByVideoResult
 	if err = p.c.Call(ctx, "GetCommentsByVideo", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetCommentNumberByVideo(ctx context.Context, Req *UserCommPb.DouyinCommentNumberRequest) (r *UserCommPb.DouyinCommentNumberResponse, err error) {
+	var _args GetCommentNumberByVideoArgs
+	_args.Req = Req
+	var _result GetCommentNumberByVideoResult
+	if err = p.c.Call(ctx, "GetCommentNumberByVideo", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

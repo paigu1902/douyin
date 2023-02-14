@@ -53,7 +53,7 @@ ReadFieldError:
 }
 
 func (x *DouyinCommentActionRequest) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.Token, offset, err = fastpb.ReadString(buf, _type)
+	x.UserId, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
@@ -278,7 +278,7 @@ ReadFieldError:
 }
 
 func (x *DouyinCommentListRequest) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.Token, offset, err = fastpb.ReadString(buf, _type)
+	x.UserId, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
@@ -337,6 +337,86 @@ func (x *DouyinCommentListResponse) fastReadField3(buf []byte, _type int8) (offs
 	return offset, nil
 }
 
+func (x *DouyinCommentNumberRequest) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_DouyinCommentNumberRequest[number], err)
+}
+
+func (x *DouyinCommentNumberRequest) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.UserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *DouyinCommentNumberRequest) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.VideoId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *DouyinCommentNumberResponse) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_DouyinCommentNumberResponse[number], err)
+}
+
+func (x *DouyinCommentNumberResponse) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.StatusCode, offset, err = fastpb.ReadInt32(buf, _type)
+	return offset, err
+}
+
+func (x *DouyinCommentNumberResponse) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.StatusMsg, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *DouyinCommentNumberResponse) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.Count, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
 func (x *DouyinCommentActionRequest) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -350,10 +430,10 @@ func (x *DouyinCommentActionRequest) FastWrite(buf []byte) (offset int) {
 }
 
 func (x *DouyinCommentActionRequest) fastWriteField1(buf []byte) (offset int) {
-	if x.Token == "" {
+	if x.UserId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 1, x.Token)
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.UserId)
 	return offset
 }
 
@@ -528,10 +608,10 @@ func (x *DouyinCommentListRequest) FastWrite(buf []byte) (offset int) {
 }
 
 func (x *DouyinCommentListRequest) fastWriteField1(buf []byte) (offset int) {
-	if x.Token == "" {
+	if x.UserId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 1, x.Token)
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.UserId)
 	return offset
 }
 
@@ -579,6 +659,65 @@ func (x *DouyinCommentListResponse) fastWriteField3(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *DouyinCommentNumberRequest) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *DouyinCommentNumberRequest) fastWriteField1(buf []byte) (offset int) {
+	if x.UserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.UserId)
+	return offset
+}
+
+func (x *DouyinCommentNumberRequest) fastWriteField2(buf []byte) (offset int) {
+	if x.VideoId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.VideoId)
+	return offset
+}
+
+func (x *DouyinCommentNumberResponse) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	return offset
+}
+
+func (x *DouyinCommentNumberResponse) fastWriteField1(buf []byte) (offset int) {
+	if x.StatusCode == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 1, x.StatusCode)
+	return offset
+}
+
+func (x *DouyinCommentNumberResponse) fastWriteField2(buf []byte) (offset int) {
+	if x.StatusMsg == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.StatusMsg)
+	return offset
+}
+
+func (x *DouyinCommentNumberResponse) fastWriteField3(buf []byte) (offset int) {
+	if x.Count == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.Count)
+	return offset
+}
+
 func (x *DouyinCommentActionRequest) Size() (n int) {
 	if x == nil {
 		return n
@@ -592,10 +731,10 @@ func (x *DouyinCommentActionRequest) Size() (n int) {
 }
 
 func (x *DouyinCommentActionRequest) sizeField1() (n int) {
-	if x.Token == "" {
+	if x.UserId == 0 {
 		return n
 	}
-	n += fastpb.SizeString(1, x.Token)
+	n += fastpb.SizeInt64(1, x.UserId)
 	return n
 }
 
@@ -770,10 +909,10 @@ func (x *DouyinCommentListRequest) Size() (n int) {
 }
 
 func (x *DouyinCommentListRequest) sizeField1() (n int) {
-	if x.Token == "" {
+	if x.UserId == 0 {
 		return n
 	}
-	n += fastpb.SizeString(1, x.Token)
+	n += fastpb.SizeInt64(1, x.UserId)
 	return n
 }
 
@@ -821,8 +960,67 @@ func (x *DouyinCommentListResponse) sizeField3() (n int) {
 	return n
 }
 
+func (x *DouyinCommentNumberRequest) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *DouyinCommentNumberRequest) sizeField1() (n int) {
+	if x.UserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.UserId)
+	return n
+}
+
+func (x *DouyinCommentNumberRequest) sizeField2() (n int) {
+	if x.VideoId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.VideoId)
+	return n
+}
+
+func (x *DouyinCommentNumberResponse) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	return n
+}
+
+func (x *DouyinCommentNumberResponse) sizeField1() (n int) {
+	if x.StatusCode == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(1, x.StatusCode)
+	return n
+}
+
+func (x *DouyinCommentNumberResponse) sizeField2() (n int) {
+	if x.StatusMsg == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.StatusMsg)
+	return n
+}
+
+func (x *DouyinCommentNumberResponse) sizeField3() (n int) {
+	if x.Count == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(3, x.Count)
+	return n
+}
+
 var fieldIDToName_DouyinCommentActionRequest = map[int32]string{
-	1: "Token",
+	1: "UserId",
 	2: "VideoId",
 	3: "ActionType",
 	4: "CommentText",
@@ -851,7 +1049,7 @@ var fieldIDToName_User = map[int32]string{
 }
 
 var fieldIDToName_DouyinCommentListRequest = map[int32]string{
-	1: "Token",
+	1: "UserId",
 	2: "VideoId",
 }
 
@@ -859,4 +1057,15 @@ var fieldIDToName_DouyinCommentListResponse = map[int32]string{
 	1: "StatusCode",
 	2: "StatusMsg",
 	3: "CommentList",
+}
+
+var fieldIDToName_DouyinCommentNumberRequest = map[int32]string{
+	1: "UserId",
+	2: "VideoId",
+}
+
+var fieldIDToName_DouyinCommentNumberResponse = map[int32]string{
+	1: "StatusCode",
+	2: "StatusMsg",
+	3: "Count",
 }

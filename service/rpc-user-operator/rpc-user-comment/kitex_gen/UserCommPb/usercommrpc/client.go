@@ -11,8 +11,9 @@ import (
 
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
-	InsertComment(ctx context.Context, Req *UserCommPb.DouyinCommentActionRequest, callOptions ...callopt.Option) (r *UserCommPb.DouyinCommentActionResponse, err error)
+	CommentAction(ctx context.Context, Req *UserCommPb.DouyinCommentActionRequest, callOptions ...callopt.Option) (r *UserCommPb.DouyinCommentActionResponse, err error)
 	GetCommentsByVideo(ctx context.Context, Req *UserCommPb.DouyinCommentListRequest, callOptions ...callopt.Option) (r *UserCommPb.DouyinCommentListResponse, err error)
+	GetCommentNumberByVideo(ctx context.Context, Req *UserCommPb.DouyinCommentNumberRequest, callOptions ...callopt.Option) (r *UserCommPb.DouyinCommentNumberResponse, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -44,12 +45,17 @@ type kUserCommRpcClient struct {
 	*kClient
 }
 
-func (p *kUserCommRpcClient) InsertComment(ctx context.Context, Req *UserCommPb.DouyinCommentActionRequest, callOptions ...callopt.Option) (r *UserCommPb.DouyinCommentActionResponse, err error) {
+func (p *kUserCommRpcClient) CommentAction(ctx context.Context, Req *UserCommPb.DouyinCommentActionRequest, callOptions ...callopt.Option) (r *UserCommPb.DouyinCommentActionResponse, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
-	return p.kClient.InsertComment(ctx, Req)
+	return p.kClient.CommentAction(ctx, Req)
 }
 
 func (p *kUserCommRpcClient) GetCommentsByVideo(ctx context.Context, Req *UserCommPb.DouyinCommentListRequest, callOptions ...callopt.Option) (r *UserCommPb.DouyinCommentListResponse, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.GetCommentsByVideo(ctx, Req)
+}
+
+func (p *kUserCommRpcClient) GetCommentNumberByVideo(ctx context.Context, Req *UserCommPb.DouyinCommentNumberRequest, callOptions ...callopt.Option) (r *UserCommPb.DouyinCommentNumberResponse, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetCommentNumberByVideo(ctx, Req)
 }

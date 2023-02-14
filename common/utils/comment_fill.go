@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	UserInfo "paigu1902/douyin/service/rpc-user-info/models"
 	"paigu1902/douyin/service/rpc-user-operator/models"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
 )
@@ -14,12 +15,16 @@ func FillCommentListFields(comments []models.UserComm) ([]*UserCommPb.Comment, e
 	}
 
 	for _, v := range comments {
-		user := &v.User
+		userid := v.UserId
+		user := UserInfo.FindUserByID(uint64(userid))
 		commentListPb = append(commentListPb, &UserCommPb.Comment{
 			Id: int64(v.ID),
 			User: &UserCommPb.User{
-				Id:   int64(user.ID),
-				Name: user.UserName,
+				Id:            int64(user.ID),
+				Name:          user.UserName,
+				FollowCount:   user.FollowCount,
+				FollowerCount: user.FollowedCount,
+				IsFollow:      false,
 			},
 			Content:    v.CommText,
 			CreateDate: v.CreatedAt.Format("1-2"),

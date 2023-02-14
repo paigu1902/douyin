@@ -45,6 +45,6 @@ message douyin_comment_list_response {
 
 
 service UserCommRpc{
-  rpc InsertComment(douyin_comment_action_request) returns (douyin_comment_action_response); //评论操作
+  rpc CommentAction(douyin_comment_action_request) returns (douyin_comment_action_response); //评论操作
   rpc GetCommentsByVideo(douyin_comment_list_request) returns (douyin_comment_list_response); // 返回评论列表
 }
