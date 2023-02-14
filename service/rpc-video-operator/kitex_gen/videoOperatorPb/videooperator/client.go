@@ -13,6 +13,8 @@ import (
 type Client interface {
 	Upload(ctx context.Context, Req *videoOperatorPb.VideoUploadReq, callOptions ...callopt.Option) (r *videoOperatorPb.VideoUploadResp, err error)
 	Feed(ctx context.Context, Req *videoOperatorPb.FeedReq, callOptions ...callopt.Option) (r *videoOperatorPb.FeedResp, err error)
+	PublishList(ctx context.Context, Req *videoOperatorPb.PublishListReq, callOptions ...callopt.Option) (r *videoOperatorPb.PublishListResp, err error)
+	VideoList(ctx context.Context, Req *videoOperatorPb.VideoListReq, callOptions ...callopt.Option) (r *videoOperatorPb.VideoListResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -52,4 +54,14 @@ func (p *kVideoOperatorClient) Upload(ctx context.Context, Req *videoOperatorPb.
 func (p *kVideoOperatorClient) Feed(ctx context.Context, Req *videoOperatorPb.FeedReq, callOptions ...callopt.Option) (r *videoOperatorPb.FeedResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.Feed(ctx, Req)
+}
+
+func (p *kVideoOperatorClient) PublishList(ctx context.Context, Req *videoOperatorPb.PublishListReq, callOptions ...callopt.Option) (r *videoOperatorPb.PublishListResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.PublishList(ctx, Req)
+}
+
+func (p *kVideoOperatorClient) VideoList(ctx context.Context, Req *videoOperatorPb.VideoListReq, callOptions ...callopt.Option) (r *videoOperatorPb.VideoListResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.VideoList(ctx, Req)
 }

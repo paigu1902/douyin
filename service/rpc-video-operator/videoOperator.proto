@@ -28,7 +28,7 @@ message FeedResp {
 }
 
 message Video {
-  int64 id = 1; // 视频唯一标识
+  uint64 id = 1; // 视频唯一标识
   User author = 2; // 视频作者信息
   string play_url = 3; // 视频播放地址
   string cover_url = 4; // 视频封面地址
@@ -39,15 +39,38 @@ message Video {
 }
 
 message User {
-  int64 id = 1; // 用户id
+  uint64 id = 1; // 用户id
   string name = 2; // 用户名称
   int64 follow_count = 3; // 关注总数
   int64 follower_count = 4; // 粉丝总数
   bool is_follow = 5; // true-已关注，false-未关注
 }
 
+message PublishListReq{
+  string token = 1;//用户鉴权token
+  string user_id = 2;//用户id
+}
+
+message PublishListResp{
+  int32 status_code = 1;//状态码，0-成功，其他值-失败
+  string status_msg = 2;//返回状态描述
+  repeated Video video_list = 3;//视频列表
+}
+
+message VideoListReq{
+  repeated uint64 video_id = 1;//用户id
+}
+
+message VideoListResp{
+  int32 status_code = 1;//状态码，0-成功，其他值-失败
+  string status_msg = 2;//返回状态描述
+  repeated Video video_list = 3;//视频列表
+}
+
 service VideoOperator {
   rpc Upload(VideoUploadReq) returns (VideoUploadResp);
   rpc Feed(FeedReq) returns (FeedResp);
+  rpc PublishList(PublishListReq) returns (PublishListResp);
+  rpc VideoList(VideoListReq) returns (VideoListResp);//查询video_id列表
 }
 

@@ -13,6 +13,7 @@ import (
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
 	videoOperatorPb "paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -52,7 +53,7 @@ func (s *VideoOperatorImpl) Upload(ctx context.Context, req *videoOperatorPb.Vid
 		return nil, err
 	}
 	info := models.VideoInfo{
-		AuthorId: int64(claims.ID),
+		AuthorId: uint64(claims.ID),
 		Title:    title,
 		PlayUrl:  playUrl,
 		CoverUrl: coverUrl,
@@ -102,12 +103,12 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 		author := videoOperatorPb.User{
 			Id:            videoInfo.AuthorId,
 			Name:          authorInfo.User.UserName,
-			FollowCount:   authorInfo.User.FollowCount,
-			FollowerCount: authorInfo.User.FollowerCount,
+			FollowCount:   followCount,
+			FollowerCount: followerCount,
 			IsFollow:      false,
 		}
 		videoRespList = append(videoRespList, &videoOperatorPb.Video{
-			Id:            int64(videoInfo.ID),
+			Id:            uint64(videoInfo.ID),
 			Author:        &author,
 			PlayUrl:       videoInfo.PlayUrl,
 			CoverUrl:      videoInfo.CoverUrl,
@@ -141,4 +142,120 @@ func extractCover(playUrl string) (string, error) {
 		return "", err
 	}
 	return coverTmpPath, nil
+}
+
+// PublishList implements the VideoOperatorImpl interface.
+func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorPb.PublishListReq) (resp *videoOperatorPb.PublishListResp, err error) {
+	//1. 根据user_id,获取author的信息
+	r, err := resolver.NewDefaultNacosResolver()
+	if err != nil {
+		return nil, err
+	}
+	userInfoClient := userinfo.MustNewClient(
+		"userInfoImpl",
+		client.WithResolver(r),
+		client.WithRPCTimeout(time.Second*5),
+	)
+
+	//token := req.Token
+	authorId, err := strconv.ParseUint(req.UserId, 10, 64)
+	if err != nil {
+		resp = &videoOperatorPb.PublishListResp{
+			StatusCode: 1,
+			StatusMsg:  "user_id 格式错误",
+		}
+		return resp, nil
+	}
+
+	authorInfo, err := userInfoClient.Info(ctx, &userInfoPb.UserInfoReq{UserId: authorId})
+	if err != nil {
+		resp = &videoOperatorPb.PublishListResp{
+			StatusCode: 1,
+			StatusMsg:  "author_id 错误",
+		}
+		return resp, nil
+	}
+	// 2.根据author信息，查询发布的视频
+	var videoList []models.VideoInfo
+	err = models.GetVideoListByAuthorId(authorInfo.GetUser().GetUserId(), &videoList)
+	if err != nil {
+		return nil, err
+	}
+	followCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowCount(), 10, 64)
+	followerCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowerCount(), 10, 64)
+	relationClient := userrelation.MustNewClient("userRelationImpl",
+		client.WithResolver(r),
+		client.WithRPCTimeout(time.Second*5),
+	)
+	//TODO: 需要判断用户是否关注该作者
+	userId := 0
+	isFollowResp, err := relationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
+		FromId: uint64(userId),
+		ToId:   authorId,
+	})
+	//TODO: 需要判断isFollowResp 是否返回fail,但是resp中尚未有错误提示
+	if err != nil {
+		return nil, err
+	}
+	author := &videoOperatorPb.User{
+		Id:            authorInfo.User.GetUserId(),
+		FollowCount:   followCnt,
+		FollowerCount: followerCnt,
+		IsFollow:      isFollowResp.IsFollow,
+	}
+
+	var videos []*videoOperatorPb.Video
+	for _, v := range videoList {
+		//TODO: isFavourite字段需要后续，根据userFavo获取
+		videos = append(videos, &videoOperatorPb.Video{
+			Id:            uint64(v.ID),
+			Author:        author,
+			PlayUrl:       v.PlayUrl,
+			CoverUrl:      v.CoverUrl,
+			CommentCount:  v.CommentCount,
+			FavoriteCount: v.FavoriteCount,
+			Title:         v.Title,
+		})
+	}
+	resp = &videoOperatorPb.PublishListResp{
+		StatusCode: 0,
+		StatusMsg:  "成功",
+		VideoList:  videos,
+	}
+	return resp, nil
+}
+
+// VideoList implements the VideoOperatorImpl interface.
+func (s *VideoOperatorImpl) VideoList(ctx context.Context, req *videoOperatorPb.VideoListReq) (resp *videoOperatorPb.VideoListResp, err error) {
+	videoIdList := req.GetVideoId()
+	var videos []models.VideoInfo
+	err = models.GetVideosByIds(videoIdList, &videos)
+	if err != nil {
+		resp = &videoOperatorPb.VideoListResp{
+			StatusCode: 1,
+			StatusMsg:  "失败",
+		}
+		return resp, nil
+	}
+	var videoList []*videoOperatorPb.Video
+	for _, v := range videos {
+		videoList = append(videoList, &videoOperatorPb.Video{
+			Id:            uint64(v.ID),
+			CoverUrl:      v.CoverUrl,
+			PlayUrl:       v.PlayUrl,
+			CommentCount:  v.CommentCount,
+			FavoriteCount: v.FavoriteCount,
+			Title:         v.Title,
+			IsFavorite:    false,
+			Author: &videoOperatorPb.User{
+				Id: v.AuthorId,
+			},
+		})
+	}
+	resp = &videoOperatorPb.VideoListResp{
+		StatusCode: 0,
+		StatusMsg:  "成功",
+		VideoList:  videoList,
+	}
+	return resp, nil
 }
