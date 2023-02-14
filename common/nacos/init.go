@@ -1,14 +1,15 @@
 package nacos
 
 import (
-	kitexRegistry "github.com/cloudwego/kitex/pkg/registry"
-	"github.com/kitex-contrib/registry-nacos/registry"
 	"github.com/nacos-group/nacos-sdk-go/clients"
+	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
 )
 
-func KitexServerRegistry() kitexRegistry.Registry {
+var Cli naming_client.INamingClient
+
+func init() {
 	sc := []constant.ServerConfig{
 		*constant.NewServerConfig("127.0.0.1", 8848),
 	}
@@ -24,7 +25,7 @@ func KitexServerRegistry() kitexRegistry.Registry {
 		// more ...
 	}
 
-	r, err := clients.NewNamingClient(
+	c, err := clients.NewNamingClient(
 		vo.NacosClientParam{
 			ClientConfig:  &cc,
 			ServerConfigs: sc,
@@ -33,5 +34,5 @@ func KitexServerRegistry() kitexRegistry.Registry {
 	if err != nil {
 		panic(err)
 	}
-	return registry.NewNacosRegistry(r)
+	Cli = c
 }
