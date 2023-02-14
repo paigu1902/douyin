@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type VideoInfo struct {
 	gorm.Model
-	AuthorId      int64  `gorm:"not null"`           //作者Id
+	AuthorId      uint64 `gorm:"not null"`           //作者Id
 	Title         string `gorm:"not null"`           //视频标题
 	PlayUrl       string `gorm:"not null"`           //视频地址
 	CoverUrl      string `gorm:"not null"`           //封面地址
@@ -26,4 +26,12 @@ func UpdateVideoInfo(info *VideoInfo) error {
 
 func GetVideoInfo(latestTime string, limit int, videoList *[]VideoInfo) error {
 	return DB.Where("deleted_at is NULL and created_at<=?", latestTime).Limit(limit).Find(videoList).Order("created_at").Error
+}
+
+func GetVideoListByAuthorId(authorId uint64, videoList *[]VideoInfo) error {
+	return DB.Where("author_id=?", authorId).Find(videoList).Order("created_at").Error
+}
+
+func GetVideosByIds(videoIdList []uint64, videoList *[]VideoInfo) error {
+	return DB.Find(videoList, videoIdList).Error
 }
