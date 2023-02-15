@@ -16,10 +16,13 @@ func main() {
 		panic(err)
 	}
 	ctx := context.Background()
-	action, err := c.FollowAction(ctx, &userRelationPb.FollowActionReq{FromId: 10, ToId: 13, Type: "0"})
+	action, err := c.FollowAction(ctx, &userRelationPb.FollowActionReq{FromId: 11, ToId: 13, Type: "1"})
+	defer ctx.Done()
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	fmt.Println(action.GetStatusMsg())
 	fmt.Println(action.GetStatusCode())
+
 }

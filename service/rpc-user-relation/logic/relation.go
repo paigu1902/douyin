@@ -4,17 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cloudwego/kitex/tool/internal_pkg/log"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-relation/client"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
+	"strconv"
+	"time"
 )
-
-// rpc FollowAction(FollowActionReq) returns (FollowActionResp);
-// rpc FollowList(FollowListReq) returns (FollowListResp);
-// rpc FollowerList(FollowerListReq) returns (FollowerListResp);
-// rpc FriendList (FriendListReq) returns (FriendListResp);
 
 func followIds(id uint64) (ids []uint64, err error) {
 	result := make([]models.Relation, 0)
@@ -55,36 +55,75 @@ func isFollow(followMap map[uint64]struct{}, id uint64) bool {
 	return ok
 }
 
-func IsFollow(req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowResp, err error) {
+func IsFollow(ctx context.Context, req *userRelationPb.IsFollowReq) (resp *userRelationPb.IsFollowResp, err error) {
 	resp = new(userRelationPb.IsFollowResp)
 	if req.FromId == req.ToId {
 		resp.IsFollow = false
 		return resp, nil
 	}
 	result := new(models.Relation)
-
+	redisKey := "UserRelation:" + strconv.FormatUint(req.FromId, 10) + "-" + strconv.FormatUint(req.ToId, 10)
+	text, err := cache.RDB.Get(ctx, redisKey).Result()
+	if err == nil {
+		if text == "1" {
+			resp.IsFollow = true
+			return resp, nil
+		} else {
+			resp.IsFollow = false
+			return resp, nil
+		}
+	}
 	err = models.DB.Where(&models.Relation{FromId: req.FromId, ToId: req.ToId}).First(result).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		err = cache.RDB.Do(ctx, "setex", redisKey, 1000, "0").Err()
+		if err != nil {
+			log.Warn("写缓存异常")
+		}
 		resp.IsFollow = false
 		return resp, nil
 	} else if err != nil {
 		return nil, err
 	}
 
+	err = cache.RDB.Do(ctx, "setex", redisKey, 1000, "1").Err()
+	if err != nil {
+		log.Warn("写缓存异常")
+	}
 	resp.IsFollow = true
 	return resp, nil
 }
 
 func IsFollowList(ctx context.Context, req *userRelationPb.IsFollowListReq) (resp *userRelationPb.IsFollowListResp, err error) {
 	resp = new(userRelationPb.IsFollowListResp)
+	relationMap := make(map[uint64]struct{}, 0)
+	idInDb := make([]uint64, 0)
+	for _, v := range req.ToId {
+		redisKey := "UserRelation:" + strconv.FormatUint(req.FromId, 10) + "-" + strconv.FormatUint(v, 10)
+		text, err := cache.RDB.Get(ctx, redisKey).Result()
+		if err == nil {
+			if text == "1" {
+				relationMap[v] = struct{}{}
+			}
+		} else if err == redis.Nil {
+			idInDb = append(idInDb, v)
+		} else {
+			log.Warn("读取缓存错误")
+		}
+	}
+
 	relations := make([]models.Relation, 0)
-	err = models.DB.Where("(from_id = ? AND to_id IN ?", req.FromId, req.ToId).Find(relations).Error
+	err = models.DB.Where("(from_id = ? AND to_id IN ?", req.FromId, idInDb).Find(relations).Error
 	if err != nil {
 		return nil, err
 	}
-	relationMap := make(map[uint64]struct{}, 0)
+
 	for _, v := range relations {
 		relationMap[v.ToId] = struct{}{}
+		redisKey := "UserRelation:" + strconv.FormatUint(req.FromId, 10) + "-" + strconv.FormatUint(v.ToId, 10)
+		err = cache.RDB.Set(ctx, redisKey, "1", 1000).Err()
+		if err != nil {
+			log.Warn("写入缓存失败")
+		}
 	}
 
 	res := make([]bool, len(req.ToId))
@@ -107,6 +146,14 @@ func FollowAction(ctx context.Context, req *userRelationPb.FollowActionReq) (res
 		resp.StatusMsg = "关注失败"
 		return resp, err
 	}
+	redisKey := "UserRelation:" + strconv.FormatUint(req.FromId, 10) + "-" + strconv.FormatUint(req.ToId, 10)
+	cache.RDB.Del(ctx, redisKey)
+	defer func() {
+		go func() {
+			time.Sleep(time.Second)
+			cache.RDB.Del(ctx, redisKey)
+		}()
+	}()
 	if req.Type == "1" {
 		err = models.DB.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Create(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Error; err != nil {
