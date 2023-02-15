@@ -4,6 +4,7 @@ package router
 
 import (
 	userInfo "paigu1902/douyin/service/api-gateway/biz/handler/userInfoPb"
+	videoOperator "paigu1902/douyin/service/api-gateway/biz/handler/videoOperatorPb"
 	"paigu1902/douyin/service/api-gateway/middlewares"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -17,4 +18,7 @@ func Register(r *server.Hertz) {
 	v2 := r.Group("/v2")
 	v2.Use(middlewares.AuthUserCheck())
 	v2.GET("/info", userInfo.InfoMethod)
+
+	v3 := r.Group("/v3")
+	v3.POST("/action", videoOperator.UploadMethod)
 }
