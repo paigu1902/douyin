@@ -90,18 +90,21 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 	return resp, nil
 }
 
-func Actcion(fromId uint64, toId uint64, actionType string) error {
+func Actcion(ctx context.Context, fromId uint64, toId uint64, actionType string) error {
 	var err error
-	err = cache.RDB.Del(context.Background(), "UserInfo:"+strconv.Itoa(int(fromId))).Err()
-	err = cache.RDB.Del(context.Background(), "UserInfo:"+strconv.Itoa(int(toId))).Err()
+	err = cache.RDB.Del(ctx, "UserInfo:"+strconv.Itoa(int(fromId))).Err()
 	if err != nil {
-		return errors.New("删除缓存失败")
+		return errors.New(string(fromId) + "删除缓存失败")
+	}
+	err = cache.RDB.Del(ctx, "UserInfo:"+strconv.Itoa(int(toId))).Err()
+	if err != nil {
+		return errors.New(string(toId) + "删除缓存失败")
 	}
 	defer func() {
 		go func() {
 			time.Sleep(time.Second * 3)
-			err = cache.RDB.Del(context.Background(), "UserInfo:"+strconv.Itoa(int(fromId))).Err()
-			err = cache.RDB.Del(context.Background(), "UserInfo:"+strconv.Itoa(int(toId))).Err()
+			cache.RDB.Del(ctx, "UserInfo:"+strconv.Itoa(int(fromId)))
+			cache.RDB.Del(ctx, "UserInfo:"+strconv.Itoa(int(toId)))
 		}()
 	}()
 	err = models.DB.Transaction(func(tx *gorm.DB) error {
@@ -153,9 +156,9 @@ func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoP
 	actionType := req.Type
 	switch actionType {
 	case 0:
-		err = Actcion(fromId, toId, "-")
+		err = Actcion(ctx, fromId, toId, "-")
 	case 1:
-		err = Actcion(fromId, toId, "+")
+		err = Actcion(ctx, fromId, toId, "+")
 	default:
 		return nil, errors.New("用户操作异常")
 	}
