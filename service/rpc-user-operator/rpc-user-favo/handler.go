@@ -17,30 +17,7 @@ type UserFavoRpcImpl struct{}
 // 执行点赞、取消赞操作
 // FavoAction implements the UserFavoRpcImpl interface.
 func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoActionReq) (resp *userFavoPb.FavoActionResp, err error) {
-	// TODO: Your code here...
-	//	if req.Type != 1 && req.Type != 2 || req.UserId == 0 || req.VideoId == 0 {
-	//		return nil, errors.New("Parameter Error")
-	//	}
-	//	likeRecord, err := models.GetLikeRecord(req.UserId, req.VideoId)
-	//	if err != nil {
-	//		err := models.CreateLikeRecord(req.UserId, req.VideoId)
-	//		if err != nil {
-	//			return nil, errors.New("Create LikeRecord Failed")
-	//		}
-	//	} else {
-	//		if likeRecord.Status == 0 {
-	//			err := models.UpdateLikeStatus(req.UserId, req.VideoId, 1)
-	//			if err != nil {
-	//				return nil, errors.New("Update LikeRecord Failed")
-	//			}
-	//		} else {
-	//			err := models.UpdateLikeStatus(req.UserId, req.VideoId, 0)
-	//			if err != nil {
-	//				return nil, errors.New("Update LikeRecord Failed")
-	//			}
-	//		}
-	//	}
-	//	return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Succeed"}, nil
+	// TODO: Your code here..
 	user := fmt.Sprintf("%s", req.UserId)
 	video := fmt.Sprintf("%s", req.VideoId)
 	msg := strings.Builder{}
@@ -190,27 +167,20 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 // FavoList implements the UserFavoRpcImpl interface.
 func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoListReq) (resp *userFavoPb.FavoListResp, err error) {
 	// TODO: Your code here...
-	//	if req.UserId == 0 {
-	//		return nil, errors.New("Parameter Error")
-	//	}
-	//	videoIdList, err := models.GetFavoVideoId(req.UserId)
-	//	if err != nil {
-	//		if err.Error() == "record not found" {
-	//			return nil, err
-	//		} else {
-	//			return nil, errors.New("Get VideoList Failed")
-	//		}
-	//	}
-	//	return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Succeed", VideoList: videoIdList}, nil
 	user := fmt.Sprintf("%s", req.UserId)
 	ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
 	if err != nil {
 		return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
 	}
 	if ext > 0 { //cache中存在点赞用户信息 获取视频列表
-		videoIdList, err := cache.RdbFavoUser.SMembers(context.Background(), user).Result()
+		videoIdListStr, err := cache.RdbFavoUser.SMembers(context.Background(), user).Result()
 		if err != nil {
-			return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
+		   	return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
+		}
+		var videoIdList []uint64
+		for index, str := range videoIdListStr {
+		   	id, _ := strconv.Atoi(str)
+		   	videoIdList[index] = uint64(id)
 		}
 		//调用VideoOperator
 		myReq := VideoOperator.VideoListReq{VideoId: videoIdList}
@@ -218,18 +188,6 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 		if err != nil {
 			return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
 		}
-		////用协程实现高并发查询Video类型对象并返回
-		//favoVideoList := new([]userFavoPb.Video)
-		//size := len(videoIdList) - 1 //去除DefaultValue
-		//var wg sync.WaitGroup
-		//wg.Add(size)
-		//for i := 0; i <= size; i++ {
-		//	if videoIdList[i] == -1 {
-		//		continue
-		//	}
-		//	go AddVideo(req.UserId, videoIdList[i], favoVideoList, &wg)
-		//}
-		//wg.Wait()
 		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Succeed", VideoList: myResp.videoList}, nil
 	} else { //cache中不存在用户信息 查询MySQL加入原有视频信息后更新
 		_, err := cache.RdbFavoUser.SAdd(context.Background(), user, -1).Result()
@@ -262,33 +220,9 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 		if err != nil {
 			return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
 		}
-		////用协程实现高并发查询Video类型对象并返回
-		//favoVideoList := new([]userFavoPb.Video)
-		//size := len(videoIdList) - 1 //去除DefaultValue
-		//var wg sync.WaitGroup
-		//wg.Add(size)
-		//for i := 0; i <= size; i++ {
-		//	if videoIdList[i] == -1 {
-		//		continue
-		//	}
-		//	go AddVideo(req.UserId, videoIdList[i], favoVideoList, &wg)
-		//}
-		//wg.Wait()
 		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Succeed", VideoList: myResp.videoList}, nil
 	}
 }
-
-//// TODO
-//// 在用户点赞视频列表中添加视频对象
-//func (s *UserFavoRpcImpl) AddVideo(userId int64, videoId int64, favoVideoList *[]userFavoPb.Video, wg *sync.WaitGroup) (bool, error) {
-//	defer wg.Done()
-//	video, err := GetVideo(userId, videoId)
-//	if err != nil {
-//		return false, err
-//	}
-//	*favoVideoList = append(*favoVideoList, video)
-//	return true, nil
-//}
 
 // 查询用户对某条视频的点赞状态
 func (s *UserFavoRpcImpl) FavoStatus(userId int64, videoId int64) (bool, error) {
