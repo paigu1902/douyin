@@ -126,19 +126,19 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 		userId, _ := strconv.ParseInt(params[0], 10, 64)
 		videoId, _ := strconv.ParseInt(params[1], 10, 64)
 		//操作数据库 查询点赞记录并更新
-		favoRecord, err := models.GetFavoRecord(userId, videoId)
+		favoRecord, err := models.GetFavoRecord(uint64(userId), uint64(videoId))
 		if err != nil {
 			log.Printf("Get FavoRecord Failed")
 			return
 		} else {
 			if favoRecord == (models.UserFavo{}) { // 数据库中不存在点赞记录
-				err := models.CreateFavoRecord(userId, videoId)
+				err := models.CreateFavoRecord(uint64(userId), uint64(videoId))
 				if err != nil {
 					log.Printf("Create FavoRecord Failed")
 					return
 				}
 			} else { // 数据库中存在点赞记录 更新状态为1
-				err := models.UpdateFavoStatus(userId, videoId, 1)
+				err := models.UpdateFavoStatus(uint64(userId), uint64(videoId), 1)
 				if err != nil {
 					log.Printf("Update FavoRecord Failed")
 					return
@@ -156,7 +156,7 @@ func (favo *RabbitMQ) ConsumeFavoDel(messages <-chan amqp.Delivery) {
 		userId, _ := strconv.ParseInt(params[0], 10, 64)
 		videoId, _ := strconv.ParseInt(params[1], 10, 64)
 		//操作数据库 查询点赞记录并更新
-		favoRecord, err := models.GetFavoRecord(userId, videoId)
+		favoRecord, err := models.GetFavoRecord(uint64(userId), uint64(videoId))
 		if err != nil {
 			log.Printf("Get FavoRecord Failed")
 			return
@@ -165,7 +165,7 @@ func (favo *RabbitMQ) ConsumeFavoDel(messages <-chan amqp.Delivery) {
 				log.Printf("Find FavoRecord Failed")
 				return
 			} else { // 数据库中存在点赞记录 更新状态为0
-				err := models.UpdateFavoStatus(userId, videoId, 0)
+				err := models.UpdateFavoStatus(uint64(userId), uint64(videoId), 0)
 				if err != nil {
 					log.Printf("Update FavoRecord Failed")
 					return

@@ -3,10 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
-	"paigu1902/douyin/service/rpc-user-operator/cache"
-	"paigu1902/douyin/service/rpc-user-operator/models"
-	"paigu1902/douyin/service/rpc-user-operator/rabbitmq"
-	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
+	"github.com/cloudwego/kitex/client"
+	"github.com/kitex-contrib/registry-nacos/resolver"
+	"paigu1902/douyin/common/cache"
+	"paigu1902/douyin/common/models"
+	"paigu1902/douyin/common/rabbitmq"
+	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
+	VideoOptPb "paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
+	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb/videooperator"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -175,20 +180,49 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 	if ext > 0 { //cache中存在点赞用户信息 获取视频列表
 		videoIdListStr, err := cache.RdbFavoUser.SMembers(context.Background(), user).Result()
 		if err != nil {
-		   	return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
+			return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
 		}
 		var videoIdList []uint64
 		for index, str := range videoIdListStr {
-		   	id, _ := strconv.Atoi(str)
-		   	videoIdList[index] = uint64(id)
+			id, _ := strconv.Atoi(str)
+			videoIdList[index] = uint64(id)
 		}
-		//调用VideoOperator
-		myReq := VideoOperator.VideoListReq{VideoId: videoIdList}
-		myResp, err := VideoOperator.VideoList(context.Background(), &myReq)
+		//获取videoOperator客户端
+		r, err := resolver.NewDefaultNacosResolver()
+		if err != nil {
+			return nil, err
+		}
+		videooptClient := videooperator.MustNewClient(
+			"videoOperatorImpl",
+			client.WithResolver(r),
+			client.WithRPCTimeout(time.Second*5),
+		)
+		resp, err := videooptClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
 		if err != nil {
 			return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
 		}
-		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Succeed", VideoList: myResp.videoList}, nil
+		var favoList []*userFavoPb.Video
+		for _, respVideo := range resp.VideoList {
+			author := userFavoPb.User{
+				Id:            respVideo.Author.Id,
+				Name:          respVideo.Author.Name,
+				FollowCount:   respVideo.Author.FollowCount,
+				FollowerCount: respVideo.Author.FollowerCount,
+				IsFollow:      false,
+			}
+			video := userFavoPb.Video{
+				Id:            respVideo.Id,
+				Author:        &author,
+				PlayUrl:       respVideo.PlayUrl,
+				CoverUrl:      respVideo.CoverUrl,
+				FavoriteCount: respVideo.FavoriteCount,
+				CommentCount:  respVideo.CommentCount,
+				IsFavorite:    respVideo.IsFavorite,
+				Title:         respVideo.Title,
+			}
+			favoList = append(favoList, &video)
+		}
+		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Success", VideoList: favoList}, err
 	} else { //cache中不存在用户信息 查询MySQL加入原有视频信息后更新
 		_, err := cache.RdbFavoUser.SAdd(context.Background(), user, -1).Result()
 		if err != nil {
@@ -214,13 +248,42 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 				return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
 			}
 		}
-		//调用VideoOperator
-		myReq := VideoOperator.VideoListReq{VideoId: videoIdList}
-		myResp, err := VideoOperator.VideoList(context.Background(), &myReq)
+		//获取videoOperator客户端
+		r, err := resolver.NewDefaultNacosResolver()
+		if err != nil {
+			return nil, err
+		}
+		videooptClient := videooperator.MustNewClient(
+			"videoOperatorImpl",
+			client.WithResolver(r),
+			client.WithRPCTimeout(time.Second*5),
+		)
+		resp, err := videooptClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
 		if err != nil {
 			return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Failed", VideoList: nil}, err
 		}
-		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Succeed", VideoList: myResp.videoList}, nil
+		var favoList []*userFavoPb.Video
+		for _, respVideo := range resp.VideoList {
+			author := userFavoPb.User{
+				Id:            respVideo.Author.Id,
+				Name:          respVideo.Author.Name,
+				FollowCount:   respVideo.Author.FollowCount,
+				FollowerCount: respVideo.Author.FollowerCount,
+				IsFollow:      false,
+			}
+			video := userFavoPb.Video{
+				Id:            respVideo.Id,
+				Author:        &author,
+				PlayUrl:       respVideo.PlayUrl,
+				CoverUrl:      respVideo.CoverUrl,
+				FavoriteCount: respVideo.FavoriteCount,
+				CommentCount:  respVideo.CommentCount,
+				IsFavorite:    respVideo.IsFavorite,
+				Title:         respVideo.Title,
+			}
+			favoList = append(favoList, &video)
+		}
+		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Success", VideoList: favoList}, err
 	}
 }
 

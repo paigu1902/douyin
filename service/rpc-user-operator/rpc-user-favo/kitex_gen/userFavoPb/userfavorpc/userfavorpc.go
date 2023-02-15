@@ -4,12 +4,12 @@ package userfavorpc
 
 import (
 	"context"
-	userFavoPb "douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	"fmt"
 	client "github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
 	streaming "github.com/cloudwego/kitex/pkg/streaming"
 	proto "google.golang.org/protobuf/proto"
+	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 )
 
 func serviceInfo() *kitex.ServiceInfo {

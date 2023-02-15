@@ -2,8 +2,8 @@
 package userfavorpc
 
 import (
-	userFavoPb "douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	server "github.com/cloudwego/kitex/server"
+	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 )
 
 // NewServer creates a server.Server with the given handler and options.

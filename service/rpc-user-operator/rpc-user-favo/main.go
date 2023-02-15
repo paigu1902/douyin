@@ -35,7 +35,7 @@ func main() {
 		},
 	)
 	if err != nil {
-		panic(err)
+		log.Println(err.Error())
 	}
 
 	svr := userFavoPb.NewServer(
