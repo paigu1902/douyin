@@ -3,13 +3,13 @@ package utils
 import (
 	"context"
 	"errors"
+	"paigu1902/douyin/common/models"
 	UserInfo "paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-info/logic"
-	"paigu1902/douyin/service/rpc-user-operator/models"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
 )
 
-func FillCommentListFields(comments []models.UserComm) ([]*UserCommPb.Comment, error) {
+func FillCommentListFields(comments []models.UserComm, videoId int64) ([]*UserCommPb.Comment, error) {
 	size := len(comments)
 	var commentListPb []*UserCommPb.Comment
 	if comments == nil || size == 0 {
@@ -19,10 +19,14 @@ func FillCommentListFields(comments []models.UserComm) ([]*UserCommPb.Comment, e
 	for _, com := range comments {
 		userids = append(userids, com.UserId)
 	}
+	var videos []models.VideoInfo
+	err := models.GetVideosByIds([]uint64{uint64(videoId)}, &videos)
+	if err != nil {
+		return commentListPb, err
+	}
 	myReq := UserInfo.BatchUserReq{
 		Batchids: userids,
-		Fromid:   uint64(comments[0].VideoId), // TODO: Find AuthorId
-		// 查找videoid的author
+		Fromid:   videos[0].AuthorId,
 	}
 	myRes, _ := logic.BatchInfo(context.Background(), &myReq)
 	for i, v := range comments {

@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"log"
+	"paigu1902/douyin/common/cache"
+	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/utils"
 	UserInfo "paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-info/logic"
-	"paigu1902/douyin/service/rpc-user-operator/models"
-	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/cache"
 	UserCommPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
 	"strconv"
 	"time"
@@ -76,10 +76,17 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 	// TODO: Your code here...
 	IDs := []uint64{uint64(req.UserId)}
 	videoId := req.VideoId
+	var videos []models.VideoInfo
+	err = models.GetVideosByIds([]uint64{uint64(videoId)}, &videos)
+	if err != nil {
+		return &UserCommPb.DouyinCommentActionResponse{
+			StatusCode: 3,
+			StatusMsg:  "GET VIDEO AUTHOR ERROR",
+		}, errors.New("VIDEO FIND Error")
+	}
 	myReq := UserInfo.BatchUserReq{
 		Batchids: IDs,
-		Fromid:   uint64((videoId)), // TODO: Find AuthorId
-		// 查找videoid的author
+		Fromid:   videos[0].AuthorId,
 	}
 	get_result, _ := logic.BatchInfo(ctx, &myReq)
 	user := get_result.Batchusers[0] // get user
@@ -89,12 +96,6 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 	commentTxt := req.CommentText
 	commentId := req.CommentId // del用
 
-	if err != nil {
-		return &UserCommPb.DouyinCommentActionResponse{
-			StatusCode: 3,
-			StatusMsg:  "USER TOKEN ERROR",
-		}, errors.New("Analyse Token Error")
-	}
 	comment := UserCommPb.Comment{
 		Id: commentId,
 		User: &UserCommPb.User{
@@ -185,7 +186,7 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 			StatusMsg:  "OTHER_ERROR",
 		}, err
 	} else {
-		respCommentList, err := utils.FillCommentListFields(commentList)
+		respCommentList, err := utils.FillCommentListFields(commentList, videoId)
 		if err != nil {
 			// 评论为空，此时应该只是提示，不报错
 			return &UserCommPb.DouyinCommentListResponse{
