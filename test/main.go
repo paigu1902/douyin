@@ -8,6 +8,7 @@ import (
 	"paigu1902/douyin/common/nacos"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userrelation"
+	"time"
 )
 
 func main() {
@@ -16,13 +17,21 @@ func main() {
 		panic(err)
 	}
 	ctx := context.Background()
-	action, err := c.FollowAction(ctx, &userRelationPb.FollowActionReq{FromId: 11, ToId: 13, Type: "1"})
 	defer ctx.Done()
+	//action, err := c.FollowAction(ctx, &userRelationPb.FollowActionReq{FromId: 19, ToId: 13, Type: "1"})
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//fmt.Println(action.GetStatusMsg())
+	//fmt.Println(action.GetStatusCode())
+
+	follow, err := c.IsFollowList(ctx, &userRelationPb.IsFollowListReq{FromId: 12, ToId: []uint64{13, 11, 12}})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(action.GetStatusMsg())
-	fmt.Println(action.GetStatusCode())
 
+	fmt.Println(follow.GetIsFollow())
+	time.Sleep(time.Second)
 }

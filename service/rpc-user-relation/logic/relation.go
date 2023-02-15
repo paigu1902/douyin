@@ -75,7 +75,7 @@ func IsFollow(ctx context.Context, req *userRelationPb.IsFollowReq) (resp *userR
 	}
 	err = models.DB.Where(&models.Relation{FromId: req.FromId, ToId: req.ToId}).First(result).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		err = cache.RDB.Do(ctx, "setex", redisKey, 1000, "0").Err()
+		err = cache.RDB.Set(ctx, redisKey, "0", time.Second*1000).Err()
 		if err != nil {
 			log.Warn("写缓存异常")
 		}
@@ -95,14 +95,14 @@ func IsFollow(ctx context.Context, req *userRelationPb.IsFollowReq) (resp *userR
 
 func IsFollowList(ctx context.Context, req *userRelationPb.IsFollowListReq) (resp *userRelationPb.IsFollowListResp, err error) {
 	resp = new(userRelationPb.IsFollowListResp)
-	relationMap := make(map[uint64]struct{}, 0)
+	relationSet := make(map[uint64]struct{}, 0)
 	idInDb := make([]uint64, 0)
 	for _, v := range req.ToId {
 		redisKey := "UserRelation:" + strconv.FormatUint(req.FromId, 10) + "-" + strconv.FormatUint(v, 10)
 		text, err := cache.RDB.Get(ctx, redisKey).Result()
 		if err == nil {
 			if text == "1" {
-				relationMap[v] = struct{}{}
+				relationSet[v] = struct{}{}
 			}
 		} else if err == redis.Nil {
 			idInDb = append(idInDb, v)
@@ -111,24 +111,34 @@ func IsFollowList(ctx context.Context, req *userRelationPb.IsFollowListReq) (res
 		}
 	}
 
-	relations := make([]models.Relation, 0)
-	err = models.DB.Where("(from_id = ? AND to_id IN ?", req.FromId, idInDb).Find(relations).Error
+	var relations []models.Relation
+	err = models.DB.Where("from_id = ?", req.FromId).Where("to_id IN ?", idInDb).Find(&relations).Error
 	if err != nil {
 		return nil, err
 	}
 
 	for _, v := range relations {
-		relationMap[v.ToId] = struct{}{}
+		relationSet[v.ToId] = struct{}{}
 		redisKey := "UserRelation:" + strconv.FormatUint(req.FromId, 10) + "-" + strconv.FormatUint(v.ToId, 10)
-		err = cache.RDB.Set(ctx, redisKey, "1", 1000).Err()
+		err = cache.RDB.Set(ctx, redisKey, "1", time.Second*1000).Err()
 		if err != nil {
 			log.Warn("写入缓存失败")
 		}
 	}
 
+	for _, v := range idInDb {
+		if _, ok := relationSet[v]; ok == false {
+			redisKey := "UserRelation:" + strconv.FormatUint(req.FromId, 10) + "-" + strconv.FormatUint(v, 10)
+			err = cache.RDB.Set(ctx, redisKey, "0", time.Second*1000).Err()
+			if err != nil {
+				log.Warn("写入缓存失败")
+			}
+		}
+	}
+
 	res := make([]bool, len(req.ToId))
 	for i, v := range req.ToId {
-		if _, ok := relationMap[v]; ok == true {
+		if _, ok := relationSet[v]; ok == true {
 			res[i] = true
 		} else {
 			res[i] = false
