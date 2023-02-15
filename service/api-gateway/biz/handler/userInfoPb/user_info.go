@@ -6,13 +6,13 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"log"
-	"paigu1902/douyin/service/api-gateway/biz/client"
+	//"paigu1902/douyin/common/utils"
+	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"strconv"
 )
 
 func LoginMethod(ctx context.Context, c *app.RequestContext) {
-
 	var req userInfoPb.LoginReq
 	var isok bool
 	req.UserName, isok = c.GetQuery("username")
@@ -21,7 +21,7 @@ func LoginMethod(ctx context.Context, c *app.RequestContext) {
 		c.String(400, "获取参数失败")
 		return
 	}
-	resp, err := client.UserInfo.Login(ctx, &userInfoPb.LoginReq{UserName: req.UserName, Password: req.Password})
+	resp, err := rpcClient.UserInfo.Login(ctx, &userInfoPb.LoginReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
 		c.String(400, err.Error())
 		return
@@ -40,7 +40,7 @@ func RegisterMethod(ctx context.Context, c *app.RequestContext) {
 		c.String(400, "获取参数失败")
 		return
 	}
-	resp, err := client.UserInfo.Register(ctx, &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
+	resp, err := rpcClient.UserInfo.Register(ctx, &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
 		c.String(400, err.Error())
 		return
@@ -52,15 +52,16 @@ func RegisterMethod(ctx context.Context, c *app.RequestContext) {
 func InfoMethod(ctx context.Context, c *app.RequestContext) {
 	var req userInfoPb.UserInfoReq
 	var isok bool
-	req.Token, isok = c.GetQuery("token")
+	fromId, _ := c.Get("from_id")
 	user_id, isok := c.GetQuery("user_id")
 	uid, _ := strconv.Atoi(user_id)
-	req.UserId = uint64(uid)
+	req.ToId = uint64(uid)
+	req.FromId = uint64(fromId.(uint))
 	if !isok {
 		c.String(400, "获取参数失败")
 		return
 	}
-	resp, err := client.UserInfo.Info(ctx, &userInfoPb.UserInfoReq{UserId: req.UserId, Token: req.Token})
+	resp, err := rpcClient.UserInfo.Info(ctx, &req)
 	if err != nil {
 		c.String(400, err.Error())
 		return
