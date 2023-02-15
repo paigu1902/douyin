@@ -1,0 +1,12 @@
+mysql:
+  host: 10.80.1.185
+  port: 3306
+  dbname: douyin
+  username: root
+  password: Seu_123456
+
+redis:
+  host: 10.64.40.226
+  port: 6379
+  password: SrpApp_123
+  database: 0

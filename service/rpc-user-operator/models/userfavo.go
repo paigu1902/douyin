@@ -10,10 +10,10 @@ var DB *gorm.DB
 
 type UserFavo struct {
 	gorm.Model
-	UserId   int64  `gorm:"not null;default:0"` //用户id
-	VideoId  int64  `gorm:"not null;default:0"` //点赞视频id
+	UserId   uint64 `gorm:"not null;default:0"` //用户id
+	VideoId  uint64 `gorm:"not null;default:0"` //点赞视频id
 	UserName string `gorm:"not null"`           //用户名
-	Status   int32  `gorm:"not null;default:1"` //点赞状态 默认1点赞 0取消
+	Status   uint32 `gorm:"not null;default:1"` //点赞状态 默认1点赞 0取消
 }
 
 func (table *UserFavo) TableName() string {
@@ -21,8 +21,8 @@ func (table *UserFavo) TableName() string {
 }
 
 // 根据视频id获取点赞用户id列表
-func GetFavoUserId(videoId int64) ([]int64, error) {
-	var FavoUserId []int64
+func GetFavoUserId(videoId uint64) ([]uint64, error) {
+	var FavoUserId []uint64
 	err := DB.Model(&UserFavo{}).Where("VideoId = ? and Status = ?", videoId, 1).
 		Pluck("UserId", &FavoUserId).Error
 	if err != nil {
@@ -39,8 +39,8 @@ func GetFavoUserId(videoId int64) ([]int64, error) {
 }
 
 // 根据用户id查询其点赞的视频id列表
-func GetFavoVideoId(userId int64) ([]int64, error) {
-	var FavoVideoId []int64
+func GetFavoVideoId(userId uint64) ([]uint64, error) {
+	var FavoVideoId []uint64
 	err := DB.Model(&UserFavo{}).Where("UserId = ? and Status = ?", userId, 1).
 		Pluck("VideoId", &FavoVideoId).Error
 	if err != nil {
@@ -57,7 +57,7 @@ func GetFavoVideoId(userId int64) ([]int64, error) {
 }
 
 // 查询用户-视频点赞信息
-func GetFavoRecord(userId int64, videoId int64) (UserFavo, error) {
+func GetFavoRecord(userId uint64, videoId uint64) (UserFavo, error) {
 	var favoRecord UserFavo
 	err := DB.Model(&UserFavo{}).Where("UserId = ? and VideoId = ?", userId, videoId).
 		First(&favoRecord).Error
@@ -75,7 +75,7 @@ func GetFavoRecord(userId int64, videoId int64) (UserFavo, error) {
 }
 
 // 更新点赞状态 双击取消
-func UpdateFavoStatus(userId int64, videoId int64, status int32) error {
+func UpdateFavoStatus(userId uint64, videoId uint64, status uint32) error {
 	err := DB.Model(&UserFavo{}).Where("UserId = ? and VideoId = ?", userId, videoId).
 		Update("Status = ?", status).Error
 	if err != nil {
@@ -87,7 +87,7 @@ func UpdateFavoStatus(userId int64, videoId int64, status int32) error {
 }
 
 // 创建点赞记录
-func CreateFavoRecord(userId int64, videoId int64) error {
+func CreateFavoRecord(userId uint64, videoId uint64) error {
 	likeRecord := UserFavo{UserId: userId, VideoId: videoId, Status: 1}
 	err := DB.Model(&UserFavo{}).Create(&likeRecord).Error
 	if err != nil {

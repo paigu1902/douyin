@@ -33,9 +33,9 @@ message LoginResp {
 message User {
   uint64 userId = 1; //userId
   string userName = 2; //name
-  string followCount = 3; //followCount
-  string followerCount = 4; //followerCount
-  string isFollow = 5;
+  int64 followCount = 3; //followCount
+  int64 followerCount = 4; //followerCount
+  bool isFollow=5;//isFollow
 }
 
 message UserInfoReq {
@@ -49,19 +49,32 @@ message UserInfoResp {
   User user = 3;
 }
 
-//message AuthsInfoReq {
-//  repeated int64 authIds = 1; //authIds
-//  optional int64 curUserId = 2; //curUserId
-//}
-//
-//message AuthsInfoResp {
-//  map<int64, User> auths = 1; //auths
-//}
+message actionDBReq {
+  int32 type = 1; // 操作类型，0-关注，1-取关
+  uint64 fromId = 2; //需要关注的用户id
+  uint64 toId = 3; //被关注的用户id
+}
 
-service UserInfo{
+message actionDBResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+}
+
+message BatchUserReq {
+  repeated uint64 batchids = 1; //批量id切片
+  uint64 fromid = 2; //请求id
+}
+
+message BtachUserResp{
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated User batchusers = 3; //批量用户信息
+}
+service UserInfo {
   //-----------------------user-----------------------
   rpc Register(RegisterReq) returns (RegisterResp);
   rpc Login(LoginReq) returns (LoginResp);
   rpc Info(UserInfoReq) returns (UserInfoResp);
-  //  rpc AuthsInfo(AuthsInfoReq) returns (AuthsInfoResp);
+  rpc ActionDB(actionDBReq) returns (actionDBResp);
+  rpc BatchInfo(BatchUserReq) returns (BtachUserResp);
 }

@@ -14,6 +14,8 @@ type Client interface {
 	Register(ctx context.Context, Req *userInfoPb.RegisterReq, callOptions ...callopt.Option) (r *userInfoPb.RegisterResp, err error)
 	Login(ctx context.Context, Req *userInfoPb.LoginReq, callOptions ...callopt.Option) (r *userInfoPb.LoginResp, err error)
 	Info(ctx context.Context, Req *userInfoPb.UserInfoReq, callOptions ...callopt.Option) (r *userInfoPb.UserInfoResp, err error)
+	ActionDB(ctx context.Context, Req *userInfoPb.ActionDBReq, callOptions ...callopt.Option) (r *userInfoPb.ActionDBResp, err error)
+	BatchInfo(ctx context.Context, Req *userInfoPb.BatchUserReq, callOptions ...callopt.Option) (r *userInfoPb.BtachUserResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -58,4 +60,14 @@ func (p *kUserInfoClient) Login(ctx context.Context, Req *userInfoPb.LoginReq, c
 func (p *kUserInfoClient) Info(ctx context.Context, Req *userInfoPb.UserInfoReq, callOptions ...callopt.Option) (r *userInfoPb.UserInfoResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.Info(ctx, Req)
+}
+
+func (p *kUserInfoClient) ActionDB(ctx context.Context, Req *userInfoPb.ActionDBReq, callOptions ...callopt.Option) (r *userInfoPb.ActionDBResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.ActionDB(ctx, Req)
+}
+
+func (p *kUserInfoClient) BatchInfo(ctx context.Context, Req *userInfoPb.BatchUserReq, callOptions ...callopt.Option) (r *userInfoPb.BtachUserResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.BatchInfo(ctx, Req)
 }

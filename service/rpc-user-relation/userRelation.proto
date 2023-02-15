@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+option go_package = "userRelationPb";
+
+package userRelationPb;
+
+// ------------------------------------
+// Messages
+// ------------------------------------
+message FollowActionReq {
+  uint64 from_id = 1; // 用户id
+  uint64 to_id = 2;
+  string type = 3; //	1-关注，2-取消关注
+}
+
+message FollowActionResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+}
+
+message User {
+  uint64 userId = 1; //userId
+  string userName = 2; //name
+  string followCount = 3; //followCount
+  string followerCount = 4; //followerCount
+  bool isFollow = 5;
+}
+
+message FollowListReq {
+  uint64 userId = 1; // 用户id
+}
+
+message FollowListResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated User user_list = 3;
+}
+
+message FollowerListReq {
+  uint64 userId = 1; //userId
+}
+
+message FollowerListResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated User user_list = 3;
+}
+
+message FriendListReq {
+  uint64 userId = 1; //userId
+}
+
+message FriendListResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated User user_list = 3;
+}
+
+message SendMessageReq {
+  uint64 from_id = 1;
+  uint64 to_id = 2; //userId
+  string type = 3;
+  string content = 4;
+}
+
+message SendMessageResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+}
+
+message MessageContent{
+  uint64 from_id = 1;
+  uint64 to_id = 2;
+  string content = 3;
+  string create_time = 4;
+}
+
+message HistoryMessageReq {
+  uint64 from_id = 1; //userId
+  uint64 to_id = 2;
+}
+
+message HistoryMessageResp {
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+  repeated MessageContent message_list = 3;
+}
+
+message IsFollowReq{
+  uint64 from_id = 1;
+  uint64 to_id = 2;
+}
+
+message IsFollowResp{
+  bool is_follow = 1;
+}
+
+message IsFollowListReq{
+  uint64 from_id = 1;
+  repeated uint64 to_id = 2;
+}
+
+message IsFollowListResp{
+  repeated bool is_follow = 1;
+}
+
+service UserRelation{
+  rpc FollowAction(FollowActionReq) returns (FollowActionResp);
+  rpc FollowList(FollowListReq) returns (FollowListResp);
+  rpc FollowerList(FollowerListReq) returns (FollowerListResp);
+  rpc FriendList (FriendListReq) returns (FriendListResp);
+  rpc SendMessage (SendMessageReq) returns (SendMessageResp);
+  rpc HistoryMessage (HistoryMessageReq) returns (HistoryMessageResp);
+  rpc IsFollow(IsFollowReq) returns (IsFollowResp);
+  rpc IsFollowList(IsFollowListReq) returns (IsFollowListResp);
+}

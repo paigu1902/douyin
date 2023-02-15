@@ -32,6 +32,7 @@ func (favo *RabbitMQ) Publish(msg string) {
 		nil,   //额外属性
 	)
 	if err != nil {
+		//panic(err)
 		log.Printf("Declare Queue Failed", err)
 		return
 	}
