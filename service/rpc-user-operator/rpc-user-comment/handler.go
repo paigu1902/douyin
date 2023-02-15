@@ -5,7 +5,8 @@ import (
 	"errors"
 	"log"
 	"paigu1902/douyin/common/utils"
-	UserInfo "paigu1902/douyin/service/rpc-user-info/models"
+	UserInfo "paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
+	"paigu1902/douyin/service/rpc-user-info/logic"
 	"paigu1902/douyin/service/rpc-user-operator/models"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/cache"
 	UserCommPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
@@ -73,11 +74,21 @@ func (s *UserCommRpcImpl) GetCommentNumberByVideo(ctx context.Context, req *User
 // CommentAction implements the UserCommRpcImpl interface.
 func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.DouyinCommentActionRequest) (resp *UserCommPb.DouyinCommentActionResponse, err error) {
 	// TODO: Your code here...
-	ID := uint64(req.UserId)
-	user := UserInfo.FindUserByID(ID)
+	IDs := []uint64{uint64(req.UserId)}
+	videoId := req.VideoId
+	myReq := UserInfo.BatchUserReq{
+		Batchids: IDs,
+		Fromid:   uint64((videoId)), // TODO: Find AuthorId
+		// 查找videoid的author
+	}
+	get_result, _ := logic.BatchInfo(ctx, &myReq)
+	user := get_result.Batchusers[0] // get user
+
+	// get_result.Batchusers
+	//user := UserInfo.FindUserByID(ID)
 	commentTxt := req.CommentText
 	commentId := req.CommentId // del用
-	video_id := req.VideoId
+
 	if err != nil {
 		return &UserCommPb.DouyinCommentActionResponse{
 			StatusCode: 3,
@@ -87,11 +98,11 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 	comment := UserCommPb.Comment{
 		Id: commentId,
 		User: &UserCommPb.User{
-			Id:            int64(user.ID),
+			Id:            int64(user.UserId),
 			Name:          user.UserName,
 			FollowCount:   user.FollowCount,
-			FollowerCount: user.FollowedCount,
-			IsFollow:      false,
+			FollowerCount: user.FollowerCount,
+			IsFollow:      user.IsFollow,
 		},
 		Content:    commentTxt,
 		CreateDate: time.Now().Format("1-2"),
@@ -100,7 +111,7 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 		// 发表评论
 		comment_tmp := models.UserComm{
 			UserName: user.UserName,
-			VideoId:  video_id,
+			VideoId:  videoId,
 			CommText: commentTxt,
 		}
 		err := models.InsertComment(comment_tmp)
@@ -112,7 +123,7 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 		} else {
 			//将此发表的评论id存入redis
 			go func() {
-				InsertRedisComment(video_id, strconv.Itoa(int(comment_tmp.ID)))
+				InsertRedisComment(videoId, strconv.Itoa(int(comment_tmp.ID)))
 				log.Println("send comment save in redis")
 			}()
 			return &UserCommPb.DouyinCommentActionResponse{
