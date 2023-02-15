@@ -5,17 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cloudwego/kitex/client"
-	"github.com/cloudwego/kitex/client/callopt"
 	"gorm.io/gorm"
 	"log"
 	"math/rand"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/utils"
+	"paigu1902/douyin/service/rpc-user-info/client"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
-	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userrelation"
 	"strconv"
 	"time"
 )
@@ -94,16 +92,16 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 
 func Actcion(fromId uint64, toId uint64, actionType string) error {
 	var err error
-	err = cache.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
-	err = cache.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
+	err = cache.RDB.Del(context.Background(), "UserInfo:"+strconv.Itoa(int(fromId))).Err()
+	err = cache.RDB.Del(context.Background(), "UserInfo:"+strconv.Itoa(int(toId))).Err()
 	if err != nil {
 		return errors.New("删除缓存失败")
 	}
 	defer func() {
 		go func() {
 			time.Sleep(time.Second * 3)
-			err = cache.RDB.Del(context.Background(), strconv.Itoa(int(fromId))).Err()
-			err = cache.RDB.Del(context.Background(), strconv.Itoa(int(toId))).Err()
+			err = cache.RDB.Del(context.Background(), "UserInfo:"+strconv.Itoa(int(fromId))).Err()
+			err = cache.RDB.Del(context.Background(), "UserInfo:"+strconv.Itoa(int(toId))).Err()
 		}()
 	}()
 	err = models.DB.Transaction(func(tx *gorm.DB) error {
@@ -124,16 +122,16 @@ func Actcion(fromId uint64, toId uint64, actionType string) error {
 func InfoRDB(ctx context.Context, userId uint64, token string) (*models.UserInfo, bool, error) {
 	var userinfo models.UserInfo
 	var err error
-	userClaim, _ := utils.AnalyseToken(token)
+	userClaim, err := utils.AnalyseToken(token)
+	if err != nil {
+		return nil, false, err
+	}
 	fromId := uint64(userClaim.ID)
-	// TODO：需要改造成nacos解析格式
-	// 不需要吧？走grpc协议，直接访问rpc请求，速度更快
-	client, err := userrelation.NewClient("UserRelationImpl", client.WithHostPorts("0.0.0.0:50052"))
-	isFollowResp, err := client.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: userId}, callopt.WithRPCTimeout(3*time.Second))
+	isFollowResp, err := client.UserRelation.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: userId})
 	if err != nil {
 		return &userinfo, false, err
 	}
-	userCache, err := cache.RDB.Do(context.Background(), "get", userId).Text()
+	userCache, err := cache.RDB.Do(ctx, "get", "UserInfo:"+strconv.Itoa(int(userId))).Text()
 	if err == nil {
 		err := json.Unmarshal([]byte(userCache), &userinfo)
 		if err == nil {
@@ -142,7 +140,7 @@ func InfoRDB(ctx context.Context, userId uint64, token string) (*models.UserInfo
 	}
 	err = models.DB.Where("id = ?", userId).First(&userinfo).Error
 	u, _ := json.Marshal(userinfo)
-	err = cache.RDB.Do(ctx, "setex", userinfo.ID, 1000, string(u)).Err()
+	err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(userinfo.ID)), 1000, string(u)).Err()
 	if err != nil {
 		return &userinfo, isFollowResp.GetIsFollow(), errors.New("写入异常")
 	}
@@ -155,30 +153,32 @@ func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoP
 	actionType := req.Type
 	switch actionType {
 	case 0:
-		err = Actcion(fromId, toId, "+")
-	case 1:
 		err = Actcion(fromId, toId, "-")
+	case 1:
+		err = Actcion(fromId, toId, "+")
 	default:
 		return nil, errors.New("用户操作异常")
 	}
 	if err != nil {
 		return nil, err
 	}
+	log.Println("操作成功", resp)
 	return &userInfoPb.ActionDBResp{StatusCode: 1, StatusMsg: "成功"}, nil
 }
 
 func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInfoPb.BtachUserResp, err error) {
-	isfollows := make(map[uint64]bool)
 	resp = new(userInfoPb.BtachUserResp)
-	batchIds := req.Batchids
+	isfollows := make(map[uint64]bool)
 	var userinfo userInfoPb.User
 	var limitids []uint64
 	var userinfors []*models.UserInfo
-	client, err := userrelation.NewClient("UserRelationImpl", client.WithHostPorts("0.0.0.0:50052"))
+	batchIds := req.Batchids
+	isfollowresp, err := client.UserRelation.IsFollowList(ctx, &userRelationPb.IsFollowListReq{FromId: req.Fromid, ToId: batchIds})
+	for i, v := range isfollowresp.GetIsFollow() {
+		isfollows[uint64(i)] = v
+	}
 	for _, id := range batchIds {
-		u, err := cache.RDB.Do(ctx, "get", strconv.Itoa(int(id))).Text()
-		isfollowresp, err := client.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: req.Fromid, ToId: id})
-		isfollows[id] = isfollowresp.GetIsFollow()
+		u, err := cache.RDB.Do(ctx, "get", "UserInfo:"+strconv.Itoa(int(id))).Text()
 		if err == nil {
 			err := json.Unmarshal([]byte(u), &userinfo)
 			if err == nil {
@@ -197,7 +197,7 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 	err = models.DB.Where("id IN ?", limitids).Find(&userinfors).Error
 	for _, user := range userinfors {
 		u, _ := json.Marshal(user)
-		err = cache.RDB.Do(ctx, "setex", user.ID, 1000, string(u)).Err()
+		err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(user.ID)), 1000, string(u)).Err()
 		if err != nil {
 			return resp, errors.New("异常")
 		}
@@ -210,6 +210,8 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 		}
 		resp.Batchusers = append(resp.Batchusers, userdetail)
 	}
+	resp.StatusCode = 0
+	resp.StatusMsg = "查询成功"
 	log.Println("resp", resp)
 	return resp, nil
 }
