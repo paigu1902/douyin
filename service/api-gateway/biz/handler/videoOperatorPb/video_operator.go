@@ -7,11 +7,45 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/kitex/client"
 	"github.com/kitex-contrib/registry-nacos/resolver"
+	"io"
 	"log"
+	"mime/multipart"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb/videooperator"
 	"time"
 )
+
+type VideoReq struct {
+	Data  *multipart.FileHeader `form:"data"`
+	Token string                `form:"token"`
+	Title string                `form:"title"`
+}
+
+type FeedReq struct {
+	Token      string `query:"token"`
+	LatestTime int64  `query:"latest_time"`
+}
+
+func file2Byte(file *multipart.FileHeader) ([]byte, error) {
+	filepoint, err := file.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer filepoint.Close()
+	var content []byte
+	buf := make([]byte, 1024)
+	for {
+		n, err := filepoint.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, err
+		}
+		if n == 0 {
+			break
+		}
+		content = append(content, buf[:n]...)
+	}
+	return content, nil
+}
 
 func UploadMethod(ctx context.Context, c *app.RequestContext) {
 	r, err := resolver.NewDefaultNacosResolver()
@@ -23,20 +57,51 @@ func UploadMethod(ctx context.Context, c *app.RequestContext) {
 		client.WithResolver(r),
 		client.WithRPCTimeout(time.Second*5),
 	)
-	var req videoOperatorPb.VideoUploadReq
+	var req VideoReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		c.String(400, err.Error())
 		return
 	}
+	data, err := file2Byte(req.Data)
+	if err != nil {
+		panic(err)
+	}
 	resp, err := newClient.Upload(context.Background(), &videoOperatorPb.VideoUploadReq{
 		Token: req.Token,
-		Data:  req.Data,
+		Data:  data,
 		Title: req.Title,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("resp", resp)
+	c.JSON(200, resp)
+}
+
+func FeedMethod(ctx context.Context, c *app.RequestContext) {
+	r, err := resolver.NewDefaultNacosResolver()
+	if err != nil {
+		panic(err)
+	}
+	newClient := videooperator.MustNewClient(
+		"videoOperatorImpl",
+		client.WithResolver(r),
+		client.WithRPCTimeout(time.Second*5),
+	)
+	var req FeedReq
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+	log.Printf("req:%v", req)
+	resp, err := newClient.Feed(context.Background(), &videoOperatorPb.FeedReq{
+		LatestTime: req.LatestTime,
+		Token:      req.Token,
+	})
+	if err != nil {
+		panic(err)
+	}
 	c.JSON(200, resp)
 }

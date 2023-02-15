@@ -31,4 +31,9 @@ func init() {
 	if err != nil {
 		panic("fail to create table")
 	}
+
+	err = db.AutoMigrate(&VideoInfo{})
+	if err != nil {
+		panic("fail to create table")
+	}
 }

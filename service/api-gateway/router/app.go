@@ -20,5 +20,9 @@ func Register(r *server.Hertz) {
 	v2.GET("/info", userInfo.InfoMethod)
 
 	v3 := r.Group("/v3")
+	//v3.Use(middlewares.AuthUserCheck())
 	v3.POST("/action", videoOperator.UploadMethod)
+
+	v4 := r.Group("/v4")
+	v4.GET("/feed", videoOperator.FeedMethod)
 }

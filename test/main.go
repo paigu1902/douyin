@@ -1,25 +1,75 @@
 package main
 
 import (
-	"context"
+	"bytes"
 	"fmt"
-	"github.com/cloudwego/kitex/client"
-	"github.com/kitex-contrib/registry-nacos/resolver"
-	"paigu1902/douyin/common/nacos"
-	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
-	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userrelation"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func main() {
-	c, err := userrelation.NewClient("userRelation", client.WithResolver(resolver.NewNacosResolver(nacos.Cli)))
-	if err != nil {
-		panic(err)
-	}
-	ctx := context.Background()
-	action, err := c.FollowAction(ctx, &userRelationPb.FollowActionReq{FromId: 10, ToId: 13, Type: "0"})
-	if err != nil {
+	//c, err := userrelation.NewClient("userRelation", client.WithResolver(resolver.NewNacosResolver(nacos.Cli)))
+	//if err != nil {
+	//	panic(err)
+	//}
+	//ctx := context.Background()
+	//action, err := c.FollowAction(ctx, &userRelationPb.FollowActionReq{FromId: 10, ToId: 13, Type: "0"})
+	//if err != nil {
+	//	return
+	//}
+	//fmt.Println(action.GetStatusMsg())
+	//fmt.Println(action.GetStatusCode())
+
+	// 上传视频
+	url := "http://172.23.31.167:3002/v3/action"
+	method := "POST"
+
+	payload := &bytes.Buffer{}
+	writer := multipart.NewWriter(payload)
+	file, errFile1 := os.Open("public/bear.mp4")
+	defer file.Close()
+	base_path := filepath.Base("public/bear.mp4")
+	fmt.Println(base_path)
+	part1, errFile1 := writer.CreateFormFile("data", base_path)
+	_, errFile1 = io.Copy(part1, file)
+	//fmt.Println(payload.String())
+	if errFile1 != nil {
+		fmt.Println(errFile1)
 		return
 	}
-	fmt.Println(action.GetStatusMsg())
-	fmt.Println(action.GetStatusCode())
+	_ = writer.WriteField("token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IndxeCIsImV4cCI6MTY3NjQ3NTE2Nn0.-wSI6cQH08Pr9D--lb5SlWhxDTAPb4KaEksmNu8YWCs")
+	_ = writer.WriteField("title", "carTest")
+	err := writer.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, payload)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	req.Header.Add("User-Agent", "Apifox/1.0.0 (https://www.apifox.cn)")
+
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(body))
 }
