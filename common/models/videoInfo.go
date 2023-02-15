@@ -2,6 +2,7 @@ package models
 
 import (
 	"gorm.io/gorm"
+	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 )
 
 type VideoInfo struct {
@@ -35,5 +36,23 @@ func GetVideoListByAuthorId(authorId uint64, videoList *[]VideoInfo) error {
 }
 
 func GetVideosByIds(videoIdList []uint64, videoList *[]VideoInfo) error {
+	// select * from video_info where in [videoIdList]
 	return DB.Find(videoList, videoIdList).Error
+}
+
+func (v *VideoInfo) TransToVideoWithAuthor(author *videoOperatorPb.User) *videoOperatorPb.Video {
+	video := v.TransToVideo()
+	video.Author = author
+	return video
+}
+
+func (v *VideoInfo) TransToVideo() *videoOperatorPb.Video {
+	return &videoOperatorPb.Video{
+		Id:            uint64(v.ID),
+		PlayUrl:       v.PlayUrl,
+		CoverUrl:      v.CoverUrl,
+		CommentCount:  v.CommentCount,
+		FavoriteCount: v.FavoriteCount,
+		Title:         v.Title,
+	}
 }

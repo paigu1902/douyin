@@ -13,7 +13,7 @@ import (
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userrelation"
-	videoOperatorPb "paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
+	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -162,7 +162,7 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 		client.WithRPCTimeout(time.Second*5),
 	)
 
-	//token := req.Token
+	token := req.Token
 	authorId, err := strconv.ParseUint(req.UserId, 10, 64)
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
@@ -176,33 +176,39 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
 			StatusCode: 1,
-			StatusMsg:  "author_id 错误",
+			StatusMsg:  "author_id 不存在",
 		}
-		return resp, nil
+		return resp, err
 	}
 	// 2.根据author信息，查询发布的视频
 	var videoList []models.VideoInfo
 	err = models.GetVideoListByAuthorId(authorInfo.GetUser().GetUserId(), &videoList)
 	if err != nil {
-		return nil, err
+		resp = &videoOperatorPb.PublishListResp{
+			StatusCode: 1,
+			StatusMsg:  "查询视频错误",
+		}
+		return resp, err
 	}
-	//followCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowCount(), 10, 64)
-	//followerCnt, _ := strconv.ParseInt(authorInfo.User.GetFollowerCount(), 10, 64)
 	followCnt := authorInfo.User.GetFollowCount()
 	followerCnt := authorInfo.User.GetFollowerCount()
 	relationClient := userrelation.MustNewClient("userRelationImpl",
 		client.WithResolver(r),
 		client.WithRPCTimeout(time.Second*5),
 	)
-	//TODO: 需要判断用户是否关注该作者
-	userId := 0
+	//3.需要判断用户是否关注该作者
+	claims, err := utils.AnalyseToken(token)
+	userId := claims.ID
 	isFollowResp, err := relationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
 		FromId: uint64(userId),
 		ToId:   authorId,
 	})
-	//TODO: 需要判断isFollowResp 是否返回fail,但是resp中尚未有错误提示
 	if err != nil {
-		return nil, err
+		resp = &videoOperatorPb.PublishListResp{
+			StatusCode: 1,
+			StatusMsg:  "查询用户关注错误",
+		}
+		return resp, err
 	}
 	author := &videoOperatorPb.User{
 		Id:            authorInfo.User.GetUserId(),
@@ -214,15 +220,9 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 	var videos []*videoOperatorPb.Video
 	for _, v := range videoList {
 		//TODO: isFavourite字段需要后续，根据userFavo获取
-		videos = append(videos, &videoOperatorPb.Video{
-			Id:            uint64(v.ID),
-			Author:        author,
-			PlayUrl:       v.PlayUrl,
-			CoverUrl:      v.CoverUrl,
-			CommentCount:  v.CommentCount,
-			FavoriteCount: v.FavoriteCount,
-			Title:         v.Title,
-		})
+		video := v.TransToVideo()
+		video.Author = author
+		videos = append(videos, video)
 	}
 	resp = &videoOperatorPb.PublishListResp{
 		StatusCode: 0,
@@ -236,28 +236,18 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 func (s *VideoOperatorImpl) VideoList(ctx context.Context, req *videoOperatorPb.VideoListReq) (resp *videoOperatorPb.VideoListResp, err error) {
 	videoIdList := req.GetVideoId()
 	var videos []models.VideoInfo
-	err = models.GetVideosByIds(videoIdList, &videos)
-	if err != nil {
+	if err = models.GetVideosByIds(videoIdList, &videos); err != nil {
 		resp = &videoOperatorPb.VideoListResp{
 			StatusCode: 1,
 			StatusMsg:  "失败",
 		}
-		return resp, nil
+		return resp, err
 	}
 	var videoList []*videoOperatorPb.Video
 	for _, v := range videos {
-		videoList = append(videoList, &videoOperatorPb.Video{
-			Id:            uint64(v.ID),
-			CoverUrl:      v.CoverUrl,
-			PlayUrl:       v.PlayUrl,
-			CommentCount:  v.CommentCount,
-			FavoriteCount: v.FavoriteCount,
-			Title:         v.Title,
-			IsFavorite:    false,
-			Author: &videoOperatorPb.User{
-				Id: v.AuthorId,
-			},
-		})
+		video := v.TransToVideo()
+		video.Author = &videoOperatorPb.User{Id: v.AuthorId}
+		videoList = append(videoList, video)
 	}
 	resp = &videoOperatorPb.VideoListResp{
 		StatusCode: 0,

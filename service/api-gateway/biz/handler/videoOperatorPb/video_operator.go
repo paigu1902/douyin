@@ -13,6 +13,7 @@ import (
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb/videooperator"
 	"time"
+
 )
 
 type VideoReq struct {
@@ -21,9 +22,18 @@ type VideoReq struct {
 	Title string                `form:"title"`
 }
 
+// get 方法需要标注 query 参数
+type PublishListReq struct {
+	UserId string `query:"user_id"`
+	Token  string `query:"token"`
+}
+
 type FeedReq struct {
 	Token      string `query:"token"`
 	LatestTime int64  `query:"latest_time"`
+}
+func (req *PublishListReq) getGrpcReq() *videoOperatorPb.PublishListReq {
+	return &videoOperatorPb.PublishListReq{UserId: req.UserId, Token: req.Token}
 }
 
 func file2Byte(file *multipart.FileHeader) ([]byte, error) {
@@ -104,4 +114,49 @@ func FeedMethod(ctx context.Context, c *app.RequestContext) {
 		panic(err)
 	}
 	c.JSON(200, resp)
+}
+func PublishListMethod(ctx context.Context, c *app.RequestContext) {
+	r, err := resolver.NewDefaultNacosResolver()
+	if err != nil {
+		panic(err)
+	}
+	client := videooperator.MustNewClient(
+		"videoOperatorImpl",
+		client.WithResolver(r),
+		client.WithRPCTimeout(time.Second*5),
+	)
+	req := new(PublishListReq)
+	// 1. 绑定校验参数
+	if err = c.BindAndValidate(req); err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+	// 2.调用rpc
+	resp, err := client.PublishList(ctx, req.getGrpcReq())
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+	c.JSON(200, resp)
+	return
+}
+
+func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
+	r, err := resolver.NewDefaultNacosResolver()
+	if err != nil {
+		panic(err)
+	}
+	client := videooperator.MustNewClient(
+		"videoOperatorImpl",
+		client.WithResolver(r),
+		client.WithRPCTimeout(time.Second*5),
+	)
+	var req videoOperatorPb.VideoUploadReq
+	if err = c.BindAndValidate(&req); err != nil {
+		c.String(400, err.Error())
+		return
+	}
+	resp, err := client.Upload(ctx, &req)
+	c.JSON(200, resp)
+	return
 }
