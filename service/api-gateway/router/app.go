@@ -3,10 +3,10 @@
 package router
 
 import (
-	userInfo "paigu1902/douyin/service/api-gateway/biz/handler/userInfoPb"
-	"paigu1902/douyin/service/api-gateway/middlewares"
-
 	"github.com/cloudwego/hertz/pkg/app/server"
+	userInfo "paigu1902/douyin/service/api-gateway/biz/handler/userInfoPb"
+	videoOperator "paigu1902/douyin/service/api-gateway/biz/handler/videoOperatorPb"
+	"paigu1902/douyin/service/api-gateway/middlewares"
 )
 
 // customizeRegister registers customize routers.
@@ -17,4 +17,8 @@ func Register(r *server.Hertz) {
 	v2 := r.Group("/v2")
 	v2.Use(middlewares.AuthUserCheck())
 	v2.GET("/info", userInfo.InfoMethod)
+
+	publishGroup := r.Group("/douyin/publish")
+	publishGroup.GET("/list", videoOperator.PublishListMethod)
+	publishGroup.POST("/action", videoOperator.PublishActionMethod)
 }

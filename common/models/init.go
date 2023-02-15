@@ -17,18 +17,16 @@ func init() {
 		panic("fail to connect database")
 	}
 	DB = db
-	err = db.AutoMigrate(&UserInfo{})
-	if err != nil {
-		panic("fail to create table")
-	}
+	migrateDBTable(&UserInfo{})
+	migrateDBTable(&Message{})
+	migrateDBTable(&Relation{})
+	migrateDBTable(&VideoInfo{})
+}
 
-	err = db.AutoMigrate(&Message{})
+func migrateDBTable(dst ...interface{}) {
+	err := DB.AutoMigrate(dst...)
 	if err != nil {
 		panic("fail to create table")
-	}
-
-	err = db.AutoMigrate(&Relation{})
-	if err != nil {
-		panic("fail to create table")
+		return
 	}
 }
