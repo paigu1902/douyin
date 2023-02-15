@@ -4,8 +4,10 @@ package router
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
+	userComment "paigu1902/douyin/service/api-gateway/biz/handler/UserCommPb"
 	userInfo "paigu1902/douyin/service/api-gateway/biz/handler/userInfoPb"
 	videoOperator "paigu1902/douyin/service/api-gateway/biz/handler/videoOperatorPb"
+
 	"paigu1902/douyin/service/api-gateway/middlewares"
 )
 
@@ -21,4 +23,8 @@ func Register(r *server.Hertz) {
 	publishGroup := r.Group("/douyin/publish")
 	publishGroup.GET("/list", videoOperator.PublishListMethod)
 	publishGroup.POST("/action", videoOperator.PublishActionMethod)
+
+	commentGroup := r.Group("/douyin/comment")
+	commentGroup.POST("/action", userComment.CommentActionMethod)
+	commentGroup.GET("/list", userComment.CommentGetListMethod)
 }

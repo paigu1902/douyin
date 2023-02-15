@@ -188,14 +188,25 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 		respCommentList, err := FillCommentListFields(commentList, videoId)
 		if err != nil {
 			// 评论为空，此时应该只是提示，不报错
-			return &UserCommPb.DouyinCommentListResponse{
-				StatusCode: 1,
-				StatusMsg:  "NOT_EXIST_LIST",
-				//CommentList: UserCommPb.Comment{
-				//	Id: comment_list
-				//},
-				CommentList: respCommentList,
-			}, nil
+			if err.Error() == "Find List is Empty" {
+				return &UserCommPb.DouyinCommentListResponse{
+					StatusCode: 0,
+					StatusMsg:  "SUCCESS BUT NOT_EXIST_LIST",
+					//CommentList: UserCommPb.Comment{
+					//	Id: comment_list
+					//},
+					CommentList: respCommentList,
+				}, nil
+			} else {
+				return &UserCommPb.DouyinCommentListResponse{
+					StatusCode: 1,
+					StatusMsg:  "ERROR",
+					//CommentList: UserCommPb.Comment{
+					//	Id: comment_list
+					//},
+					CommentList: respCommentList,
+				}, nil
+			}
 		}
 		// redis 更新评论id
 		go func() {
