@@ -39,8 +39,8 @@ message User {
 }
 
 message UserInfoReq {
-  uint64 userId = 1; //userId
-  string token = 2; //token
+  uint64 fromId = 1; //userId
+  uint64 toId = 2; //token
 }
 
 message UserInfoResp {

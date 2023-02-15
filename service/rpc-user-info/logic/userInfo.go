@@ -74,9 +74,9 @@ func Register(req *userInfoPb.RegisterReq) (resp *userInfoPb.RegisterResp, err e
 
 func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.UserInfoResp, err error) {
 	resp = new(userInfoPb.UserInfoResp)
-	ID := req.UserId
-	token := req.Token
-	user, isFollow, err := InfoRDB(ctx, ID, token)
+	fromID := req.FromId
+	toId := req.ToId
+	user, isFollow, err := InfoRDB(ctx, fromID, toId)
 	if err != nil || user.UserName == "" {
 		resp.StatusCode = 1
 		resp.StatusMsg = "查询错误"
@@ -94,11 +94,11 @@ func Actcion(ctx context.Context, fromId uint64, toId uint64, actionType string)
 	var err error
 	err = cache.RDB.Del(ctx, "UserInfo:"+strconv.Itoa(int(fromId))).Err()
 	if err != nil {
-		return errors.New(string(fromId) + "删除缓存失败")
+		return errors.New(strconv.Itoa(int(fromId)) + "删除缓存失败")
 	}
 	err = cache.RDB.Del(ctx, "UserInfo:"+strconv.Itoa(int(toId))).Err()
 	if err != nil {
-		return errors.New(string(toId) + "删除缓存失败")
+		return errors.New(strconv.Itoa(int(toId)) + "删除缓存失败")
 	}
 	defer func() {
 		go func() {
@@ -122,26 +122,21 @@ func Actcion(ctx context.Context, fromId uint64, toId uint64, actionType string)
 	return err
 }
 
-func InfoRDB(ctx context.Context, userId uint64, token string) (*models.UserInfo, bool, error) {
+func InfoRDB(ctx context.Context, fromId uint64, toId uint64) (*models.UserInfo, bool, error) {
 	var userinfo models.UserInfo
 	var err error
-	userClaim, err := utils.AnalyseToken(token)
-	if err != nil {
-		return nil, false, err
-	}
-	fromId := uint64(userClaim.ID)
-	isFollowResp, err := client.UserRelation.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: userId})
+	isFollowResp, err := client.UserRelation.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: toId})
 	if err != nil {
 		return &userinfo, false, err
 	}
-	userCache, err := cache.RDB.Do(ctx, "get", "UserInfo:"+strconv.Itoa(int(userId))).Text()
+	userCache, err := cache.RDB.Do(ctx, "get", "UserInfo:"+strconv.Itoa(int(toId))).Text()
 	if err == nil {
 		err := json.Unmarshal([]byte(userCache), &userinfo)
 		if err == nil {
 			return &userinfo, isFollowResp.GetIsFollow(), nil
 		}
 	}
-	err = models.DB.Where("id = ?", userId).First(&userinfo).Error
+	err = models.DB.Where("id = ?", toId).First(&userinfo).Error
 	u, _ := json.Marshal(userinfo)
 	err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(userinfo.ID)), 1000, string(u)).Err()
 	if err != nil {
