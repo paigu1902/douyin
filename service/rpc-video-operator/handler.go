@@ -86,9 +86,17 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 			Token:      "",
 		}
 	}
+	var id uint
+	if req.Token != "" {
+		claims, err := utils.AnalyseToken(req.Token)
+		id = claims.ID
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	limit := 30
-	token := req.Token
+
 	// todo: timestamp to UTC time format
 	timestamp := req.LatestTime
 	if timestamp == 0 {
@@ -105,8 +113,11 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 	var videoRespList []*videoOperatorPb.Video
 	for _, videoInfo := range videoList {
 		userInfoReq := userInfoPb.UserInfoReq{
-			UserId: videoInfo.AuthorId,
-			Token:  token,
+			FromId: videoInfo.AuthorId,
+			ToId:   videoInfo.AuthorId,
+		}
+		if req.Token != "" {
+			userInfoReq.FromId = uint64(id)
 		}
 		authorInfo, err := userInfoClient.Info(ctx, &userInfoReq)
 		if err != nil {
@@ -179,7 +190,7 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 		return resp, nil
 	}
 
-	authorInfo, err := userInfoClient.Info(ctx, &userInfoPb.UserInfoReq{UserId: authorId})
+	authorInfo, err := userInfoClient.Info(ctx, &userInfoPb.UserInfoReq{ToId: authorId})
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
 			StatusCode: 1,
