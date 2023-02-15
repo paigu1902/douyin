@@ -1,4 +1,4 @@
-package client
+package rpcClient
 
 import (
 	"github.com/cloudwego/kitex/client"
