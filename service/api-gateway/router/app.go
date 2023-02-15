@@ -19,5 +19,9 @@ func Register(r *server.Hertz) {
 
 	publishGroup := r.Group("/douyin/publish")
 	publishGroup.GET("/list", videoOperator.PublishListMethod)
+	//publishGroup.POST("/action", videoOperator.PublishActionMethod)
 	publishGroup.POST("/action", videoOperator.PublishActionMethod)
+
+	v4 := r.Group("/v4")
+	v4.GET("/feed", videoOperator.FeedMethod)
 }

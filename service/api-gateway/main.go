@@ -34,7 +34,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	addr := "127.0.0.1:3002"
+	addr := "0.0.0.0:3002"
 	r := nacos.NewNacosRegistry(cli)
 	h := server.Default(
 		server.WithHostPorts(addr),

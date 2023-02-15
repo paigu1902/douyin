@@ -10,7 +10,7 @@ import (
 var DB *gorm.DB
 
 func init() {
-	dsn := "root:123456@tcp(127.0.0.1:3306)/douyin?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:Wqx1761391865.@tcp(124.222.182.66:3306)/douyin?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{SkipDefaultTransaction: true})
 	if err != nil {
 		log.Println("gorm Init Error : ", err)
@@ -20,6 +20,7 @@ func init() {
 	migrateDBTable(&UserInfo{})
 	migrateDBTable(&Message{})
 	migrateDBTable(&Relation{})
+	migrateDBTable(&VideoInfo{})
 	migrateDBTable(&VideoInfo{})
 }
 

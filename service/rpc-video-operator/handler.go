@@ -80,10 +80,28 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 		client.WithRPCTimeout(time.Second*5),
 	)
 
+	if req == nil {
+		req = &videoOperatorPb.FeedReq{
+			LatestTime: 0,
+			Token:      "",
+		}
+	}
+	var id uint
+	if req.Token != "" {
+		claims, err := utils.AnalyseToken(req.Token)
+		id = claims.ID
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	limit := 30
-	token := req.Token
-	// todo: timestamp to UTC time format，抓包看一下timestamp的形式
+
+	// todo: timestamp to UTC time format
 	timestamp := req.LatestTime
+	if timestamp == 0 {
+		timestamp = time.Now().Unix()
+	}
 	latestTime := time.Unix(timestamp, 0).Format("2006-01-02 15:04:05")
 	var videoList []models.VideoInfo
 	err = models.GetVideoInfo(latestTime, limit+1, &videoList)
@@ -95,8 +113,11 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 	var videoRespList []*videoOperatorPb.Video
 	for _, videoInfo := range videoList {
 		userInfoReq := userInfoPb.UserInfoReq{
-			UserId: uint64(videoInfo.AuthorId),
-			Token:  token,
+			FromId: videoInfo.AuthorId,
+			ToId:   videoInfo.AuthorId,
+		}
+		if req.Token != "" {
+			userInfoReq.FromId = uint64(id)
 		}
 		authorInfo, err := userInfoClient.Info(ctx, &userInfoReq)
 		if err != nil {
@@ -105,9 +126,9 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 		author := videoOperatorPb.User{
 			Id:            videoInfo.AuthorId,
 			Name:          authorInfo.User.UserName,
-			FollowCount:   authorInfo.User.FollowerCount,
+			FollowCount:   authorInfo.User.FollowCount,
 			FollowerCount: authorInfo.User.FollowerCount,
-			IsFollow:      false,
+			IsFollow:      authorInfo.User.IsFollow,
 		}
 		videoRespList = append(videoRespList, &videoOperatorPb.Video{
 			Id:            uint64(videoInfo.ID),
@@ -169,7 +190,7 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 		return resp, nil
 	}
 
-	authorInfo, err := userInfoClient.Info(ctx, &userInfoPb.UserInfoReq{UserId: authorId})
+	authorInfo, err := userInfoClient.Info(ctx, &userInfoPb.UserInfoReq{ToId: authorId})
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
 			StatusCode: 1,
