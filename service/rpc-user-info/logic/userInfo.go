@@ -125,24 +125,31 @@ func Actcion(ctx context.Context, fromId uint64, toId uint64, actionType string)
 func InfoRDB(ctx context.Context, fromId uint64, toId uint64) (*models.UserInfo, bool, error) {
 	var userinfo models.UserInfo
 	var err error
-	isFollowResp, err := client.UserRelation.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: toId})
-	if err != nil {
-		return &userinfo, false, err
-	}
+	var isFollowResp *userRelationPb.IsFollowResp
 	userCache, err := cache.RDB.Do(ctx, "get", "UserInfo:"+strconv.Itoa(int(toId))).Text()
 	if err == nil {
-		err := json.Unmarshal([]byte(userCache), &userinfo)
+		isFollowResp, err = client.UserRelation.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: toId})
+		err = json.Unmarshal([]byte(userCache), &userinfo)
 		if err == nil {
 			return &userinfo, isFollowResp.GetIsFollow(), nil
 		}
-	}
-	err = models.DB.Where("id = ?", toId).First(&userinfo).Error
-	u, _ := json.Marshal(userinfo)
-	err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(userinfo.ID)), 1000, string(u)).Err()
-	if err != nil {
-		return &userinfo, isFollowResp.GetIsFollow(), errors.New("写入异常")
+	} else {
+		err = models.DB.Where("id = ?", toId).First(&userinfo).Error
+		if err != nil {
+			return nil, false, errors.New("用户不存在")
+		}
+		u, _ := json.Marshal(userinfo)
+		err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(userinfo.ID)), 1000, string(u)).Err()
+		if err != nil {
+			return nil, false, errors.New("写入异常")
+		}
+		isFollowResp, err = client.UserRelation.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: toId})
+		if err != nil {
+			return nil, false, err
+		}
 	}
 	return &userinfo, isFollowResp.GetIsFollow(), nil
+
 }
 
 func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoPb.ActionDBResp, err error) {

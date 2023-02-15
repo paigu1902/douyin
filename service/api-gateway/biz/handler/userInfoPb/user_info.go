@@ -52,10 +52,11 @@ func RegisterMethod(ctx context.Context, c *app.RequestContext) {
 func InfoMethod(ctx context.Context, c *app.RequestContext) {
 	var req userInfoPb.UserInfoReq
 	var isok bool
-	req.FromId = c.GetUint64("from_id")
+	fromId, _ := c.Get("from_id")
 	user_id, isok := c.GetQuery("user_id")
 	uid, _ := strconv.Atoi(user_id)
 	req.ToId = uint64(uid)
+	req.FromId = uint64(fromId.(uint))
 	if !isok {
 		c.String(400, "获取参数失败")
 		return
