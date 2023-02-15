@@ -4,48 +4,27 @@ package userInfo
 
 import (
 	"context"
-	"github.com/cloudwego/kitex/client"
-	"github.com/kitex-contrib/registry-nacos/resolver"
-	"log"
-	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
-	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
-	"time"
-
 	"github.com/cloudwego/hertz/pkg/app"
+	"log"
+	"paigu1902/douyin/service/api-gateway/biz/client"
+	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
+	"strconv"
 )
 
-type User struct {
-	Id            uint64 `json:"id"`
-	Name          string `json:"name"`
-	FollowCount   int64  `json:"follow_count"`
-	FollowerCount int64  `json:"follower_count"`
-	IsFollow      bool   `json:"is_follow"`
-}
-type InfoResp struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg"`
-	User       User   `json:"user"`
-}
-
 func LoginMethod(ctx context.Context, c *app.RequestContext) {
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	newClient := userinfo.MustNewClient(
-		"userInfoImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
+
 	var req userInfoPb.LoginReq
-	err = c.BindAndValidate(&req)
+	var isok bool
+	req.UserName, isok = c.GetQuery("username")
+	req.Password, isok = c.GetQuery("password")
+	if !isok {
+		c.String(400, "获取参数失败")
+		return
+	}
+	resp, err := client.UserInfo.Login(ctx, &userInfoPb.LoginReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
 		c.String(400, err.Error())
 		return
-	}
-	resp, err := newClient.Login(context.Background(), &userInfoPb.LoginReq{UserName: req.UserName, Password: req.Password})
-	if err != nil {
-		log.Fatal(err)
 	}
 	log.Println("resp", resp)
 	c.JSON(200, resp)
@@ -53,55 +32,39 @@ func LoginMethod(ctx context.Context, c *app.RequestContext) {
 }
 
 func RegisterMethod(ctx context.Context, c *app.RequestContext) {
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	newClient := userinfo.MustNewClient(
-		"userInfoImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*3),
-	)
 	var req userInfoPb.RegisterReq
-	err = c.BindAndValidate(&req)
+	var isok bool
+	req.UserName, isok = c.GetQuery("username")
+	req.Password, isok = c.GetQuery("password")
+	if !isok {
+		c.String(400, "获取参数失败")
+		return
+	}
+	resp, err := client.UserInfo.Register(ctx, &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
 		c.String(400, err.Error())
 		return
-	}
-	resp, err := newClient.Register(context.Background(), &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
-	if err != nil {
-		log.Fatal(err)
 	}
 	log.Println("resp", resp)
 	c.JSON(200, resp)
 }
 
 func InfoMethod(ctx context.Context, c *app.RequestContext) {
-	// TODO:构建一个结构体来承接传来的resp，需要优化
-	inforesp := new(InfoResp)
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	newClient := userinfo.MustNewClient(
-		"userInfoImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*3),
-	)
 	var req userInfoPb.UserInfoReq
-	err = c.BindAndValidate(&req)
+	var isok bool
+	req.Token, isok = c.GetQuery("token")
+	user_id, isok := c.GetQuery("user_id")
+	uid, _ := strconv.Atoi(user_id)
+	req.UserId = uint64(uid)
+	if !isok {
+		c.String(400, "获取参数失败")
+		return
+	}
+	resp, err := client.UserInfo.Info(ctx, &userInfoPb.UserInfoReq{UserId: req.UserId, Token: req.Token})
 	if err != nil {
 		c.String(400, err.Error())
 		return
 	}
-	resp, err := newClient.Info(context.Background(), &userInfoPb.UserInfoReq{UserId: req.UserId, Token: req.Token})
-	if err != nil {
-		log.Fatal(err)
-	}
-	userDetail := User{Id: resp.GetUser().GetUserId(), Name: resp.GetUser().GetUserName(), FollowerCount: resp.GetUser().GetFollowerCount(), FollowCount: resp.GetUser().GetFollowCount(), IsFollow: resp.GetUser().GetIsFollow()}
-	inforesp.StatusCode = resp.GetStatusCode()
-	inforesp.StatusMsg = resp.GetStatusMsg()
-	inforesp.User = userDetail
-	log.Println("resp", inforesp)
-	c.JSON(200, inforesp)
+	log.Println("resp", resp)
+	c.JSON(200, resp)
 }

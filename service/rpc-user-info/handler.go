@@ -32,3 +32,9 @@ func (s *UserInfoImpl) ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq
 	// TODO: Your code here...
 	return logic.ActionDB(ctx, req)
 }
+
+// BatchInfo implements the UserInfoImpl interface.
+func (s *UserInfoImpl) BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInfoPb.BtachUserResp, err error) {
+	// TODO: Your code here...
+	return logic.BatchInfo(ctx, req)
+}
