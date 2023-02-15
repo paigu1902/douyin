@@ -46,6 +46,7 @@ func AuthUserCheck() app.HandlerFunc {
 			return
 		}
 		c.Set("user_claims", userClaim)
+		c.Set("from_id", userClaim.ID)
 		c.Next(ctx)
 	}
 }
