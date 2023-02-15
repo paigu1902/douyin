@@ -5,6 +5,7 @@ package router
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	userInfo "paigu1902/douyin/service/api-gateway/biz/handler/userInfoPb"
+	userRelation "paigu1902/douyin/service/api-gateway/biz/handler/userRelationPb"
 	videoOperator "paigu1902/douyin/service/api-gateway/biz/handler/videoOperatorPb"
 	"paigu1902/douyin/service/api-gateway/middlewares"
 )
@@ -21,6 +22,18 @@ func Register(r *server.Hertz) {
 	publishGroup.GET("/list", videoOperator.PublishListMethod)
 	//publishGroup.POST("/action", videoOperator.PublishActionMethod)
 	publishGroup.POST("/action", videoOperator.PublishActionMethod)
+
+	userMessageGroup := r.Group("/douyin/message")
+	userMessageGroup.Use(middlewares.AuthUserCheck())
+	userMessageGroup.GET("/chat", userRelation.MessageHistory)
+	userMessageGroup.POST("/action", userRelation.MessageAction)
+
+	userRelationGroup := r.Group("/douyin/relation")
+	userRelationGroup.Use(middlewares.AuthUserCheck())
+	userRelationGroup.POST("/action", userRelation.FollowAction)
+	userRelationGroup.GET("/follow/list", userRelation.FollowList)
+	userRelationGroup.GET("/follower/list", userRelation.FollowerList)
+	userRelationGroup.GET("/friend/list", userRelation.FriendList)
 
 	v4 := r.Group("/v4")
 	v4.GET("/feed", videoOperator.FeedMethod)
