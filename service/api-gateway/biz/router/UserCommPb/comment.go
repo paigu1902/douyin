@@ -4,7 +4,7 @@ package UserCommPb
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
-	UserCommPb "paigu1902/douyin/biz/handler/UserCommPb"
+	//UserCommPb "paigu1902/douyin/service/api-gateway/biz/handler/UserCommPb"
 )
 
 /*
