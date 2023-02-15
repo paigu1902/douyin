@@ -13,9 +13,9 @@ import (
 func main() {
 	svr := UserCommPb.NewServer(
 		new(UserCommRpcImpl),
-		server.WithServiceAddr(&net.TCPAddr{Port: 12345, IP: net.IPv4(127, 0, 0, 1)}),
-		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "UserComment"}),
+		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "UserCommentImpl"}),
 		server.WithRegistry(registry.NewNacosRegistry(nacos.Cli)),
+		server.WithServiceAddr(&net.TCPAddr{Port: 12345, IP: net.IPv4(127, 0, 0, 1)}),
 	)
 	if err := svr.Run(); err != nil {
 		log.Println("server stopped with error:", err)
