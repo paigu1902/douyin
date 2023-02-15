@@ -3,8 +3,6 @@ package utils
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
-	"net/http"
 	"time"
 )
 
@@ -24,8 +22,8 @@ func GenerateToken(id uint, name string) (string, error) {
 		Name:           name,
 		StandardClaims: jwt.StandardClaims{},
 	}
-	// 1小时过期
-	UserClaim.ExpiresAt = time.Now().Add(time.Second * 5).Unix()
+	// 6小时过期
+	UserClaim.ExpiresAt = time.Now().Add(time.Hour * 6).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaim)
 	tokenString, err := token.SignedString(myKey)
 	if err != nil {
@@ -50,44 +48,44 @@ func AnalyseToken(tokenString string) (*UserClaims, error) {
 	return userClaim, nil
 }
 
-type Auth struct {
-	Token string `json:"token"`
-}
+//type Auth struct {
+//	Token string `json:"token"`
+//}
 
-func AuthUserCheck() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token, ok := c.GetQuery("token")
-		if !ok {
-			auth := new(Auth)
-			err := c.BindJSON(auth)
-			if err != nil {
-				c.Abort()
-				c.JSON(http.StatusOK, gin.H{
-					"code": http.StatusUnauthorized,
-					"msg":  "Unauthorized Authorization",
-				})
-				return
-			}
-			token = auth.Token
-		}
-		userClaim, err := AnalyseToken(token)
-		if err != nil {
-			c.Abort()
-			c.JSON(http.StatusOK, gin.H{
-				"code": http.StatusUnauthorized,
-				"msg":  "Unauthorized Authorization",
-			})
-			return
-		}
-		if userClaim == nil {
-			c.Abort()
-			c.JSON(http.StatusOK, gin.H{
-				"code": http.StatusUnauthorized,
-				"msg":  "Unauthorized Admin",
-			})
-			return
-		}
-		c.Set("user_claims", userClaim)
-		c.Next()
-	}
-}
+//func AuthUserCheck() gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//		token, ok := c.GetQuery("token")
+//		if !ok {
+//			auth := new(Auth)
+//			err := c.BindJSON(auth)
+//			if err != nil {
+//				c.Abort()
+//				c.JSON(http.StatusOK, gin.H{
+//					"code": http.StatusUnauthorized,
+//					"msg":  "Unauthorized Authorization",
+//				})
+//				return
+//			}
+//			token = auth.Token
+//		}
+//		userClaim, err := AnalyseToken(token)
+//		if err != nil {
+//			c.Abort()
+//			c.JSON(http.StatusOK, gin.H{
+//				"code": http.StatusUnauthorized,
+//				"msg":  "Unauthorized Authorization",
+//			})
+//			return
+//		}
+//		if userClaim == nil {
+//			c.Abort()
+//			c.JSON(http.StatusOK, gin.H{
+//				"code": http.StatusUnauthorized,
+//				"msg":  "Unauthorized Admin",
+//			})
+//			return
+//		}
+//		c.Set("user_claims", userClaim)
+//		c.Next()
+//	}
+//}

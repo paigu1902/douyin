@@ -9,8 +9,6 @@ import (
 
 var DB *gorm.DB
 
-//var RDB = InitRedisDB()
-
 func init() {
 	dsn := "root:Wqx1761391865.@tcp(124.222.182.66:3306)/douyin?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{SkipDefaultTransaction: true})
@@ -34,11 +32,3 @@ func init() {
 		panic("fail to create table")
 	}
 }
-
-//func InitRedisDB() *redis.Client {
-//	return redis.NewClient(&redis.Options{
-//		Addr:     "localhost:6379",
-//		Password: "", // no password set
-//		DB:       0,  // use default DB
-//	})
-//}

@@ -95,8 +95,16 @@ message IsFollowResp{
   bool is_follow = 1;
 }
 
-service UserRelation{
+message IsFollowListReq{
+  uint64 from_id = 1;
+  repeated uint64 to_id = 2;
+}
 
+message IsFollowListResp{
+  repeated bool is_follow = 1;
+}
+
+service UserRelation{
   rpc FollowAction(FollowActionReq) returns (FollowActionResp);
   rpc FollowList(FollowListReq) returns (FollowListResp);
   rpc FollowerList(FollowerListReq) returns (FollowerListResp);
@@ -104,5 +112,5 @@ service UserRelation{
   rpc SendMessage (SendMessageReq) returns (SendMessageResp);
   rpc HistoryMessage (HistoryMessageReq) returns (HistoryMessageResp);
   rpc IsFollow(IsFollowReq) returns (IsFollowResp);
-
+  rpc IsFollowList(IsFollowListReq) returns (IsFollowListResp);
 }

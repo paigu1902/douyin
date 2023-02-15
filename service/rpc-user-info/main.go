@@ -41,7 +41,7 @@ func main() {
 		new(UserInfoImpl),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "userInfoImpl"}),
 		server.WithRegistry(registry.NewNacosRegistry(cli)),
-		server.WithServiceAddr(&net.TCPAddr{Port: 50051}),
+		server.WithServiceAddr(&net.TCPAddr{Port: 50051, IP: net.IPv4(127, 0, 0, 1)}),
 	)
 	if err := svr.Run(); err != nil {
 		log.Println("server stopped with error:", err)
