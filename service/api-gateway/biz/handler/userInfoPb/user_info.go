@@ -21,7 +21,7 @@ func LoginMethod(ctx context.Context, c *app.RequestContext) {
 		c.String(400, "获取参数失败")
 		return
 	}
-	resp, err := client.UserInfo.Login(context.Background(), &userInfoPb.LoginReq{UserName: req.UserName, Password: req.Password})
+	resp, err := client.UserInfo.Login(ctx, &userInfoPb.LoginReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
 		c.String(400, err.Error())
 		return
@@ -40,7 +40,7 @@ func RegisterMethod(ctx context.Context, c *app.RequestContext) {
 		c.String(400, "获取参数失败")
 		return
 	}
-	resp, err := client.UserInfo.Register(context.Background(), &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
+	resp, err := client.UserInfo.Register(ctx, &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
 	if err != nil {
 		c.String(400, err.Error())
 		return
@@ -60,7 +60,7 @@ func InfoMethod(ctx context.Context, c *app.RequestContext) {
 		c.String(400, "获取参数失败")
 		return
 	}
-	resp, err := client.UserInfo.Info(context.Background(), &userInfoPb.UserInfoReq{UserId: req.UserId, Token: req.Token})
+	resp, err := client.UserInfo.Info(ctx, &userInfoPb.UserInfoReq{UserId: req.UserId, Token: req.Token})
 	if err != nil {
 		c.String(400, err.Error())
 		return
