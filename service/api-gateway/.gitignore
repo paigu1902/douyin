@@ -28,10 +28,11 @@ _testmain.go
 *.sublime-project
 *.sublime-workspace
 !.gitkeep
-.DS_Store
+.DS_Stores
 /.idea
 /.vscode
 /output
+/cache
 *.local.yml
 dumped_hertz_remote_config.json
 		  
