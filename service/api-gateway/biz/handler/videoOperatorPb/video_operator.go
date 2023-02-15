@@ -13,7 +13,6 @@ import (
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb/videooperator"
 	"time"
-
 )
 
 type VideoReq struct {
@@ -32,6 +31,7 @@ type FeedReq struct {
 	Token      string `query:"token"`
 	LatestTime int64  `query:"latest_time"`
 }
+
 func (req *PublishListReq) getGrpcReq() *videoOperatorPb.PublishListReq {
 	return &videoOperatorPb.PublishListReq{UserId: req.UserId, Token: req.Token}
 }
@@ -57,7 +57,7 @@ func file2Byte(file *multipart.FileHeader) ([]byte, error) {
 	return content, nil
 }
 
-func UploadMethod(ctx context.Context, c *app.RequestContext) {
+func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 	r, err := resolver.NewDefaultNacosResolver()
 	if err != nil {
 		panic(err)
@@ -141,22 +141,22 @@ func PublishListMethod(ctx context.Context, c *app.RequestContext) {
 	return
 }
 
-func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	client := videooperator.MustNewClient(
-		"videoOperatorImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
-	var req videoOperatorPb.VideoUploadReq
-	if err = c.BindAndValidate(&req); err != nil {
-		c.String(400, err.Error())
-		return
-	}
-	resp, err := client.Upload(ctx, &req)
-	c.JSON(200, resp)
-	return
-}
+//func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
+//	r, err := resolver.NewDefaultNacosResolver()
+//	if err != nil {
+//		panic(err)
+//	}
+//	client := videooperator.MustNewClient(
+//		"videoOperatorImpl",
+//		client.WithResolver(r),
+//		client.WithRPCTimeout(time.Second*5),
+//	)
+//	var req videoOperatorPb.VideoUploadReq
+//	if err = c.BindAndValidate(&req); err != nil {
+//		c.String(400, err.Error())
+//		return
+//	}
+//	resp, err := client.Upload(ctx, &req)
+//	c.JSON(200, resp)
+//	return
+//}

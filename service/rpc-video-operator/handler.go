@@ -80,6 +80,13 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 		client.WithRPCTimeout(time.Second*5),
 	)
 
+	if req == nil {
+		req = &videoOperatorPb.FeedReq{
+			LatestTime: 0,
+			Token:      "",
+		}
+	}
+
 	limit := 30
 	token := req.Token
 	// todo: timestamp to UTC time format

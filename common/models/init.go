@@ -21,6 +21,7 @@ func init() {
 	migrateDBTable(&Message{})
 	migrateDBTable(&Relation{})
 	migrateDBTable(&VideoInfo{})
+	migrateDBTable(&VideoInfo{})
 }
 
 func migrateDBTable(dst ...interface{}) {
@@ -28,10 +29,5 @@ func migrateDBTable(dst ...interface{}) {
 	if err != nil {
 		panic("fail to create table")
 		return
-	}
-
-	err = db.AutoMigrate(&VideoInfo{})
-	if err != nil {
-		panic("fail to create table")
 	}
 }

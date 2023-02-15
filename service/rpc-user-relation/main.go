@@ -7,7 +7,7 @@ import (
 	"log"
 	"net"
 	"paigu1902/douyin/common/nacos"
-	UserRelationPb "paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userRelation"
+	UserRelationPb "paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userrelation"
 )
 
 func main() {
