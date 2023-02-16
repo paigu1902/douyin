@@ -17,3 +17,4 @@
 # 调试用的
 /service/rpc-video-operator/client/
 /tmp/
+/cache/
