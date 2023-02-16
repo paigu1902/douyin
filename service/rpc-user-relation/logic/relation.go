@@ -3,7 +3,6 @@ package logic
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/cloudwego/kitex/tool/internal_pkg/log"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -215,6 +214,13 @@ func FollowList(req *userRelationPb.FollowListReq) (resp *userRelationPb.FollowL
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
+	userList := make([]*userRelationPb.User, len(ids))
+	if len(ids) == 0 {
+		resp.StatusCode = 0
+		resp.StatusMsg = "操作成功"
+		resp.UserList = userList
+		return resp, nil
+	}
 	userInfos := make([]models.UserInfo, len(ids))
 	err = models.DB.Where(&ids).Find(&userInfos).Error
 	if err != nil {
@@ -222,13 +228,12 @@ func FollowList(req *userRelationPb.FollowListReq) (resp *userRelationPb.FollowL
 		resp.StatusMsg = "获取失败"
 		return resp, err
 	}
-	userList := make([]*userRelationPb.User, len(ids))
 	for i, v := range userInfos {
 		userList[i] = &userRelationPb.User{
 			UserId:        uint64(v.ID),
 			UserName:      v.UserName,
-			FollowCount:   fmt.Sprint(v.FollowCount),
-			FollowerCount: fmt.Sprint(v.FollowedCount),
+			FollowCount:   v.FollowCount,
+			FollowerCount: v.FollowedCount,
 			IsFollow:      true,
 		}
 	}
@@ -271,8 +276,8 @@ func FollowerList(req *userRelationPb.FollowerListReq) (resp *userRelationPb.Fol
 		userList[i] = &userRelationPb.User{
 			UserId:        uint64(v.ID),
 			UserName:      v.UserName,
-			FollowCount:   fmt.Sprint(v.FollowCount),
-			FollowerCount: fmt.Sprint(v.FollowedCount),
+			FollowCount:   v.FollowCount,
+			FollowerCount: v.FollowedCount,
 			IsFollow:      isFollow(followMap, uint64(v.ID)),
 		}
 	}
@@ -305,8 +310,16 @@ func FriendList(req *userRelationPb.FriendListReq) (resp *userRelationPb.FriendL
 			friendIds = append(friendIds, v)
 		}
 	}
+	userList := make([]*userRelationPb.User, len(friendIds))
 
 	userInfos := make([]models.UserInfo, len(friendIds))
+	if len(friendIds) == 0 {
+		resp.StatusCode = 0
+		resp.StatusMsg = "操作成功"
+		resp.UserList = userList
+		return resp, nil
+	}
+
 	err = models.DB.Where(&friendIds).Find(&userInfos).Error
 	if err != nil {
 		resp.StatusCode = 1
@@ -314,13 +327,12 @@ func FriendList(req *userRelationPb.FriendListReq) (resp *userRelationPb.FriendL
 		return resp, err
 	}
 
-	userList := make([]*userRelationPb.User, len(friendIds))
 	for i, v := range userInfos {
 		userList[i] = &userRelationPb.User{
 			UserId:        uint64(v.ID),
 			UserName:      v.UserName,
-			FollowCount:   fmt.Sprint(v.FollowCount),
-			FollowerCount: fmt.Sprint(v.FollowedCount),
+			FollowCount:   v.FollowCount,
+			FollowerCount: v.FollowedCount,
 			IsFollow:      true,
 		}
 	}
