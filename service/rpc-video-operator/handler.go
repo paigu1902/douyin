@@ -3,17 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudwego/kitex/client"
-	"github.com/kitex-contrib/registry-nacos/resolver"
 	"os"
 	"os/exec"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
-	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
-	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
-	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb/userfavorpc"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
@@ -135,12 +130,7 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 		//用户登录状态的话，查询用户是否点赞视频
 		if req.Token != "" {
 			userInfoReq.FromId = uint64(id)
-			userFavoClient := userfavorpc.MustNewClient(
-				"UserFavoImpl",
-				client.WithResolver(r),
-				client.WithRPCTimeout(time.Second*5),
-			)
-			userFavoResp, err := userFavoClient.FavoStatus(context.Background(), &userFavoPb.FavoStatusReq{
+			userFavoResp, err := rpcClient.UserFavo.FavoStatus(context.Background(), &userFavoPb.FavoStatusReq{
 				UserId:  int64(id),
 				VideoId: int64(video.Id),
 			})

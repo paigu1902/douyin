@@ -15,7 +15,7 @@ func init() {
 		panic(err)
 	}
 	c := userfavorpc.MustNewClient(
-		"userFavoRpcImpl",
+		"UserFavoriteImpl",
 		client.WithResolver(r),
 		client.WithRPCTimeout(time.Second*5),
 	)
