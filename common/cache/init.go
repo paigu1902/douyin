@@ -24,23 +24,23 @@ var RdbFavoVideo *redis.Client //key:VideoId,value:UserId
 
 func InitRedis() {
 	RdbCVid = redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:7777",
-		Password: "",
+		Addr:     "183.253.74.204:6379",
+		Password: "123456",
 		DB:       1,
 	})
 	RdbVCid = redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:7778",
-		Password: "",
+		Addr:     "183.253.74.204:6379",
+		Password: "123456",
 		DB:       2,
 	})
 	RdbFavoUser = redis.NewClient(&redis.Options{
-		Addr:     "0.0.0.0",
-		Password: "",
+		Addr:     "183.253.74.204:6379",
+		Password: "123456",
 		DB:       3,
 	})
 	RdbFavoVideo = redis.NewClient(&redis.Options{
-		Addr:     "0.0.0.0",
-		Password: "",
+		Addr:     "183.253.74.204:6379",
+		Password: "123456",
 		DB:       4,
 	})
 }
