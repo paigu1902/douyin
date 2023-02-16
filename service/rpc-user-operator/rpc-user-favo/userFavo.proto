@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package userFavoPb;
+
+option go_package = "userFavoPb";
+
+// ------------------------------------
+// Messages
+// ------------------------------------
+message FavoActionReq{
+    int64 userId = 1; // 用户id
+    string token = 2; //用户鉴权token
+    int64 videoId = 3; // 视频id
+    int32 type = 4; // 1-点赞，2-取消点赞
+}
+
+message FavoActionResp {
+    int32 statusCode = 1; // 状态码，0-成功，其他值-失败
+    string statusMsg = 2; // 返回状态描述
+}
+
+message FavoListReq{
+    int64 userId = 1; // 用户id
+    string token = 2; //用户鉴权token
+}
+
+message FavoListResp {
+    int32 statusCode = 1; // 状态码，0-成功，其他值-失败
+    string statusMsg = 2; // 返回状态描述
+    repeated Video videoList = 3; // 用户点赞视频列表
+}
+
+message FavoStatusReq{
+    int64 userId = 1; // 用户id
+    int64 videoId = 2; // 视频id
+}
+
+message FavoStatusResp {
+    int32 statusCode = 1; // 状态码，0-成功，其他值-失败
+    string statusMsg = 2; // 返回状态描述
+    bool isFavorite = 3; // 用户是否点赞视频
+}
+
+message Video {
+    uint64 id = 1; // 视频唯一标识
+    User author = 2; // 视频作者信息
+    string play_url = 3; // 视频播放地址
+    string cover_url = 4; // 视频封面地址
+    int64 favorite_count = 5; // 视频的点赞总数
+    int64 comment_count = 6; // 视频的评论总数
+    bool is_favorite = 7; // true-已点赞，false-未点赞
+    string title = 8; // 视频标题
+}
+
+message User {
+    uint64 id = 1; // 用户id
+    string name = 2; // 用户名称
+    int64 follow_count = 3; // 关注总数
+    int64 follower_count = 4; // 粉丝总数
+    bool is_follow = 5; // true-已关注，false-未关注
+}
+
+service UserFavoRpc{
+    rpc FavoAction(FavoActionReq) returns (FavoActionResp); //点赞或取消点赞
+    rpc FavoList(FavoListReq) returns (FavoListResp); // 返回点赞视频列表
+    rpc FavoStatus(FavoStatusReq) returns (FavoStatusResp); //返回点赞状态
+}
