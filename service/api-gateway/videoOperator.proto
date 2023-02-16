@@ -48,7 +48,8 @@ message User {
 
 message PublishListReq{
   string token = 1;//用户鉴权token
-  string user_id = 2;//用户id
+  uint64 user_id = 2;//用户id
+  uint64 author_id = 3;//视频作者id
 }
 
 message PublishListResp{

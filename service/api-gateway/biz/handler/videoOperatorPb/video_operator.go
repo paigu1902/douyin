@@ -20,8 +20,9 @@ type VideoReq struct {
 
 // get 方法需要标注 query 参数
 type PublishListReq struct {
-	UserId string `query:"user_id"`
-	Token  string `query:"token"`
+	UserId   uint64
+	Token    string `query:"token"`
+	AuthorId uint64 `query:"user_id"`
 }
 
 type FeedReq struct {
@@ -30,7 +31,7 @@ type FeedReq struct {
 }
 
 func (req *PublishListReq) getGrpcReq() *videoOperatorPb.PublishListReq {
-	return &videoOperatorPb.PublishListReq{UserId: req.UserId, Token: req.Token}
+	return &videoOperatorPb.PublishListReq{UserId: req.UserId, AuthorId: req.AuthorId, Token: req.Token}
 }
 
 func file2Byte(file *multipart.FileHeader) ([]byte, error) {
@@ -119,8 +120,15 @@ func PublishListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+	// 获取用户id
+	fromId, isOK := c.Get("from_id")
+	if !isOK {
+		c.JSON(400, "get current user_id error")
+		return
+	}
+	req.UserId = uint64(fromId.(uint))
 	// 2.调用rpc
-	resp, err := rpcClient.VideoOperatorClient.PublishList(ctx, req.getGrpcReq())
+	resp, err := rpcClient.VideoOpClient.PublishList(ctx, req.getGrpcReq())
 	if err != nil {
 		c.JSON(400, err.Error())
 		return

@@ -13,9 +13,9 @@ import (
 func main() {
 	svr := userFavoPb.NewServer(
 		new(UserFavoRpcImpl),
-		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "UserFavoImpl"}),
+		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "UserFavoriteImpl"}),
 		server.WithRegistry(registry.NewNacosRegistry(nacos.Cli)),
-		server.WithServiceAddr(&net.TCPAddr{Port: 50056}),
+		server.WithServiceAddr(&net.TCPAddr{Port: 12345, IP: net.IPv4(127, 0, 0, 1)}),
 	)
 	if err := svr.Run(); err != nil {
 		log.Println("server stopped with error:", err)

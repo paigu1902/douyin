@@ -9,15 +9,14 @@ import (
 	"os/exec"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/utils"
+	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb/userfavorpc"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
-	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userrelation"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -191,18 +190,7 @@ func extractCover(playUrl string) (string, error) {
 // PublishList implements the VideoOperatorImpl interface.
 func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorPb.PublishListReq) (resp *videoOperatorPb.PublishListResp, err error) {
 	//1. 根据user_id,获取author的信息
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		return nil, err
-	}
-	userInfoClient := userinfo.MustNewClient(
-		"userInfoImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
-
-	token := req.Token
-	authorId, err := strconv.ParseUint(req.UserId, 10, 64)
+	authorId, userId := req.AuthorId, req.UserId
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
 			StatusCode: 1,
@@ -211,7 +199,7 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 		return resp, nil
 	}
 
-	authorInfo, err := userInfoClient.Info(ctx, &userInfoPb.UserInfoReq{ToId: authorId})
+	authorInfo, err := rpcClient.UserInfo.Info(ctx, &userInfoPb.UserInfoReq{ToId: authorId})
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
 			StatusCode: 1,
@@ -231,15 +219,9 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 	}
 	followCnt := authorInfo.User.GetFollowCount()
 	followerCnt := authorInfo.User.GetFollowerCount()
-	relationClient := userrelation.MustNewClient("userRelationImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
 	//3.需要判断用户是否关注该作者
-	claims, err := utils.AnalyseToken(token)
-	userId := claims.ID
-	isFollowResp, err := relationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
-		FromId: uint64(userId),
+	isFollowResp, err := rpcClient.UserRelationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
+		FromId: userId,
 		ToId:   authorId,
 	})
 	if err != nil {
