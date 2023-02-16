@@ -46,7 +46,7 @@ func Register(r *server.Hertz) {
 	favoriteGroup.GET("/list", userFavo.FavoListMethod)
 	favoriteGroup.GET("/status", userFavo.FavoStatusMethod)
 
-	userCommGroup := r.Group("douyin/comment")
+	userCommGroup := r.Group("/douyin/comment")
 	userCommGroup.Use(middlewares.AuthUserCheck())
 	userCommGroup.POST("/action", userComm.CommentActionMethod)
 	userCommGroup.GET("/list", userComm.CommentGetListMethod)
