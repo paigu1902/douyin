@@ -29,6 +29,11 @@ func (x *FavoActionReq) FastRead(buf []byte, _type int8, number int32) (offset i
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -48,11 +53,16 @@ func (x *FavoActionReq) fastReadField1(buf []byte, _type int8) (offset int, err 
 }
 
 func (x *FavoActionReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.VideoId, offset, err = fastpb.ReadInt64(buf, _type)
+	x.Token, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
 func (x *FavoActionReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.VideoId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *FavoActionReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
 	x.Type, offset, err = fastpb.ReadInt32(buf, _type)
 	return offset, err
 }
@@ -99,6 +109,11 @@ func (x *FavoListReq) FastRead(buf []byte, _type int8, number int32) (offset int
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -114,6 +129,11 @@ ReadFieldError:
 
 func (x *FavoListReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
 	x.UserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *FavoListReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.Token, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -163,8 +183,88 @@ func (x *FavoListResp) fastReadField3(buf []byte, _type int8) (offset int, err e
 	if err != nil {
 		return offset, err
 	}
-	x.VideoList = &v
+	x.VideoList = append(x.VideoList, &v)
 	return offset, nil
+}
+
+func (x *FavoStatusReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_FavoStatusReq[number], err)
+}
+
+func (x *FavoStatusReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.UserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *FavoStatusReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.VideoId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *FavoStatusResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_FavoStatusResp[number], err)
+}
+
+func (x *FavoStatusResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.StatusCode, offset, err = fastpb.ReadInt32(buf, _type)
+	return offset, err
+}
+
+func (x *FavoStatusResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.StatusMsg, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *FavoStatusResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.IsFavorite, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
 }
 
 func (x *Video) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
@@ -223,7 +323,7 @@ ReadFieldError:
 }
 
 func (x *Video) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	x.Id, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
@@ -258,7 +358,7 @@ func (x *Video) fastReadField6(buf []byte, _type int8) (offset int, err error) {
 }
 
 func (x *Video) fastReadField7(buf []byte, _type int8) (offset int, err error) {
-	x.FavoStatus, offset, err = fastpb.ReadBool(buf, _type)
+	x.IsFavorite, offset, err = fastpb.ReadBool(buf, _type)
 	return offset, err
 }
 
@@ -308,27 +408,27 @@ ReadFieldError:
 }
 
 func (x *User) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.UserId, offset, err = fastpb.ReadUint64(buf, _type)
+	x.Id, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
 func (x *User) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.UserName, offset, err = fastpb.ReadString(buf, _type)
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
 func (x *User) fastReadField3(buf []byte, _type int8) (offset int, err error) {
-	x.FollowCount, offset, err = fastpb.ReadString(buf, _type)
+	x.FollowCount, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
 func (x *User) fastReadField4(buf []byte, _type int8) (offset int, err error) {
-	x.FollowerCount, offset, err = fastpb.ReadString(buf, _type)
+	x.FollowerCount, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
 func (x *User) fastReadField5(buf []byte, _type int8) (offset int, err error) {
-	x.IsFollow, offset, err = fastpb.ReadString(buf, _type)
+	x.IsFollow, offset, err = fastpb.ReadBool(buf, _type)
 	return offset, err
 }
 
@@ -339,6 +439,7 @@ func (x *FavoActionReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
 	return offset
 }
 
@@ -351,18 +452,26 @@ func (x *FavoActionReq) fastWriteField1(buf []byte) (offset int) {
 }
 
 func (x *FavoActionReq) fastWriteField2(buf []byte) (offset int) {
-	if x.VideoId == 0 {
+	if x.Token == "" {
 		return offset
 	}
-	offset += fastpb.WriteInt64(buf[offset:], 2, x.VideoId)
+	offset += fastpb.WriteString(buf[offset:], 2, x.Token)
 	return offset
 }
 
 func (x *FavoActionReq) fastWriteField3(buf []byte) (offset int) {
+	if x.VideoId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.VideoId)
+	return offset
+}
+
+func (x *FavoActionReq) fastWriteField4(buf []byte) (offset int) {
 	if x.Type == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt32(buf[offset:], 3, x.Type)
+	offset += fastpb.WriteInt32(buf[offset:], 4, x.Type)
 	return offset
 }
 
@@ -396,6 +505,7 @@ func (x *FavoListReq) FastWrite(buf []byte) (offset int) {
 		return offset
 	}
 	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
 	return offset
 }
 
@@ -404,6 +514,14 @@ func (x *FavoListReq) fastWriteField1(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteInt64(buf[offset:], 1, x.UserId)
+	return offset
+}
+
+func (x *FavoListReq) fastWriteField2(buf []byte) (offset int) {
+	if x.Token == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.Token)
 	return offset
 }
 
@@ -437,7 +555,68 @@ func (x *FavoListResp) fastWriteField3(buf []byte) (offset int) {
 	if x.VideoList == nil {
 		return offset
 	}
-	offset += fastpb.WriteMessage(buf[offset:], 3, x.VideoList)
+	for i := range x.VideoList {
+		offset += fastpb.WriteMessage(buf[offset:], 3, x.VideoList[i])
+	}
+	return offset
+}
+
+func (x *FavoStatusReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *FavoStatusReq) fastWriteField1(buf []byte) (offset int) {
+	if x.UserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.UserId)
+	return offset
+}
+
+func (x *FavoStatusReq) fastWriteField2(buf []byte) (offset int) {
+	if x.VideoId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.VideoId)
+	return offset
+}
+
+func (x *FavoStatusResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	return offset
+}
+
+func (x *FavoStatusResp) fastWriteField1(buf []byte) (offset int) {
+	if x.StatusCode == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 1, x.StatusCode)
+	return offset
+}
+
+func (x *FavoStatusResp) fastWriteField2(buf []byte) (offset int) {
+	if x.StatusMsg == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.StatusMsg)
+	return offset
+}
+
+func (x *FavoStatusResp) fastWriteField3(buf []byte) (offset int) {
+	if !x.IsFavorite {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 3, x.IsFavorite)
 	return offset
 }
 
@@ -460,7 +639,7 @@ func (x *Video) fastWriteField1(buf []byte) (offset int) {
 	if x.Id == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt64(buf[offset:], 1, x.Id)
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.Id)
 	return offset
 }
 
@@ -505,10 +684,10 @@ func (x *Video) fastWriteField6(buf []byte) (offset int) {
 }
 
 func (x *Video) fastWriteField7(buf []byte) (offset int) {
-	if !x.FavoStatus {
+	if !x.IsFavorite {
 		return offset
 	}
-	offset += fastpb.WriteBool(buf[offset:], 7, x.FavoStatus)
+	offset += fastpb.WriteBool(buf[offset:], 7, x.IsFavorite)
 	return offset
 }
 
@@ -533,42 +712,42 @@ func (x *User) FastWrite(buf []byte) (offset int) {
 }
 
 func (x *User) fastWriteField1(buf []byte) (offset int) {
-	if x.UserId == 0 {
+	if x.Id == 0 {
 		return offset
 	}
-	offset += fastpb.WriteUint64(buf[offset:], 1, x.UserId)
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.Id)
 	return offset
 }
 
 func (x *User) fastWriteField2(buf []byte) (offset int) {
-	if x.UserName == "" {
+	if x.Name == "" {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 2, x.UserName)
+	offset += fastpb.WriteString(buf[offset:], 2, x.Name)
 	return offset
 }
 
 func (x *User) fastWriteField3(buf []byte) (offset int) {
-	if x.FollowCount == "" {
+	if x.FollowCount == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 3, x.FollowCount)
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.FollowCount)
 	return offset
 }
 
 func (x *User) fastWriteField4(buf []byte) (offset int) {
-	if x.FollowerCount == "" {
+	if x.FollowerCount == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 4, x.FollowerCount)
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.FollowerCount)
 	return offset
 }
 
 func (x *User) fastWriteField5(buf []byte) (offset int) {
-	if x.IsFollow == "" {
+	if !x.IsFollow {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 5, x.IsFollow)
+	offset += fastpb.WriteBool(buf[offset:], 5, x.IsFollow)
 	return offset
 }
 
@@ -579,6 +758,7 @@ func (x *FavoActionReq) Size() (n int) {
 	n += x.sizeField1()
 	n += x.sizeField2()
 	n += x.sizeField3()
+	n += x.sizeField4()
 	return n
 }
 
@@ -591,18 +771,26 @@ func (x *FavoActionReq) sizeField1() (n int) {
 }
 
 func (x *FavoActionReq) sizeField2() (n int) {
-	if x.VideoId == 0 {
+	if x.Token == "" {
 		return n
 	}
-	n += fastpb.SizeInt64(2, x.VideoId)
+	n += fastpb.SizeString(2, x.Token)
 	return n
 }
 
 func (x *FavoActionReq) sizeField3() (n int) {
+	if x.VideoId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(3, x.VideoId)
+	return n
+}
+
+func (x *FavoActionReq) sizeField4() (n int) {
 	if x.Type == 0 {
 		return n
 	}
-	n += fastpb.SizeInt32(3, x.Type)
+	n += fastpb.SizeInt32(4, x.Type)
 	return n
 }
 
@@ -636,6 +824,7 @@ func (x *FavoListReq) Size() (n int) {
 		return n
 	}
 	n += x.sizeField1()
+	n += x.sizeField2()
 	return n
 }
 
@@ -644,6 +833,14 @@ func (x *FavoListReq) sizeField1() (n int) {
 		return n
 	}
 	n += fastpb.SizeInt64(1, x.UserId)
+	return n
+}
+
+func (x *FavoListReq) sizeField2() (n int) {
+	if x.Token == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.Token)
 	return n
 }
 
@@ -677,7 +874,68 @@ func (x *FavoListResp) sizeField3() (n int) {
 	if x.VideoList == nil {
 		return n
 	}
-	n += fastpb.SizeMessage(3, x.VideoList)
+	for i := range x.VideoList {
+		n += fastpb.SizeMessage(3, x.VideoList[i])
+	}
+	return n
+}
+
+func (x *FavoStatusReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *FavoStatusReq) sizeField1() (n int) {
+	if x.UserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.UserId)
+	return n
+}
+
+func (x *FavoStatusReq) sizeField2() (n int) {
+	if x.VideoId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.VideoId)
+	return n
+}
+
+func (x *FavoStatusResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	return n
+}
+
+func (x *FavoStatusResp) sizeField1() (n int) {
+	if x.StatusCode == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(1, x.StatusCode)
+	return n
+}
+
+func (x *FavoStatusResp) sizeField2() (n int) {
+	if x.StatusMsg == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.StatusMsg)
+	return n
+}
+
+func (x *FavoStatusResp) sizeField3() (n int) {
+	if !x.IsFavorite {
+		return n
+	}
+	n += fastpb.SizeBool(3, x.IsFavorite)
 	return n
 }
 
@@ -700,7 +958,7 @@ func (x *Video) sizeField1() (n int) {
 	if x.Id == 0 {
 		return n
 	}
-	n += fastpb.SizeInt64(1, x.Id)
+	n += fastpb.SizeUint64(1, x.Id)
 	return n
 }
 
@@ -745,10 +1003,10 @@ func (x *Video) sizeField6() (n int) {
 }
 
 func (x *Video) sizeField7() (n int) {
-	if !x.FavoStatus {
+	if !x.IsFavorite {
 		return n
 	}
-	n += fastpb.SizeBool(7, x.FavoStatus)
+	n += fastpb.SizeBool(7, x.IsFavorite)
 	return n
 }
 
@@ -773,49 +1031,50 @@ func (x *User) Size() (n int) {
 }
 
 func (x *User) sizeField1() (n int) {
-	if x.UserId == 0 {
+	if x.Id == 0 {
 		return n
 	}
-	n += fastpb.SizeUint64(1, x.UserId)
+	n += fastpb.SizeUint64(1, x.Id)
 	return n
 }
 
 func (x *User) sizeField2() (n int) {
-	if x.UserName == "" {
+	if x.Name == "" {
 		return n
 	}
-	n += fastpb.SizeString(2, x.UserName)
+	n += fastpb.SizeString(2, x.Name)
 	return n
 }
 
 func (x *User) sizeField3() (n int) {
-	if x.FollowCount == "" {
+	if x.FollowCount == 0 {
 		return n
 	}
-	n += fastpb.SizeString(3, x.FollowCount)
+	n += fastpb.SizeInt64(3, x.FollowCount)
 	return n
 }
 
 func (x *User) sizeField4() (n int) {
-	if x.FollowerCount == "" {
+	if x.FollowerCount == 0 {
 		return n
 	}
-	n += fastpb.SizeString(4, x.FollowerCount)
+	n += fastpb.SizeInt64(4, x.FollowerCount)
 	return n
 }
 
 func (x *User) sizeField5() (n int) {
-	if x.IsFollow == "" {
+	if !x.IsFollow {
 		return n
 	}
-	n += fastpb.SizeString(5, x.IsFollow)
+	n += fastpb.SizeBool(5, x.IsFollow)
 	return n
 }
 
 var fieldIDToName_FavoActionReq = map[int32]string{
 	1: "UserId",
-	2: "VideoId",
-	3: "Type",
+	2: "Token",
+	3: "VideoId",
+	4: "Type",
 }
 
 var fieldIDToName_FavoActionResp = map[int32]string{
@@ -825,12 +1084,24 @@ var fieldIDToName_FavoActionResp = map[int32]string{
 
 var fieldIDToName_FavoListReq = map[int32]string{
 	1: "UserId",
+	2: "Token",
 }
 
 var fieldIDToName_FavoListResp = map[int32]string{
 	1: "StatusCode",
 	2: "StatusMsg",
 	3: "VideoList",
+}
+
+var fieldIDToName_FavoStatusReq = map[int32]string{
+	1: "UserId",
+	2: "VideoId",
+}
+
+var fieldIDToName_FavoStatusResp = map[int32]string{
+	1: "StatusCode",
+	2: "StatusMsg",
+	3: "IsFavorite",
 }
 
 var fieldIDToName_Video = map[int32]string{
@@ -840,13 +1111,13 @@ var fieldIDToName_Video = map[int32]string{
 	4: "CoverUrl",
 	5: "FavoriteCount",
 	6: "CommentCount",
-	7: "FavoStatus",
+	7: "IsFavorite",
 	8: "Title",
 }
 
 var fieldIDToName_User = map[int32]string{
-	1: "UserId",
-	2: "UserName",
+	1: "Id",
+	2: "Name",
 	3: "FollowCount",
 	4: "FollowerCount",
 	5: "IsFollow",

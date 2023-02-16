@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/streadway/amqp"
 	"log"
-	"paigu1902/douyin/service/rpc-user-operator/models"
+	"paigu1902/douyin/common/models"
 	"strconv"
 	"strings"
 )
