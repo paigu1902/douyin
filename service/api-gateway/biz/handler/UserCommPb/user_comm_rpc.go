@@ -65,3 +65,25 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, &resp)
 	return
 }
+
+func CommentNumberMethod(ctx context.Context, c *app.RequestContext) {
+	UserId, Exist1 := c.GetQuery("user_id")
+	VideoId, Exist2 := c.GetQuery("video_id")
+	if !(Exist1 && Exist2) {
+		c.String(400, "获取参数失败")
+		return
+	}
+	userid, _ := strconv.Atoi(UserId)
+	videoid, _ := strconv.Atoi(VideoId)
+
+	resp, err := rpcClient.UserComm.GetCommentNumberByVideo(ctx, &UserCommPb.DouyinCommentNumberRequest{
+		UserId:  int64(userid),
+		VideoId: int64(videoid),
+	})
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+	c.JSON(200, &resp)
+	return
+}
