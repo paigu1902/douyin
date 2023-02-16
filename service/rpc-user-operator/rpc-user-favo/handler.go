@@ -175,7 +175,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 	user := fmt.Sprintf("%s", req.UserId)
 	ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
 	if err != nil {
-		return &userFavoPb.FavoListResp{StatusCode: 1 StatusMsg: "Failed", VideoList: nil}, err
+		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
 	}
 	if ext > 0 { //cache中存在点赞用户信息 获取视频列表
 		videoIdListStr, err := cache.RdbFavoUser.SMembers(context.Background(), user).Result()
