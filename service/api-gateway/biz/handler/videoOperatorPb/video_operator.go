@@ -10,7 +10,6 @@ import (
 	"mime/multipart"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
-	"strconv"
 )
 
 type VideoReq struct {
@@ -104,13 +103,12 @@ func PublishListMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	// 获取用户id
-	user_id_str, isok := c.GetQuery("user_id")
-	if !isok {
-		c.JSON(400, "get user_id err")
+	fromId, isOK := c.Get("from_id")
+	if !isOK {
+		c.JSON(400, "get current user_id error")
 		return
 	}
-	user_id, err := strconv.ParseUint(user_id_str, 10, 64)
-	req.UserId = user_id
+	req.UserId = uint64(fromId.(uint))
 	// 2.调用rpc
 	resp, err := rpcClient.VideoOpClient.PublishList(ctx, req.getGrpcReq())
 	if err != nil {

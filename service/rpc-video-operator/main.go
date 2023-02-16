@@ -15,7 +15,7 @@ func main() {
 		new(VideoOperatorImpl),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "videoOperatorImpl"}),
 		server.WithRegistry(registry.NewNacosRegistry(nacos.Cli)),
-		server.WithServiceAddr(&net.TCPAddr{Port: 50053}),
+		server.WithServiceAddr(&net.TCPAddr{Port: 50053, IP: net.IPv4(127, 0, 0, 1)}),
 	)
 	if err := svr.Run(); err != nil {
 		log.Println("server stopped with error:", err)
