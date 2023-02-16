@@ -3,7 +3,7 @@ package middlewares
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/gin-gonic/gin"
+	hzUtils "github.com/cloudwego/hertz/pkg/common/utils"
 	"net/http"
 	"paigu1902/douyin/common/utils"
 )
@@ -20,7 +20,7 @@ func AuthUserCheck() app.HandlerFunc {
 			err := c.Bind(auth)
 			if err != nil {
 				c.Abort()
-				c.JSON(http.StatusOK, gin.H{
+				c.JSON(http.StatusOK, hzUtils.H{
 					"code": http.StatusUnauthorized,
 					"msg":  "Unauthorized Authorization",
 				})
@@ -31,7 +31,7 @@ func AuthUserCheck() app.HandlerFunc {
 		userClaim, err := utils.AnalyseToken(token)
 		if err != nil {
 			c.Abort()
-			c.JSON(http.StatusOK, gin.H{
+			c.JSON(http.StatusOK, hzUtils.H{
 				"code": http.StatusUnauthorized,
 				"msg":  "Unauthorized Authorization",
 			})
@@ -39,7 +39,7 @@ func AuthUserCheck() app.HandlerFunc {
 		}
 		if userClaim == nil {
 			c.Abort()
-			c.JSON(http.StatusOK, gin.H{
+			c.JSON(http.StatusOK, hzUtils.H{
 				"code": http.StatusUnauthorized,
 				"msg":  "Unauthorized Admin",
 			})

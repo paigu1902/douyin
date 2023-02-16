@@ -36,15 +36,11 @@ func stringToUint64(intStr string) (uint64, error) {
 }
 
 func getFromId(c *app.RequestContext) (uint64, error) {
-	var fromId uint64
 	value, exists := c.Get("from_id")
 	if exists != true {
 		return 0, errors.New("token解析失败")
 	}
-	fromId, err := stringToUint64(value.(string))
-	if err != nil {
-		return 0, errors.New("from_id异常")
-	}
+	fromId := uint64(value.(uint))
 	return fromId, nil
 }
 

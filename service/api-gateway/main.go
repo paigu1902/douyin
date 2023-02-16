@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	addr := "0.0.0.0:3002"
+	addr := "127.0.0.1:3002"
 	r := nacos.NewNacosRegistry(nacosClient.Cli)
 	h := server.Default(
 		server.WithHostPorts(addr),
