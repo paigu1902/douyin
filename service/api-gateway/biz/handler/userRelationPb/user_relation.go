@@ -12,6 +12,14 @@ import (
 	"strconv"
 )
 
+type UserHttp struct {
+	UserId        uint64
+	UserName      string
+	FollowCount   int64
+	FollowerCount int64
+	IsFollow      bool
+}
+
 type FollowActionReq struct {
 	ToId       string `query:"to_user_id"`
 	ActionType string `query:"action_type"`
@@ -25,6 +33,20 @@ type MessageActionReq struct {
 
 type MessageHistoryReq struct {
 	ToId string `query:"to_user_id"`
+}
+
+func getUsers(users []*userRelationPb.User) []*UserHttp {
+	res := make([]*UserHttp, len(users))
+	for i, v := range users {
+		res[i] = &UserHttp{
+			UserId:        v.GetUserId(),
+			UserName:      v.GetUserName(),
+			FollowCount:   v.GetFollowCount(),
+			FollowerCount: v.GetFollowerCount(),
+			IsFollow:      v.GetIsFollow(),
+		}
+	}
+	return res
 }
 
 func stringToUint64(intStr string) (uint64, error) {
@@ -93,10 +115,11 @@ func FollowList(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
-		"user_list":   resp.GetUserList()},
+		"user_list":   getUsers(resp.GetUserList())},
 	)
 	return
 }
@@ -117,10 +140,11 @@ func FollowerList(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
-		"user_list":   resp.GetUserList()},
+		"user_list":   getUsers(resp.GetUserList())},
 	)
 	return
 }
@@ -144,7 +168,7 @@ func FriendList(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
-		"user_list":   resp.GetUserList()},
+		"user_list":   getUsers(resp.GetUserList())},
 	)
 	return
 }
