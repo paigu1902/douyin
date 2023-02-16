@@ -289,6 +289,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 
 // 查询用户对某条视频的点赞状态
 func (s *UserFavoRpcImpl) FavoStatus(ctx context.Context, req *userFavoPb.FavoStatusReq) (resp *userFavoPb.FavoStatusResp, err error) {
+	fmt.Printf("%v\n", req)
 	user := fmt.Sprintf("%s", req.UserId)
 	video := fmt.Sprintf("%s", req.VideoId)
 	//查询user-video表

@@ -11,6 +11,8 @@ import (
 	"paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
+	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
+	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb/userfavorpc"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb/userrelation"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
@@ -89,15 +91,14 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 	var id uint
 	if req.Token != "" {
 		claims, err := utils.AnalyseToken(req.Token)
-		id = claims.ID
 		if err != nil {
 			return nil, err
 		}
+		id = claims.ID
 	}
 
 	limit := 30
 
-	// todo: timestamp to UTC time format
 	timestamp := req.LatestTime
 	if timestamp == 0 {
 		timestamp = time.Now().Unix()
@@ -141,24 +142,23 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 			Title:         videoInfo.Title,
 		}
 
-		////用户登录状态的话，查询用户是否点赞视频
-		////还不能用，好像rpc-user-favo会报错
-		//if req.Token != "" {
-		//	userInfoReq.FromId = uint64(id)
-		//	userFavoClient := userfavorpc.MustNewClient(
-		//		"userFavoRpcImpl",
-		//		client.WithResolver(r),
-		//		client.WithRPCTimeout(time.Second*5),
-		//	)
-		//	userFavoResp, err := userFavoClient.FavoStatus(context.Background(), &userFavoPb.FavoStatusReq{
-		//		UserId:  int64(id),
-		//		VideoId: int64(video.Id),
-		//	})
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//	video.IsFavorite = userFavoResp.IsFavorite
-		//}
+		//用户登录状态的话，查询用户是否点赞视频
+		if req.Token != "" {
+			userInfoReq.FromId = uint64(id)
+			userFavoClient := userfavorpc.MustNewClient(
+				"UserFavoImpl",
+				client.WithResolver(r),
+				client.WithRPCTimeout(time.Second*5),
+			)
+			userFavoResp, err := userFavoClient.FavoStatus(context.Background(), &userFavoPb.FavoStatusReq{
+				UserId:  int64(id),
+				VideoId: int64(video.Id),
+			})
+			if err != nil {
+				return nil, err
+			}
+			video.IsFavorite = userFavoResp.IsFavorite
+		}
 
 		videoRespList = append(videoRespList, &video)
 	}
