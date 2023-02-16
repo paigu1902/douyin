@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/rabbitmq"
@@ -21,8 +20,8 @@ type UserFavoRpcImpl struct{}
 // FavoAction implements the UserFavoRpcImpl interface.
 func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoActionReq) (resp *userFavoPb.FavoActionResp, err error) {
 	// TODO: Your code here..
-	user := fmt.Sprintf("%s", req.UserId)
-	video := fmt.Sprintf("%s", req.VideoId)
+	user := strconv.FormatInt(req.UserId, 10)
+	video := strconv.FormatInt(req.VideoId, 10)
 	msg := strings.Builder{}
 	msg.WriteString(user)
 	msg.WriteString(" ")
@@ -170,7 +169,7 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 // FavoList implements the UserFavoRpcImpl interface.
 func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoListReq) (resp *userFavoPb.FavoListResp, err error) {
 	// TODO: Your code here...
-	user := fmt.Sprintf("%s", req.UserId)
+	user := strconv.FormatInt(req.UserId, 10)
 	ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
 	if err != nil {
 		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
@@ -269,8 +268,8 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 
 // 查询用户对某条视频的点赞状态
 func (s *UserFavoRpcImpl) FavoStatus(ctx context.Context, req *userFavoPb.FavoStatusReq) (resp *userFavoPb.FavoStatusResp, err error) {
-	user := fmt.Sprintf("%s", req.UserId)
-	video := fmt.Sprintf("%s", req.VideoId)
+	user := strconv.FormatInt(req.UserId, 10)
+	video := strconv.FormatInt(req.VideoId, 10)
 	//查询user-video表
 	ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
 	if err != nil {
@@ -311,7 +310,7 @@ func (s *UserFavoRpcImpl) FavoStatus(ctx context.Context, req *userFavoPb.FavoSt
 				return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Failed", IsFavorite: false}, err
 			}
 			for _, favoVideo := range videoList {
-				str := fmt.Sprintf("%s", favoVideo)
+				str := strconv.FormatInt(int64(favoVideo), 10)
 				cache.RdbFavoUser.SAdd(context.Background(), user, str)
 			}
 			//再次查询cache
@@ -326,7 +325,7 @@ func (s *UserFavoRpcImpl) FavoStatus(ctx context.Context, req *userFavoPb.FavoSt
 
 // 查询视频被点赞总数
 func (s *UserFavoRpcImpl) FavoCount(videoId int64) (int64, error) {
-	video := fmt.Sprintf("%s", videoId)
+	video := strconv.FormatInt(videoId, 10)
 	//查询video-user表
 	ext, err := cache.RdbFavoVideo.Exists(context.Background(), video).Result()
 	if err != nil {
@@ -357,7 +356,7 @@ func (s *UserFavoRpcImpl) FavoCount(videoId int64) (int64, error) {
 			return 0, err
 		}
 		for _, favoUser := range userList {
-			str := fmt.Sprintf("%s", favoUser)
+			str := strconv.FormatInt(int64(favoUser), 10)
 			cache.RdbFavoUser.SAdd(context.Background(), video, str)
 		}
 		//再次查询cache
