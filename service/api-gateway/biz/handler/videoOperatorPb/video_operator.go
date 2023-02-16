@@ -5,14 +5,12 @@ package videoOperator
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/kitex/client"
-	"github.com/kitex-contrib/registry-nacos/resolver"
 	"io"
 	"log"
 	"mime/multipart"
+	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
-	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb/videooperator"
-	"time"
+	"strconv"
 )
 
 type VideoReq struct {
@@ -23,8 +21,9 @@ type VideoReq struct {
 
 // get 方法需要标注 query 参数
 type PublishListReq struct {
-	UserId string `query:"user_id"`
-	Token  string `query:"token"`
+	UserId   uint64
+	Token    string `query:"token"`
+	AuthorId uint64 `query:"user_id"`
 }
 
 type FeedReq struct {
@@ -33,7 +32,7 @@ type FeedReq struct {
 }
 
 func (req *PublishListReq) getGrpcReq() *videoOperatorPb.PublishListReq {
-	return &videoOperatorPb.PublishListReq{UserId: req.UserId, Token: req.Token}
+	return &videoOperatorPb.PublishListReq{UserId: req.UserId, AuthorId: req.AuthorId, Token: req.Token}
 }
 
 func file2Byte(file *multipart.FileHeader) ([]byte, error) {
@@ -58,17 +57,8 @@ func file2Byte(file *multipart.FileHeader) ([]byte, error) {
 }
 
 func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	newClient := videooperator.MustNewClient(
-		"videoOperatorImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
 	var req VideoReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		c.String(400, err.Error())
 		return
@@ -77,7 +67,7 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		panic(err)
 	}
-	resp, err := newClient.Upload(context.Background(), &videoOperatorPb.VideoUploadReq{
+	resp, err := rpcClient.VideoOpClient.Upload(context.Background(), &videoOperatorPb.VideoUploadReq{
 		Token: req.Token,
 		Data:  data,
 		Title: req.Title,
@@ -90,23 +80,14 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 }
 
 func FeedMethod(ctx context.Context, c *app.RequestContext) {
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	newClient := videooperator.MustNewClient(
-		"videoOperatorImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
 	var req FeedReq
-	err = c.BindAndValidate(&req)
+	err := c.BindAndValidate(&req)
 	if err != nil {
 		c.String(400, err.Error())
 		return
 	}
 	log.Printf("req:%v", req)
-	resp, err := newClient.Feed(context.Background(), &videoOperatorPb.FeedReq{
+	resp, err := rpcClient.VideoOpClient.Feed(context.Background(), &videoOperatorPb.FeedReq{
 		LatestTime: req.LatestTime,
 		Token:      req.Token,
 	})
@@ -116,23 +97,22 @@ func FeedMethod(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, resp)
 }
 func PublishListMethod(ctx context.Context, c *app.RequestContext) {
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	client := videooperator.MustNewClient(
-		"videoOperatorImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
 	req := new(PublishListReq)
 	// 1. 绑定校验参数
-	if err = c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(req); err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
+	// 获取用户id
+	user_id_str, isok := c.GetQuery("user_id")
+	if !isok {
+		c.JSON(400, "get user_id err")
+		return
+	}
+	user_id, err := strconv.ParseUint(user_id_str, 10, 64)
+	req.UserId = user_id
 	// 2.调用rpc
-	resp, err := client.PublishList(ctx, req.getGrpcReq())
+	resp, err := rpcClient.VideoOpClient.PublishList(ctx, req.getGrpcReq())
 	if err != nil {
 		c.JSON(400, err.Error())
 		return
