@@ -21,8 +21,8 @@ message FollowActionResp {
 message User {
   uint64 userId = 1; //userId
   string userName = 2; //name
-  string followCount = 3; //followCount
-  string followerCount = 4; //followerCount
+  int64 followCount = 3; //followCount
+  int64 followerCount = 4; //followerCount
   bool isFollow = 5;
 }
 

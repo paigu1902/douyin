@@ -4,25 +4,183 @@ package userRelationPb
 
 import (
 	"context"
+	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
+	"strconv"
 )
 
-type MessageHistoryReq struct {
-	From_id string
-	To_id   string
+type FollowActionReq struct {
+	ToId       string `query:"to_user_id"`
+	ActionType string `query:"action_type"`
 }
 
-func FollowAction(ctx context.Context, c *app.RequestContext) {}
+type MessageActionReq struct {
+	ToId       string `query:"to_user_id"`
+	ActionType string `query:"action_type"`
+	Content    string `query:"content"`
+}
 
-func FollowList(ctx context.Context, c *app.RequestContext) {}
+type MessageHistoryReq struct {
+	ToId string `query:"to_user_id"`
+}
 
-func FollowerList(ctx context.Context, c *app.RequestContext) {}
+func stringToUint64(intStr string) (uint64, error) {
+	atoi, err := strconv.Atoi(intStr)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(atoi), nil
+}
 
-func FriendList(ctx context.Context, c *app.RequestContext) {}
+func getFromId(c *app.RequestContext) (uint64, error) {
+	value, exists := c.Get("from_id")
+	if exists != true {
+		return 0, errors.New("token解析失败")
+	}
+	fromId := uint64(value.(uint))
+	return fromId, nil
+}
 
-func MessageAction(ctx context.Context, c *app.RequestContext) {}
+func FollowAction(ctx context.Context, c *app.RequestContext) {
+	req := new(FollowActionReq)
+	// 1. 绑定校验参数
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+
+	toId, err := stringToUint64(req.ToId)
+	if err != nil {
+		c.JSON(400, errors.New("to_id异常"))
+		return
+	}
+
+	fromId, err := getFromId(c)
+	if err != nil {
+		c.JSON(400, err)
+		return
+	}
+
+	// 2.调用rpc
+	resp, err := rpcClient.UserRelationClient.FollowAction(ctx, &userRelationPb.FollowActionReq{FromId: fromId, ToId: toId, Type: req.ActionType})
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg()},
+	)
+	return
+}
+
+func FollowList(ctx context.Context, c *app.RequestContext) {
+	id, exist := c.GetQuery("user_id")
+	if exist != true {
+		c.JSON(400, errors.New("参数userid异常"))
+		return
+	}
+	userId, err := stringToUint64(id)
+	if err != nil {
+		c.JSON(400, errors.New("to_id异常"))
+		return
+	}
+	resp, err := rpcClient.UserRelationClient.FollowList(ctx, &userRelationPb.FollowListReq{UserId: userId})
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"user_list":   resp.GetUserList()},
+	)
+	return
+}
+
+func FollowerList(ctx context.Context, c *app.RequestContext) {
+	id, exist := c.GetQuery("user_id")
+	if exist != true {
+		c.JSON(400, errors.New("参数userid异常"))
+		return
+	}
+	userId, err := stringToUint64(id)
+	if err != nil {
+		c.JSON(400, errors.New("id异常"))
+		return
+	}
+	resp, err := rpcClient.UserRelationClient.FollowerList(ctx, &userRelationPb.FollowerListReq{UserId: userId})
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"user_list":   resp.GetUserList()},
+	)
+	return
+}
+
+func FriendList(ctx context.Context, c *app.RequestContext) {
+	id, exist := c.GetQuery("user_id")
+	if exist != true {
+		c.JSON(400, errors.New("参数userid异常"))
+		return
+	}
+	userId, err := stringToUint64(id)
+	if err != nil {
+		c.JSON(400, errors.New("id异常"))
+		return
+	}
+	resp, err := rpcClient.UserRelationClient.FriendList(ctx, &userRelationPb.FriendListReq{UserId: userId})
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"user_list":   resp.GetUserList()},
+	)
+	return
+}
+
+func MessageAction(ctx context.Context, c *app.RequestContext) {
+	req := new(MessageActionReq)
+	// 1. 绑定校验参数
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+
+	toId, err := stringToUint64(req.ToId)
+	if err != nil {
+		c.JSON(400, errors.New("to_id异常"))
+		return
+	}
+
+	fromId, err := getFromId(c)
+	if err != nil {
+		c.JSON(400, err)
+		return
+	}
+
+	// 2.调用rpc
+	resp, err := rpcClient.UserRelationClient.SendMessage(ctx, &userRelationPb.SendMessageReq{FromId: fromId, ToId: toId, Type: req.ActionType, Content: req.Content})
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg()},
+	)
+	return
+}
 
 func MessageHistory(ctx context.Context, c *app.RequestContext) {
 	req := new(MessageHistoryReq)
@@ -31,12 +189,28 @@ func MessageHistory(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+	var toId uint64
+	toId, err := stringToUint64(req.ToId)
+	if err != nil {
+		c.JSON(400, errors.New("to_id异常"))
+		return
+	}
+
+	fromId, err := getFromId(c)
+	if err != nil {
+		c.JSON(400, err)
+		return
+	}
 	// 2.调用rpc
-	resp, err := rpcClient.UserRelationClient.HistoryMessage(ctx, &userRelationPb.HistoryMessageReq{FromId: 123, ToId: 123})
+	resp, err := rpcClient.UserRelationClient.HistoryMessage(ctx, &userRelationPb.HistoryMessageReq{FromId: fromId, ToId: toId})
 	if err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, resp)
+	c.JSON(200, utils.H{
+		"status_code":  resp.GetStatusCode(),
+		"status_msg":   resp.GetStatusMsg(),
+		"message_list": resp.GetMessageList()},
+	)
 	return
 }

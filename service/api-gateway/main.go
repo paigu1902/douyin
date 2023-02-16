@@ -7,35 +7,13 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/hertz-contrib/registry/nacos"
-	"github.com/nacos-group/nacos-sdk-go/clients"
-	"github.com/nacos-group/nacos-sdk-go/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/vo"
+	nacosClient "paigu1902/douyin/common/nacos"
 	"paigu1902/douyin/service/api-gateway/router"
 )
 
 func main() {
-	sc := []constant.ServerConfig{
-		*constant.NewServerConfig("127.0.0.1", 8848),
-	}
-	cc := constant.ClientConfig{
-		NamespaceId:         "", //命名空间
-		TimeoutMs:           5000,
-		NotLoadCacheAtStart: true,
-		LogDir:              "/tmp/nacos/log",
-		CacheDir:            "/tmp/nacos/cache",
-		LogLevel:            "info",
-	}
-
-	cli, err := clients.NewNamingClient(
-		vo.NacosClientParam{
-			ClientConfig:  &cc,
-			ServerConfigs: sc,
-		})
-	if err != nil {
-		panic(err)
-	}
-	addr := "0.0.0.0:3002"
-	r := nacos.NewNacosRegistry(cli)
+	addr := "127.0.0.1:3002"
+	r := nacos.NewNacosRegistry(nacosClient.Cli)
 	h := server.Default(
 		server.WithHostPorts(addr),
 		server.WithRegistry(r, &registry.Info{

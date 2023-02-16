@@ -8,7 +8,6 @@ require (
 	github.com/cloudwego/hertz v0.5.2
 	github.com/cloudwego/kitex v0.4.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/gin-gonic/gin v1.8.2
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/hertz-contrib/registry/nacos v0.0.0-20230207051619-7ff71fed629c
 	github.com/kitex-contrib/registry-nacos v0.0.1
