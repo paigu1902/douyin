@@ -44,3 +44,7 @@ func init() {
 		DB:       4,
 	})
 }
+
+func init() {
+	InitRedis()
+}

@@ -48,14 +48,14 @@ func Register(r *server.Hertz) {
 	favoriteGroup := r.Group("/douyin/favorite/")
 	favoriteGroup.Use(middlewares.AccessLog())
 	favoriteGroup.Use(middlewares.AuthUserCheck())
-	favoriteGroup.POST("/action/", userFavo.FavoActionMethod)
+	favoriteGroup.POST("/action/", userFavo.FavoActionMethod, middlewares.LimitFavorAction())
 	favoriteGroup.GET("/list/", userFavo.FavoListMethod)
 	favoriteGroup.GET("/status/", userFavo.FavoStatusMethod)
 
 	userCommGroup := r.Group("/douyin/comment/")
 	userCommGroup.Use(middlewares.AccessLog())
 	userCommGroup.Use(middlewares.AuthUserCheck())
-	userCommGroup.POST("/action/", userComm.CommentActionMethod)
+	userCommGroup.POST("/action/", userComm.CommentActionMethod, middlewares.LimitCommentAction())
 	userCommGroup.GET("/list/", userComm.CommentGetListMethod)
 	userCommGroup.GET("/number/", userComm.CommentNumberMethod)
 }
