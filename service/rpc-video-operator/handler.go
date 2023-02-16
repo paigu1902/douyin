@@ -14,6 +14,7 @@ import (
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb/userfavorpc"
+	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
@@ -71,16 +72,6 @@ func (s *VideoOperatorImpl) Upload(ctx context.Context, req *videoOperatorPb.Vid
 // Feed implements the VideoOperatorImpl interface.
 func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedReq) (resp *videoOperatorPb.FeedResp, err error) {
 	// TODO: Your code here...
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	userInfoClient := userinfo.MustNewClient(
-		"userInfoImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
-
 	if req == nil {
 		req = &videoOperatorPb.FeedReq{
 			LatestTime: 0,
@@ -119,7 +110,7 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 		if req.Token != "" {
 			userInfoReq.FromId = uint64(id)
 		}
-		authorInfo, err := userInfoClient.Info(ctx, &userInfoReq)
+		authorInfo, err := rpcClient.UserInfo.Info(ctx, &userInfoReq)
 		if err != nil {
 			return nil, err
 		}
@@ -243,6 +234,15 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 		//TODO: isFavourite字段需要后续，根据userFavo获取
 		video := v.TransToVideo()
 		video.Author = author
+		favoStatusResp, er := rpcClient.UserFavo.FavoStatus(ctx, &userFavoPb.FavoStatusReq{UserId: int64(userId), VideoId: int64(v.ID)})
+		if er != nil {
+			resp = &videoOperatorPb.PublishListResp{
+				StatusCode: 1,
+				StatusMsg:  "查询用户点赞错误",
+			}
+			return resp, er
+		}
+		video.IsFavorite = favoStatusResp.IsFavorite
 		videos = append(videos, video)
 	}
 	resp = &videoOperatorPb.PublishListResp{
