@@ -3,14 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudwego/kitex/client"
-	"github.com/kitex-contrib/registry-nacos/resolver"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/rabbitmq"
+	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	VideoOptPb "paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
-	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb/videooperator"
 	"strconv"
 	"strings"
 	"time"
@@ -175,7 +173,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 	user := fmt.Sprintf("%s", req.UserId)
 	ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
 	if err != nil {
-		return &userFavoPb.FavoListResp{StatusCode: 1 StatusMsg: "Failed", VideoList: nil}, err
+		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
 	}
 	if ext > 0 { //cache中存在点赞用户信息 获取视频列表
 		videoIdListStr, err := cache.RdbFavoUser.SMembers(context.Background(), user).Result()
@@ -188,16 +186,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 			videoIdList[index] = uint64(id)
 		}
 		//获取videoOperator客户端
-		r, err := resolver.NewDefaultNacosResolver()
-		if err != nil {
-			return nil, err
-		}
-		videooptClient := videooperator.MustNewClient(
-			"videoOperatorImpl",
-			client.WithResolver(r),
-			client.WithRPCTimeout(time.Second*5),
-		)
-		resp, err := videooptClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
+		resp, err := rpcClient.VideoOpClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
 		if err != nil {
 			return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
 		}
@@ -249,16 +238,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 			}
 		}
 		//获取videoOperator客户端
-		r, err := resolver.NewDefaultNacosResolver()
-		if err != nil {
-			return nil, err
-		}
-		videooptClient := videooperator.MustNewClient(
-			"videoOperatorImpl",
-			client.WithResolver(r),
-			client.WithRPCTimeout(time.Second*5),
-		)
-		resp, err := videooptClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
+		resp, err := rpcClient.VideoOpClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
 		if err != nil {
 			return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
 		}
