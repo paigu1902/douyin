@@ -45,3 +45,15 @@ func LimitFollowAction() app.HandlerFunc {
 		LimitAction(c, ctx, LimitConfig{KeyPre: "FollowLim:", Expiration: time.Second * 10, MaxNum: 5})
 	}
 }
+
+func LimitCommentAction() app.HandlerFunc {
+	return func(c context.Context, ctx *app.RequestContext) {
+		LimitAction(c, ctx, LimitConfig{KeyPre: "CommentLim:", Expiration: time.Second * 10, MaxNum: 5})
+	}
+}
+
+func LimitFavorAction() app.HandlerFunc {
+	return func(c context.Context, ctx *app.RequestContext) {
+		LimitAction(c, ctx, LimitConfig{KeyPre: "FavorLim:", Expiration: time.Second * 10, MaxNum: 5})
+	}
+}
