@@ -76,15 +76,14 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 	var id uint
 	if req.Token != "" {
 		claims, err := utils.AnalyseToken(req.Token)
-		id = claims.ID
 		if err != nil {
 			return nil, err
 		}
+		id = claims.ID
 	}
 
 	limit := 30
 
-	// todo: timestamp to UTC time format
 	timestamp := req.LatestTime
 	if timestamp == 0 {
 		timestamp = time.Now().Unix()
@@ -117,16 +116,31 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 			FollowerCount: authorInfo.User.FollowerCount,
 			IsFollow:      authorInfo.User.IsFollow,
 		}
-		videoRespList = append(videoRespList, &videoOperatorPb.Video{
+		video := videoOperatorPb.Video{
 			Id:            uint64(videoInfo.ID),
 			Author:        &author,
 			PlayUrl:       videoInfo.PlayUrl,
 			CoverUrl:      videoInfo.CoverUrl,
 			FavoriteCount: videoInfo.FavoriteCount,
 			CommentCount:  videoInfo.CommentCount,
-			IsFavorite:    false, //todo: 修改
+			IsFavorite:    false,
 			Title:         videoInfo.Title,
-		})
+		}
+
+		//用户登录状态的话，查询用户是否点赞视频
+		if req.Token != "" {
+			userInfoReq.FromId = uint64(id)
+			userFavoResp, err := rpcClient.UserFavo.FavoStatus(context.Background(), &userFavoPb.FavoStatusReq{
+				UserId:  int64(id),
+				VideoId: int64(video.Id),
+			})
+			if err != nil {
+				return nil, err
+			}
+			video.IsFavorite = userFavoResp.IsFavorite
+		}
+
+		videoRespList = append(videoRespList, &video)
 	}
 	feedResp := &videoOperatorPb.FeedResp{
 		StatusCode: 0,
@@ -207,6 +221,7 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 
 	var videos []*videoOperatorPb.Video
 	for _, v := range videoList {
+		//TODO: isFavourite字段需要后续，根据userFavo获取
 		video := v.TransToVideo()
 		video.Author = author
 		favoStatusResp, er := rpcClient.UserFavo.FavoStatus(ctx, &userFavoPb.FavoStatusReq{UserId: int64(userId), VideoId: int64(v.ID)})

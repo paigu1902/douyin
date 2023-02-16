@@ -21,8 +21,8 @@ func (table *UserFavo) TableName() string {
 // 根据视频id获取点赞用户id列表
 func GetFavoUserId(videoId uint64) ([]uint64, error) {
 	var favoUserId []uint64
-	err := DB.Model(&UserFavo{}).Where("VideoId = ? and Status = ?", videoId, 1).
-		Pluck("UserId", &favoUserId).Error
+	err := DB.Model(&UserFavo{}).Where("video_id = ? and status = ?", videoId, 1).
+		Pluck("user_id", &favoUserId).Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			log.Println("The video hasn't been liked.")
@@ -39,8 +39,8 @@ func GetFavoUserId(videoId uint64) ([]uint64, error) {
 // 根据用户id查询其点赞的视频id列表
 func GetFavoVideoId(userId uint64) ([]uint64, error) {
 	var favoVideoId []uint64
-	err := DB.Model(&UserFavo{}).Where("UserId = ? and Status = ?", userId, 1).
-		Pluck("VideoId", &favoVideoId).Error
+	err := DB.Model(&UserFavo{}).Where("user_id = ? and status = ?", userId, 1).
+		Pluck("video_id", &favoVideoId).Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			log.Println("The user hasn't liked any video.")
@@ -57,7 +57,7 @@ func GetFavoVideoId(userId uint64) ([]uint64, error) {
 // 查询用户-视频点赞信息
 func GetFavoRecord(userId uint64, videoId uint64) (UserFavo, error) {
 	var favoRecord UserFavo
-	err := DB.Model(&UserFavo{}).Where("UserId = ? and VideoId = ?", userId, videoId).
+	err := DB.Model(&UserFavo{}).Where("user_id = ? and video_id = ?", userId, videoId).
 		First(&favoRecord).Error
 	if err != nil {
 		if err.Error() == "record not found" {
@@ -74,8 +74,8 @@ func GetFavoRecord(userId uint64, videoId uint64) (UserFavo, error) {
 
 // 更新点赞状态 双击取消
 func UpdateFavoStatus(userId uint64, videoId uint64, status uint32) error {
-	err := DB.Model(&UserFavo{}).Where("UserId = ? and VideoId = ?", userId, videoId).
-		Update("Status = ?", status).Error
+	err := DB.Model(&UserFavo{}).Where("user_id = ? and video_id = ?", userId, videoId).
+		Update("status = ?", status).Error
 	if err != nil {
 		log.Println(err.Error())
 		return errors.New("Update Record Failed")

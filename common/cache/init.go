@@ -22,25 +22,25 @@ var Ctx = context.Background()
 var RdbFavoUser *redis.Client  //key:UserId,value:VideoId
 var RdbFavoVideo *redis.Client //key:VideoId,value:UserId
 
-func InitRedis() {
+func init() {
 	RdbCVid = redis.NewClient(&redis.Options{
-		Addr:     "183.253.74.204:6379",
-		Password: "123456",
+		Addr:     "localhost:6379",
+		Password: "",
 		DB:       1,
 	})
 	RdbVCid = redis.NewClient(&redis.Options{
-		Addr:     "183.253.74.204:6379",
-		Password: "123456",
+		Addr:     "localhost:6379",
+		Password: "",
 		DB:       2,
 	})
 	RdbFavoUser = redis.NewClient(&redis.Options{
-		Addr:     "183.253.74.204:6379",
-		Password: "123456",
+		Addr:     "localhost:6379",
+		Password: "",
 		DB:       3,
 	})
 	RdbFavoVideo = redis.NewClient(&redis.Options{
-		Addr:     "183.253.74.204:6379",
-		Password: "123456",
+		Addr:     "localhost:6379",
+		Password: "",
 		DB:       4,
 	})
 }
