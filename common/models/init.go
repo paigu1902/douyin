@@ -21,7 +21,6 @@ func init() {
 	migrateDBTable(&Message{})
 	migrateDBTable(&Relation{})
 	migrateDBTable(&VideoInfo{})
-	migrateDBTable(&VideoInfo{})
 }
 
 func migrateDBTable(dst ...interface{}) {

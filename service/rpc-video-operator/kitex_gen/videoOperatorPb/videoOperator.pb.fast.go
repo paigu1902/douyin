@@ -364,6 +364,11 @@ func (x *PublishListReq) FastRead(buf []byte, _type int8, number int32) (offset 
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -383,7 +388,12 @@ func (x *PublishListReq) fastReadField1(buf []byte, _type int8) (offset int, err
 }
 
 func (x *PublishListReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.UserId, offset, err = fastpb.ReadString(buf, _type)
+	x.UserId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *PublishListReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.AuthorId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
@@ -787,6 +797,7 @@ func (x *PublishListReq) FastWrite(buf []byte) (offset int) {
 	}
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
 	return offset
 }
 
@@ -799,10 +810,18 @@ func (x *PublishListReq) fastWriteField1(buf []byte) (offset int) {
 }
 
 func (x *PublishListReq) fastWriteField2(buf []byte) (offset int) {
-	if x.UserId == "" {
+	if x.UserId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 2, x.UserId)
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.UserId)
+	return offset
+}
+
+func (x *PublishListReq) fastWriteField3(buf []byte) (offset int) {
+	if x.AuthorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 3, x.AuthorId)
 	return offset
 }
 
@@ -1165,6 +1184,7 @@ func (x *PublishListReq) Size() (n int) {
 	}
 	n += x.sizeField1()
 	n += x.sizeField2()
+	n += x.sizeField3()
 	return n
 }
 
@@ -1177,10 +1197,18 @@ func (x *PublishListReq) sizeField1() (n int) {
 }
 
 func (x *PublishListReq) sizeField2() (n int) {
-	if x.UserId == "" {
+	if x.UserId == 0 {
 		return n
 	}
-	n += fastpb.SizeString(2, x.UserId)
+	n += fastpb.SizeUint64(2, x.UserId)
+	return n
+}
+
+func (x *PublishListReq) sizeField3() (n int) {
+	if x.AuthorId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(3, x.AuthorId)
 	return n
 }
 
@@ -1322,6 +1350,7 @@ var fieldIDToName_User = map[int32]string{
 var fieldIDToName_PublishListReq = map[int32]string{
 	1: "Token",
 	2: "UserId",
+	3: "AuthorId",
 }
 
 var fieldIDToName_PublishListResp = map[int32]string{
