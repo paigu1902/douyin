@@ -21,13 +21,13 @@ var Ctx = context.Background()
 
 func InitRedis() {
 	RdbCVid = redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1",
-		Password: "xx",
+		Addr:     "localhost:7777",
+		Password: "",
 		DB:       1,
 	})
 	RdbVCid = redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1",
-		Password: "xx",
+		Addr:     "localhost:7778",
+		Password: "",
 		DB:       2,
 	})
 }
