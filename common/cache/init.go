@@ -19,15 +19,28 @@ var RdbVCid *redis.Client // video -> comment 一对多
 var RdbCVid *redis.Client // comment -> video 一对一
 var Ctx = context.Background()
 
+var RdbFavoUser *redis.Client  //key:UserId,value:VideoId
+var RdbFavoVideo *redis.Client //key:VideoId,value:UserId
+
 func InitRedis() {
 	RdbCVid = redis.NewClient(&redis.Options{
-		Addr:     "localhost:7777",
-		Password: "",
+		Addr:     "127.0.0.1",
+		Password: "xx",
 		DB:       1,
 	})
 	RdbVCid = redis.NewClient(&redis.Options{
-		Addr:     "localhost:7778",
-		Password: "",
+		Addr:     "127.0.0.1",
+		Password: "xx",
 		DB:       2,
+	})
+	RdbFavoUser = redis.NewClient(&redis.Options{
+		Addr:     "0.0.0.0",
+		Password: "",
+		DB:       3,
+	})
+	RdbFavoVideo = redis.NewClient(&redis.Options{
+		Addr:     "0.0.0.0",
+		Password: "",
+		DB:       4,
 	})
 }
