@@ -4,6 +4,7 @@ package router
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
+	userComm "paigu1902/douyin/service/api-gateway/biz/handler/UserCommPb"
 	userFavo "paigu1902/douyin/service/api-gateway/biz/handler/userFavoPb"
 	userInfo "paigu1902/douyin/service/api-gateway/biz/handler/userInfoPb"
 	userRelation "paigu1902/douyin/service/api-gateway/biz/handler/userRelationPb"
@@ -44,4 +45,10 @@ func Register(r *server.Hertz) {
 	favoriteGroup.POST("/action", userFavo.FavoActionMethod)
 	favoriteGroup.GET("/list", userFavo.FavoListMethod)
 	favoriteGroup.GET("/status", userFavo.FavoStatusMethod)
+
+	userCommGroup := r.Group("douyin/comment")
+	userCommGroup.Use(middlewares.AuthUserCheck())
+	userCommGroup.POST("/action", userComm.CommentActionMethod)
+	userCommGroup.GET("/list", userComm.CommentGetListMethod)
+	userCommGroup.GET("/number", userComm.CommentNumberMethod)
 }
