@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-RUN_NAME="UserFavo"
+RUN_NAME="userFavo"
 
 mkdir -p output/bin
 cp script/* output/
