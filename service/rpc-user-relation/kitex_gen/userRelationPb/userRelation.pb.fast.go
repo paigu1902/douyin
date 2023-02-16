@@ -143,12 +143,12 @@ func (x *User) fastReadField2(buf []byte, _type int8) (offset int, err error) {
 }
 
 func (x *User) fastReadField3(buf []byte, _type int8) (offset int, err error) {
-	x.FollowCount, offset, err = fastpb.ReadString(buf, _type)
+	x.FollowCount, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
 func (x *User) fastReadField4(buf []byte, _type int8) (offset int, err error) {
-	x.FollowerCount, offset, err = fastpb.ReadString(buf, _type)
+	x.FollowerCount, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
@@ -838,18 +838,18 @@ func (x *User) fastWriteField2(buf []byte) (offset int) {
 }
 
 func (x *User) fastWriteField3(buf []byte) (offset int) {
-	if x.FollowCount == "" {
+	if x.FollowCount == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 3, x.FollowCount)
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.FollowCount)
 	return offset
 }
 
 func (x *User) fastWriteField4(buf []byte) (offset int) {
-	if x.FollowerCount == "" {
+	if x.FollowerCount == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 4, x.FollowerCount)
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.FollowerCount)
 	return offset
 }
 
@@ -1369,18 +1369,18 @@ func (x *User) sizeField2() (n int) {
 }
 
 func (x *User) sizeField3() (n int) {
-	if x.FollowCount == "" {
+	if x.FollowCount == 0 {
 		return n
 	}
-	n += fastpb.SizeString(3, x.FollowCount)
+	n += fastpb.SizeInt64(3, x.FollowCount)
 	return n
 }
 
 func (x *User) sizeField4() (n int) {
-	if x.FollowerCount == "" {
+	if x.FollowerCount == 0 {
 		return n
 	}
-	n += fastpb.SizeString(4, x.FollowerCount)
+	n += fastpb.SizeInt64(4, x.FollowerCount)
 	return n
 }
 
