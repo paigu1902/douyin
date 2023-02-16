@@ -283,12 +283,12 @@ ReadFieldError:
 }
 
 func (x *UserInfoReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.UserId, offset, err = fastpb.ReadUint64(buf, _type)
+	x.FromId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
 func (x *UserInfoReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.Token, offset, err = fastpb.ReadString(buf, _type)
+	x.ToId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
@@ -714,18 +714,18 @@ func (x *UserInfoReq) FastWrite(buf []byte) (offset int) {
 }
 
 func (x *UserInfoReq) fastWriteField1(buf []byte) (offset int) {
-	if x.UserId == 0 {
+	if x.FromId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteUint64(buf[offset:], 1, x.UserId)
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.FromId)
 	return offset
 }
 
 func (x *UserInfoReq) fastWriteField2(buf []byte) (offset int) {
-	if x.Token == "" {
+	if x.ToId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 2, x.Token)
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.ToId)
 	return offset
 }
 
@@ -1086,18 +1086,18 @@ func (x *UserInfoReq) Size() (n int) {
 }
 
 func (x *UserInfoReq) sizeField1() (n int) {
-	if x.UserId == 0 {
+	if x.FromId == 0 {
 		return n
 	}
-	n += fastpb.SizeUint64(1, x.UserId)
+	n += fastpb.SizeUint64(1, x.FromId)
 	return n
 }
 
 func (x *UserInfoReq) sizeField2() (n int) {
-	if x.Token == "" {
+	if x.ToId == 0 {
 		return n
 	}
-	n += fastpb.SizeString(2, x.Token)
+	n += fastpb.SizeUint64(2, x.ToId)
 	return n
 }
 
@@ -1293,8 +1293,8 @@ var fieldIDToName_User = map[int32]string{
 }
 
 var fieldIDToName_UserInfoReq = map[int32]string{
-	1: "UserId",
-	2: "Token",
+	1: "FromId",
+	2: "ToId",
 }
 
 var fieldIDToName_UserInfoResp = map[int32]string{

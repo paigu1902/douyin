@@ -24,6 +24,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 	methods := map[string]kitex.MethodInfo{
 		"FavoAction": kitex.NewMethodInfo(favoActionHandler, newFavoActionArgs, newFavoActionResult, false),
 		"FavoList":   kitex.NewMethodInfo(favoListHandler, newFavoListArgs, newFavoListResult, false),
+		"FavoStatus": kitex.NewMethodInfo(favoStatusHandler, newFavoStatusArgs, newFavoStatusResult, false),
 	}
 	extra := map[string]interface{}{
 		"PackageName": "userFavoPb",
@@ -329,6 +330,151 @@ func (p *FavoListResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
+func favoStatusHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(userFavoPb.FavoStatusReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(userFavoPb.UserFavoRpc).FavoStatus(ctx, req)
+		if err != nil {
+			return err
+		}
+		if err := st.SendMsg(resp); err != nil {
+			return err
+		}
+	case *FavoStatusArgs:
+		success, err := handler.(userFavoPb.UserFavoRpc).FavoStatus(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*FavoStatusResult)
+		realResult.Success = success
+	}
+	return nil
+}
+func newFavoStatusArgs() interface{} {
+	return &FavoStatusArgs{}
+}
+
+func newFavoStatusResult() interface{} {
+	return &FavoStatusResult{}
+}
+
+type FavoStatusArgs struct {
+	Req *userFavoPb.FavoStatusReq
+}
+
+func (p *FavoStatusArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(userFavoPb.FavoStatusReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *FavoStatusArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *FavoStatusArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *FavoStatusArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, fmt.Errorf("No req in FavoStatusArgs")
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *FavoStatusArgs) Unmarshal(in []byte) error {
+	msg := new(userFavoPb.FavoStatusReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var FavoStatusArgs_Req_DEFAULT *userFavoPb.FavoStatusReq
+
+func (p *FavoStatusArgs) GetReq() *userFavoPb.FavoStatusReq {
+	if !p.IsSetReq() {
+		return FavoStatusArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *FavoStatusArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+type FavoStatusResult struct {
+	Success *userFavoPb.FavoStatusResp
+}
+
+var FavoStatusResult_Success_DEFAULT *userFavoPb.FavoStatusResp
+
+func (p *FavoStatusResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(userFavoPb.FavoStatusResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *FavoStatusResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *FavoStatusResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *FavoStatusResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, fmt.Errorf("No req in FavoStatusResult")
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *FavoStatusResult) Unmarshal(in []byte) error {
+	msg := new(userFavoPb.FavoStatusResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *FavoStatusResult) GetSuccess() *userFavoPb.FavoStatusResp {
+	if !p.IsSetSuccess() {
+		return FavoStatusResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *FavoStatusResult) SetSuccess(x interface{}) {
+	p.Success = x.(*userFavoPb.FavoStatusResp)
+}
+
+func (p *FavoStatusResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -354,6 +500,16 @@ func (p *kClient) FavoList(ctx context.Context, Req *userFavoPb.FavoListReq) (r 
 	_args.Req = Req
 	var _result FavoListResult
 	if err = p.c.Call(ctx, "FavoList", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) FavoStatus(ctx context.Context, Req *userFavoPb.FavoStatusReq) (r *userFavoPb.FavoStatusResp, err error) {
+	var _args FavoStatusArgs
+	_args.Req = Req
+	var _result FavoStatusResult
+	if err = p.c.Call(ctx, "FavoStatus", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

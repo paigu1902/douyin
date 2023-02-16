@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	userInfoPb "paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
+	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-info/logic"
 )
 

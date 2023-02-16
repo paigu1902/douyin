@@ -26,21 +26,21 @@ func InitRedis() {
 	RdbCVid = redis.NewClient(&redis.Options{
 		Addr:     "127.0.0.1",
 		Password: "xx",
-		DB:       11,
+		DB:       1,
 	})
 	RdbVCid = redis.NewClient(&redis.Options{
 		Addr:     "127.0.0.1",
 		Password: "xx",
-		DB:       22,
+		DB:       2,
 	})
 	RdbFavoUser = redis.NewClient(&redis.Options{
 		Addr:     "0.0.0.0",
 		Password: "",
-		DB:       33,
+		DB:       3,
 	})
 	RdbFavoVideo = redis.NewClient(&redis.Options{
 		Addr:     "0.0.0.0",
 		Password: "",
-		DB:       44,
+		DB:       4,
 	})
 }

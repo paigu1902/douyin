@@ -288,48 +288,47 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 }
 
 // 查询用户对某条视频的点赞状态
-func (s *UserFavoRpcImpl) FavoStatus(userId int64, videoId int64) (bool, error) {
-	user := fmt.Sprintf("%s", userId)
-	video := fmt.Sprintf("%s", videoId)
+func (s *UserFavoRpcImpl) FavoStatus(ctx context.Context, req *userFavoPb.FavoStatusReq) (resp *userFavoPb.FavoStatusResp, err error) {
+	user := fmt.Sprintf("%s", req.UserId)
+	video := fmt.Sprintf("%s", req.VideoId)
 	//查询user-video表
 	ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
 	if err != nil {
-		//return false, errors.New("Function IsFavorite Error")
-		return false, err
+		return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Failed", IsFavorite: false}, err
 	}
 	if ext > 0 { //在user-video表中查到记录
 		res, err := cache.RdbFavoUser.SIsMember(context.Background(), user, video).Result()
 		if err != nil {
-			return false, err
+			return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Failed", IsFavorite: false}, err
 		}
-		return res, nil
+		return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Success", IsFavorite: res}, err
 	} else { //查询video-user表
 		ext, err := cache.RdbFavoVideo.Exists(context.Background(), video).Result()
 		if err != nil {
-			return false, err
+			return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Failed", IsFavorite: false}, err
 		}
 		if ext > 0 { //在video-user表中查到记录
 			res, err := cache.RdbFavoVideo.SIsMember(context.Background(), video, user).Result()
 			if err != nil {
-				return false, err
+				return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Failed", IsFavorite: false}, err
 			}
-			return res, nil
+			return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Success", IsFavorite: res}, err
 		} else { //在cache中未查到记录 加入 default value 查询数据库
 			//加入value:DefaultRedisValue，过期删除
 			_, err := cache.RdbFavoUser.SAdd(context.Background(), user, -1).Result()
 			if err != nil {
 				cache.RdbFavoUser.Del(context.Background(), user)
-				return false, err
+				return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Failed", IsFavorite: false}, err
 			}
 			_, errT := cache.RdbFavoUser.Expire(context.Background(), user, time.Duration(30)*time.Second).Result()
 			if errT != nil {
 				cache.RdbFavoUser.Del(context.Background(), user)
-				return false, errT
+				return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Failed", IsFavorite: false}, errT
 			}
 			//将数据查询结果加入cache
-			videoList, err := models.GetFavoVideoId(uint64(userId))
+			videoList, err := models.GetFavoVideoId(uint64(req.UserId))
 			if err != nil {
-				return false, err
+				return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Failed", IsFavorite: false}, err
 			}
 			for _, favoVideo := range videoList {
 				str := fmt.Sprintf("%s", favoVideo)
@@ -338,9 +337,9 @@ func (s *UserFavoRpcImpl) FavoStatus(userId int64, videoId int64) (bool, error) 
 			//再次查询cache
 			res, err := cache.RdbFavoUser.SIsMember(context.Background(), user, video).Result()
 			if err != nil {
-				return false, err
+				return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Failed", IsFavorite: false}, err
 			}
-			return res, nil
+			return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Success", IsFavorite: res}, err
 		}
 	}
 }

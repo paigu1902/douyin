@@ -13,6 +13,7 @@ import (
 type Client interface {
 	FavoAction(ctx context.Context, Req *userFavoPb.FavoActionReq, callOptions ...callopt.Option) (r *userFavoPb.FavoActionResp, err error)
 	FavoList(ctx context.Context, Req *userFavoPb.FavoListReq, callOptions ...callopt.Option) (r *userFavoPb.FavoListResp, err error)
+	FavoStatus(ctx context.Context, Req *userFavoPb.FavoStatusReq, callOptions ...callopt.Option) (r *userFavoPb.FavoStatusResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -52,4 +53,9 @@ func (p *kUserFavoRpcClient) FavoAction(ctx context.Context, Req *userFavoPb.Fav
 func (p *kUserFavoRpcClient) FavoList(ctx context.Context, Req *userFavoPb.FavoListReq, callOptions ...callopt.Option) (r *userFavoPb.FavoListResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.FavoList(ctx, Req)
+}
+
+func (p *kUserFavoRpcClient) FavoStatus(ctx context.Context, Req *userFavoPb.FavoStatusReq, callOptions ...callopt.Option) (r *userFavoPb.FavoStatusResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.FavoStatus(ctx, Req)
 }

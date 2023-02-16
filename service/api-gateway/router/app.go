@@ -12,18 +12,23 @@ import (
 
 // customizeRegister registers customize routers.
 func Register(r *server.Hertz) {
-	v1 := r.Group("/v1")
-	v1.POST("/login", userInfo.LoginMethod)
-	v1.POST("/register", userInfo.RegisterMethod)
-	v2 := r.Group("/v2")
-	v2.Use(middlewares.AuthUserCheck())
-	v2.GET("/info", userInfo.InfoMethod)
+	userinfoGroup := r.Group("/douyin/user")
+	userinfoGroup.POST("/login", userInfo.LoginMethod)
+	userinfoGroup.POST("/register", userInfo.RegisterMethod)
+	userinfoGroup.Use(middlewares.AuthUserCheck())
+	userinfoGroup.GET("", userInfo.InfoMethod)
 
 	publishGroup := r.Group("/douyin/publish")
 	publishGroup.GET("/list", videoOperator.PublishListMethod)
+	//publishGroup.POST("/action", videoOperator.PublishActionMethod)
 	publishGroup.POST("/action", videoOperator.PublishActionMethod)
 
+	v4 := r.Group("/v4")
+	v4.GET("/feed", videoOperator.FeedMethod)
+
 	favoriteGroup := r.Group("/douyin/favorite")
+	favoriteGroup.Use(middlewares.AuthUserCheck())
 	favoriteGroup.POST("/action", userFavo.FavoActionMethod)
 	favoriteGroup.GET("/list", userFavo.FavoListMethod)
+	favoriteGroup.GET("/status", userFavo.FavoStatusMethod)
 }
