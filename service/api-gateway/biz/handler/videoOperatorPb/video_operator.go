@@ -66,7 +66,7 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		panic(err)
 	}
-	resp, err := rpcClient.VideoOpClient.Upload(context.Background(), &videoOperatorPb.VideoUploadReq{
+	resp, err := rpcClient.VideoOperatorClient.Upload(context.Background(), &videoOperatorPb.VideoUploadReq{
 		Token: req.Token,
 		Data:  data,
 		Title: req.Title,
@@ -79,6 +79,15 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 }
 
 func FeedMethod(ctx context.Context, c *app.RequestContext) {
+	//r, err := resolver.NewDefaultNacosResolver()
+	//if err != nil {
+	//	panic(err)
+	//}
+	//newClient := videooperator.MustNewClient(
+	//	"videoOperatorImpl",
+	//	client.WithResolver(r),
+	//	client.WithRPCTimeout(time.Second*5),
+	//)
 	var req FeedReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -86,7 +95,7 @@ func FeedMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	log.Printf("req:%v", req)
-	resp, err := rpcClient.VideoOpClient.Feed(context.Background(), &videoOperatorPb.FeedReq{
+	resp, err := rpcClient.VideoOperatorClient.Feed(context.Background(), &videoOperatorPb.FeedReq{
 		LatestTime: req.LatestTime,
 		Token:      req.Token,
 	})
@@ -96,6 +105,15 @@ func FeedMethod(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, resp)
 }
 func PublishListMethod(ctx context.Context, c *app.RequestContext) {
+	//r, err := resolver.NewDefaultNacosResolver()
+	//if err != nil {
+	//	panic(err)
+	//}
+	//client := videooperator.MustNewClient(
+	//	"videoOperatorImpl",
+	//	client.WithResolver(r),
+	//	client.WithRPCTimeout(time.Second*5),
+	//)
 	req := new(PublishListReq)
 	// 1. 绑定校验参数
 	if err := c.BindAndValidate(req); err != nil {
