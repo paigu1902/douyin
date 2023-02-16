@@ -4,6 +4,7 @@ package router
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
+	userComment "paigu1902/douyin/service/api-gateway/biz/handler/UsercommPb"
 	userInfo "paigu1902/douyin/service/api-gateway/biz/handler/userInfoPb"
 	userRelation "paigu1902/douyin/service/api-gateway/biz/handler/userRelationPb"
 	videoOperator "paigu1902/douyin/service/api-gateway/biz/handler/videoOperatorPb"
@@ -37,4 +38,9 @@ func Register(r *server.Hertz) {
 
 	v4 := r.Group("/v4")
 	v4.GET("/feed", videoOperator.FeedMethod)
+
+	userCommentGroup := r.Group("/douyin/comment")
+	userCommentGroup.Use(middlewares.AuthUserCheck())
+	userCommentGroup.POST("/action", userComment.CommentActionMethod)
+	userCommentGroup.GET("/list", userComment.CommentGetListMethod)
 }

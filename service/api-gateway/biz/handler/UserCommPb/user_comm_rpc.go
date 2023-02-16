@@ -4,47 +4,32 @@ package UserCommPb
 
 import (
 	"context"
-	"github.com/cloudwego/kitex/client"
-	"github.com/kitex-contrib/registry-nacos/resolver"
-	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
-	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb/usercommrpc"
-	"strconv"
-	"time"
-
 	"github.com/cloudwego/hertz/pkg/app"
+	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
+	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
+	"strconv"
 )
 
 func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	newClient := usercommrpc.MustNewClient(
-		"UserCommRpcImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
-	//var req UserCommPb.DouyinCommentActionRequest
-	//var Fla bool
-	UserId, Flag1 := c.GetQuery("user_id")
-	CommentId, Flag2 := c.GetQuery("comment_id")
-	VideoId, Flag3 := c.GetQuery("video_id")
-	ActionType, Flag4 := c.GetQuery("action_type")
-	CommentText, Flag5 := c.GetQuery("comment_text")
+	UserId, Exist1 := c.GetQuery("user_id")
+	CommentId, Exist2 := c.GetQuery("comment_id")
+	VideoId, Exist3 := c.GetQuery("video_id")
+	ActionType, Exist4 := c.GetQuery("action_type")
+	CommentText, Exist5 := c.GetQuery("comment_text")
 
-	// 特判Flag2 因为 当发布评论时没有CommentId
-	if !(((!Flag2 && ActionType == "1") || Flag2) && Flag1 && Flag3 && Flag4 && Flag5) {
+	// 特判Exist2 因为 当发布评论时没有CommentId
+	if !(((!Exist2 && ActionType == "1") || Exist2) && Exist1 && Exist3 && Exist4 && Exist5) {
 		c.String(400, "获取参数失败")
 		return
 	}
-	if !Flag2 {
+	if !Exist2 {
 		CommentId = "0"
 	}
 	userid, _ := strconv.Atoi(UserId)
 	commentid, _ := strconv.Atoi(CommentId)
 	videoid, _ := strconv.Atoi(VideoId)
 	actiontype, _ := strconv.Atoi(ActionType)
-	resp, err := newClient.CommentAction(ctx, &UserCommPb.DouyinCommentActionRequest{
+	resp, err := rpcClient.UserComm.CommentAction(ctx, &UserCommPb.DouyinCommentActionRequest{
 		UserId:      int64(userid),
 		VideoId:     int64(videoid),
 		ActionType:  int32(actiontype),
@@ -60,25 +45,16 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 }
 
 func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
-	r, err := resolver.NewDefaultNacosResolver()
-	if err != nil {
-		panic(err)
-	}
-	newClient := usercommrpc.MustNewClient(
-		"UserCommRpcImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
-	UserId, Flag1 := c.GetQuery("user_id")
-	VideoId, Flag2 := c.GetQuery("video_id")
-	if !(Flag1 && Flag2) {
+	UserId, Exist1 := c.GetQuery("user_id")
+	VideoId, Exist2 := c.GetQuery("video_id")
+	if !(Exist1 && Exist2) {
 		c.String(400, "获取参数失败")
 		return
 	}
-	//var req UserCommPb.DouyinCommentListRequest
 	userid, _ := strconv.Atoi(UserId)
 	videoid, _ := strconv.Atoi(VideoId)
-	resp, err := newClient.GetCommentsByVideo(ctx, &UserCommPb.DouyinCommentListRequest{
+
+	resp, err := rpcClient.UserComm.GetCommentsByVideo(ctx, &UserCommPb.DouyinCommentListRequest{
 		UserId:  int64(userid),
 		VideoId: int64(videoid),
 	})
