@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/cloudwego/kitex/client"
+	"github.com/kitex-contrib/registry-nacos/resolver"
 	"log"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	UserInfo "paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
-	"paigu1902/douyin/service/rpc-user-info/logic"
+	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb/userinfo"
 	UserCommPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
 	"strconv"
 	"time"
@@ -73,9 +75,20 @@ func (s *UserCommRpcImpl) GetCommentNumberByVideo(ctx context.Context, req *User
 // CommentAction implements the UserCommRpcImpl interface.
 func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.DouyinCommentActionRequest) (resp *UserCommPb.DouyinCommentActionResponse, err error) {
 	// TODO: Your code here...
+	r, err := resolver.NewDefaultNacosResolver()
+	if err != nil {
+		panic(err)
+	}
+	ClinetUserInfo := userinfo.MustNewClient(
+		"logic",
+		client.WithResolver(r),
+		client.WithRPCTimeout(time.Second*5),
+	)
+
 	IDs := []uint64{uint64(req.UserId)}
 	videoId := req.VideoId
 	var videos []models.VideoInfo
+
 	err = models.GetVideosByIds([]uint64{uint64(videoId)}, &videos)
 	if err != nil {
 		return &UserCommPb.DouyinCommentActionResponse{
@@ -87,7 +100,7 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 		Batchids: IDs,
 		Fromid:   videos[0].AuthorId,
 	}
-	get_result, _ := logic.BatchInfo(ctx, &myReq)
+	get_result, _ := ClinetUserInfo.BatchInfo(ctx, &myReq)
 	user := get_result.Batchusers[0] // get user
 
 	// get_result.Batchusers
@@ -188,14 +201,25 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 		respCommentList, err := FillCommentListFields(commentList, videoId)
 		if err != nil {
 			// 评论为空，此时应该只是提示，不报错
-			return &UserCommPb.DouyinCommentListResponse{
-				StatusCode: 1,
-				StatusMsg:  "NOT_EXIST_LIST",
-				//CommentList: UserCommPb.Comment{
-				//	Id: comment_list
-				//},
-				CommentList: respCommentList,
-			}, nil
+			if err.Error() == "Find List is Empty" {
+				return &UserCommPb.DouyinCommentListResponse{
+					StatusCode: 0,
+					StatusMsg:  "SUCCESS BUT NOT_EXIST_LIST",
+					//CommentList: UserCommPb.Comment{
+					//	Id: comment_list
+					//},
+					CommentList: respCommentList,
+				}, nil
+			} else {
+				return &UserCommPb.DouyinCommentListResponse{
+					StatusCode: 1,
+					StatusMsg:  "ERROR",
+					//CommentList: UserCommPb.Comment{
+					//	Id: comment_list
+					//},
+					CommentList: respCommentList,
+				}, nil
+			}
 		}
 		// redis 更新评论id
 		go func() {
@@ -245,6 +269,16 @@ func InsertRedisComment(VideoId int64, CommentId string) {
 }
 
 func FillCommentListFields(comments []models.UserComm, videoId int64) ([]*UserCommPb.Comment, error) {
+	r, err := resolver.NewDefaultNacosResolver()
+	if err != nil {
+		panic(err)
+	}
+	ClinetUserInfo := userinfo.MustNewClient(
+		"logic",
+		client.WithResolver(r),
+		client.WithRPCTimeout(time.Second*5),
+	)
+
 	size := len(comments)
 	var commentListPb []*UserCommPb.Comment
 	if comments == nil || size == 0 {
@@ -255,7 +289,7 @@ func FillCommentListFields(comments []models.UserComm, videoId int64) ([]*UserCo
 		userids = append(userids, com.UserId)
 	}
 	var videos []models.VideoInfo
-	err := models.GetVideosByIds([]uint64{uint64(videoId)}, &videos)
+	err = models.GetVideosByIds([]uint64{uint64(videoId)}, &videos)
 	if err != nil {
 		return commentListPb, err
 	}
@@ -263,7 +297,7 @@ func FillCommentListFields(comments []models.UserComm, videoId int64) ([]*UserCo
 		Batchids: userids,
 		Fromid:   videos[0].AuthorId,
 	}
-	myRes, _ := logic.BatchInfo(context.Background(), &myReq)
+	myRes, _ := ClinetUserInfo.BatchInfo(context.Background(), &myReq)
 	for i, v := range comments {
 		//userid := v.UserId
 		//user := UserInfo.FindUserByID(uint64(userid))
