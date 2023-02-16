@@ -37,8 +37,8 @@ func Register(r *server.Hertz) {
 	userRelationGroup.GET("/follower/list", userRelation.FollowerList)
 	userRelationGroup.GET("/friend/list", userRelation.FriendList)
 
-	v4 := r.Group("/v4")
-	v4.GET("/feed", videoOperator.FeedMethod)
+	feedGroup := r.Group("/douyin")
+	feedGroup.GET("/feed", videoOperator.FeedMethod)
 
 	favoriteGroup := r.Group("/douyin/favorite")
 	favoriteGroup.Use(middlewares.AuthUserCheck())
