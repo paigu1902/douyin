@@ -5,13 +5,14 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
+	"paigu1902/douyin/common/config"
 )
 
 var Cli naming_client.INamingClient
 
 func init() {
 	sc := []constant.ServerConfig{
-		*constant.NewServerConfig("192.168.1.115", 8848),
+		*constant.NewServerConfig(config.C.Nacos.Host, config.C.Nacos.Port),
 	}
 
 	// the nacos client config
