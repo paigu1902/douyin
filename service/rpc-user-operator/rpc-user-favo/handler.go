@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"log"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/rabbitmq"
@@ -16,354 +18,334 @@ import (
 // UserFavoRpcImpl implements the last service interface defined in the IDL.
 type UserFavoRpcImpl struct{}
 
-// 执行点赞、取消赞操作
-// FavoAction implements the UserFavoRpcImpl interface.
+// FavoAction implements the UserFavoRpcImpl interface. 执行点赞、取消赞操作 actionType==1->点赞 actionType==2->取消点赞
 func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoActionReq) (resp *userFavoPb.FavoActionResp, err error) {
 	// TODO: Your code here..
+	if req.Type != 1 && req.Type != 2 {
+		return &userFavoPb.FavoActionResp{
+			StatusCode: 1,
+			StatusMsg:  "Failed",
+		}, errors.New("FavoAction Parameters Error")
+	}
 	user := strconv.FormatInt(req.UserId, 10)
 	video := strconv.FormatInt(req.VideoId, 10)
-	msg := strings.Builder{}
-	msg.WriteString(user)
-	msg.WriteString(" ")
-	msg.WriteString((video))
-	if req.Type == 1 { //点赞操作
-		ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
-		if err != nil {
-			return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-		}
-		if ext > 0 { //cache中存在点赞用户信息 加入视频信息
-			_, err := cache.RdbFavoUser.SAdd(context.Background(), user, video).Result()
-			if err != nil {
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-			} else { //为避免脏数据 仅当cache操作成功后再操作MySQL
-				//mq优化
-				rabbitmq.RmqFavoAdd.Publish(msg.String())
-			}
-		} else { //cache中不存在用户信息 查询MySQL加入原有视频信息后更新
-			_, err := cache.RdbFavoUser.SAdd(context.Background(), user, -1).Result()
-			if err != nil {
-				cache.RdbFavoUser.Del(context.Background(), user)
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-			}
-			//设置数据有效期
-			_, errT := cache.RdbFavoUser.Expire(context.Background(), user, time.Duration(30)*time.Second).Result()
-			if errT != nil {
-				cache.RdbFavoUser.Del(context.Background(), user)
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, errT
-			}
-			//查询MySQL原有视频信息 加入cache
-			videoIdList, err := models.GetFavoVideoId(uint64(req.UserId))
-			if err != nil {
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-			}
-			for _, favoVideoId := range videoIdList {
-				_, err := cache.RdbFavoUser.SAdd(context.Background(), user, favoVideoId).Result()
-				if err != nil {
-					cache.RdbFavoUser.Del(context.Background(), user)
-					return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-				}
-			}
-			//将本次点赞视频信息加入cache
-			_, errA := cache.RdbFavoUser.SAdd(context.Background(), user, video).Result()
-			if errA != nil {
-				cache.RdbFavoUser.Del(context.Background(), user)
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, errA
-			} else {
-				//mq优化
-				rabbitmq.RmqFavoAdd.Publish(msg.String())
-			}
-		}
-	} else { //取消点赞
-		extU, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
-		if err != nil {
-			return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-		}
-		if extU > 0 { //cache中存在点赞用户信息 删除视频信息
-			_, err := cache.RdbFavoUser.SRem(context.Background(), user, video).Result()
-			if err != nil {
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-			} else { //为避免脏数据 仅当cache操作成功后再操作MySQL
-				//mq优化
-				rabbitmq.RmqFavoDel.Publish(msg.String())
-			}
-		} else { //cache中不存在用户信息 查询MySQL加入原有视频信息后更新
-			_, err := cache.RdbFavoUser.SAdd(context.Background(), user, -1).Result()
-			if err != nil {
-				cache.RdbFavoUser.Del(context.Background(), user)
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-			}
-			//设置数据有效期
-			_, errT := cache.RdbFavoUser.Expire(context.Background(), user, time.Duration(30)*time.Second).Result()
-			if errT != nil {
-				cache.RdbFavoUser.Del(context.Background(), user)
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, errT
-			}
-			//查询MySQL原有视频信息 加入cache
-			videoIdList, err := models.GetFavoVideoId(uint64(req.UserId))
-			if err != nil {
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-			}
-			for _, favoVideoId := range videoIdList {
-				_, err := cache.RdbFavoUser.SAdd(context.Background(), user, favoVideoId).Result()
-				if err != nil {
-					cache.RdbFavoUser.Del(context.Background(), user)
-					return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-				}
-			}
-			//将本次取消点赞视频信息加入cache
-			_, errD := cache.RdbFavoUser.SRem(context.Background(), user, video).Result()
-			if errD != nil {
-				cache.RdbFavoUser.Del(context.Background(), user)
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, errD
-			} else {
-				//mq优化
-				rabbitmq.RmqFavoDel.Publish(msg.String())
-			}
-		}
-		//查询 RdbFavoVideo key:VideoId-value:UderId 中是否缓存此信息
-		extV, err := cache.RdbFavoVideo.Exists(context.Background(), user).Result()
-		if err != nil {
-			return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-		}
-		if extV > 0 { //cache中存在点赞用户信息 删除视频信息
-			_, err := cache.RdbFavoVideo.SRem(context.Background(), user, video).Result()
-			if err != nil {
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-			}
-		} else { //cache中不存在用户信息 查询MySQL加入原有视频信息后更新
-			//为避免脏数据，加入value:DefaultRedisValue，过期删除
-			_, err := cache.RdbFavoVideo.SAdd(context.Background(), video, -1).Result()
-			if err != nil {
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-			}
-			//设置数据有效期
-			_, errT := cache.RdbFavoVideo.Expire(context.Background(), user, time.Duration(30)*time.Second).Result()
-			if errT != nil {
-				cache.RdbFavoVideo.Del(context.Background(), video)
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, errT
-			}
-			//查询MySQL原有视频信息 加入cache
-			UserIdList, err := models.GetFavoUserId(uint64(req.UserId))
-			if err != nil {
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-			}
-			for _, favoUserId := range UserIdList {
-				_, err := cache.RdbFavoVideo.SAdd(context.Background(), video, favoUserId).Result()
-				if err != nil {
-					cache.RdbFavoVideo.Del(context.Background(), video)
-					return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, err
-				}
-			}
-			//将本次取消点赞视频信息加入cache
-			_, errD := cache.RdbFavoVideo.SRem(context.Background(), video, user).Result()
-			if errD != nil {
-				cache.RdbFavoVideo.Del(context.Background(), video)
-				return &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: "Failed"}, errD
-			}
-		}
+	err1 := s.userFavoActionImpl(int(req.Type), user, video)
+	err2 := s.videoFavoActionImpl(int(req.Type), user, video)
+	if err1 != nil || err2 != nil {
+		return &userFavoPb.FavoActionResp{
+				StatusCode: 1,
+				StatusMsg:  "Failed",
+			},
+			errors.New("FavoAction Failed")
 	}
-	return &userFavoPb.FavoActionResp{StatusCode: 0, StatusMsg: "Succeed"}, nil
+	return &userFavoPb.FavoActionResp{
+			StatusCode: 0,
+			StatusMsg:  "Succeed",
+		},
+		nil
 }
 
-// 获取用户的点赞视频列表
-// FavoList implements the UserFavoRpcImpl interface.
+// FavoList implements the UserFavoRpcImpl interface. 获取用户的点赞视频列表
 func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoListReq) (resp *userFavoPb.FavoListResp, err error) {
 	// TODO: Your code here...
 	user := strconv.FormatInt(req.UserId, 10)
-	ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
-	if err != nil {
-		return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
+	key := "UserIdsToVideoIds" + user
+	// 1. 查询cache
+	ext, err1 := cache.RDB.Exists(context.Background(), key).Result()
+	if err1 != nil {
+		log.Println("FavoList Exists Error")
 	}
-	if ext > 0 { //cache中存在点赞用户信息 获取视频列表
-		videoIdListStr, err := cache.RdbFavoUser.SMembers(context.Background(), user).Result()
-		if err != nil {
-			return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
+	// 2. cache中存在点赞用户信息 获取视频列表
+	if ext > 0 {
+		videoIdListStr, err2 := cache.RDB.SMembers(context.Background(), key).Result()
+		if err2 != nil {
+			log.Println("FavoList SMembers Error")
 		}
 		var videoIdList []uint64
 		for index, str := range videoIdListStr {
 			id, _ := strconv.Atoi(str)
 			videoIdList[index] = uint64(id)
 		}
-		//获取videoOperator客户端
-		resp, err := rpcClient.VideoOpClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
-		if err != nil {
-			return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
+		// 获取videoOperator客户端 读取视频对象
+		resp1, err3 := s.GetVideoList(ctx, videoIdList)
+		if err3 != nil {
+			return &userFavoPb.FavoListResp{
+					StatusCode: 1,
+					StatusMsg:  "Failed",
+					VideoList:  nil},
+				errors.New("FavoList GetVidoeList Failed")
 		}
-		var favoList []*userFavoPb.Video
-		for _, respVideo := range resp.VideoList {
-			author := userFavoPb.User{
-				Id:            respVideo.Author.Id,
-				Name:          respVideo.Author.Name,
-				FollowCount:   respVideo.Author.FollowCount,
-				FollowerCount: respVideo.Author.FollowerCount,
-				IsFollow:      false,
-			}
-			video := userFavoPb.Video{
-				Id:            respVideo.Id,
-				Author:        &author,
-				PlayUrl:       respVideo.PlayUrl,
-				CoverUrl:      respVideo.CoverUrl,
-				FavoriteCount: respVideo.FavoriteCount,
-				CommentCount:  respVideo.CommentCount,
-				IsFavorite:    respVideo.IsFavorite,
-				Title:         respVideo.Title,
-			}
-			favoList = append(favoList, &video)
-		}
-		return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Success", VideoList: favoList}, err
-	} else { //cache中不存在用户信息 查询MySQL加入原有视频信息后更新
-		_, err := cache.RdbFavoUser.SAdd(context.Background(), user, -1).Result()
-		if err != nil {
-			cache.RdbFavoUser.Del(context.Background(), user)
-			return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
-		}
-		//设置数据有效期
-		_, errT := cache.RdbFavoUser.Expire(context.Background(), user, time.Duration(30)*time.Second).Result()
-		if errT != nil {
-			cache.RdbFavoUser.Del(context.Background(), user)
-			return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, errT
-		}
-		//查询MySQL原有视频信息 加入cache
-		videoIdList, errV := models.GetFavoVideoId(uint64(req.UserId))
-		if errV != nil {
-			cache.RdbFavoUser.Del(context.Background(), user)
-			return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, errV
-		}
-		for _, favoVideoId := range videoIdList {
-			_, err := cache.RdbFavoUser.SAdd(context.Background(), user, favoVideoId).Result()
-			if err != nil {
-				cache.RdbFavoUser.Del(context.Background(), user)
-				return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
-			}
-		}
-		//获取videoOperator客户端
-		resp, err := rpcClient.VideoOpClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
-		if err != nil {
-			return &userFavoPb.FavoListResp{StatusCode: 1, StatusMsg: "Failed", VideoList: nil}, err
-		}
-		var favoList []*userFavoPb.Video
-		for _, respVideo := range resp.VideoList {
-			author := userFavoPb.User{
-				Id:            respVideo.Author.Id,
-				Name:          respVideo.Author.Name,
-				FollowCount:   respVideo.Author.FollowCount,
-				FollowerCount: respVideo.Author.FollowerCount,
-				IsFollow:      false,
-			}
-			video := userFavoPb.Video{
-				Id:            respVideo.Id,
-				Author:        &author,
-				PlayUrl:       respVideo.PlayUrl,
-				CoverUrl:      respVideo.CoverUrl,
-				FavoriteCount: respVideo.FavoriteCount,
-				CommentCount:  respVideo.CommentCount,
-				IsFavorite:    respVideo.IsFavorite,
-				Title:         respVideo.Title,
-			}
-			favoList = append(favoList, &video)
-		}
-		return &userFavoPb.FavoListResp{StatusCode: 0, StatusMsg: "Success", VideoList: favoList}, err
+		return resp1, nil
 	}
+	// 3. cache中不存在用户信息 查询MySQL加入原有视频信息后更新
+	err4 := s.readRecordsToCache(1, key, user, "")
+	if err4 != nil {
+		log.Println("FavoList readRecordsToCache Error")
+	}
+	// 4. 重新读取缓存中的video列表
+	videoIdListStr, err5 := cache.RDB.SMembers(context.Background(), key).Result()
+	if err5 != nil {
+		log.Println("FavoList SMembers Error")
+	}
+	var videoIdList []uint64
+	for index, str := range videoIdListStr {
+		id, _ := strconv.Atoi(str)
+		videoIdList[index] = uint64(id)
+	}
+	// 5. 获取videoOperator客户端 读取视频对象
+	resp2, err := s.GetVideoList(ctx, videoIdList)
+	if err != nil {
+		return &userFavoPb.FavoListResp{
+				StatusCode: 1,
+				StatusMsg:  "Failed",
+				VideoList:  nil},
+			errors.New("FavoList GetVidoeList Failed")
+	}
+	return resp2, nil
 }
 
-// 查询用户对某条视频的点赞状态
+// FavoStatus 查询用户对某条视频的点赞状态
 func (s *UserFavoRpcImpl) FavoStatus(ctx context.Context, req *userFavoPb.FavoStatusReq) (resp *userFavoPb.FavoStatusResp, err error) {
 	user := strconv.FormatInt(req.UserId, 10)
 	video := strconv.FormatInt(req.VideoId, 10)
-	//查询user-video表
-	ext, err := cache.RdbFavoUser.Exists(context.Background(), user).Result()
+	keyU := "UserIdsToVideoIds" + user
+	keyV := "VideoIdsToUserIds" + video
+	// 1. 查询RDB(key:user, value:video)
+	ext1, err1 := cache.RDB.Exists(context.Background(), keyU).Result()
+	if err1 != nil {
+		log.Println("FavoStatus Exists Error")
+	}
+	if ext1 > 0 {
+		res, err := cache.RDB.SIsMember(context.Background(), keyU, video).Result()
+		if err != nil {
+			log.Println("FavoStatus Exists Error")
+		}
+		return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, nil
+	}
+	// 2. 若RDB(key:user, value:video)中不存在点赞记录 查询RDB(key:video, value:user)
+	ext2, err2 := cache.RDB.Exists(context.Background(), keyV).Result()
+	if err2 != nil {
+		log.Println("FavoStatus Exists Error")
+	}
+	if ext2 > 0 {
+		res, err := cache.RDB.SIsMember(context.Background(), keyV, user).Result()
+		if err != nil {
+			log.Println("FavoStatus SIsMember Error")
+		}
+		return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, nil
+	}
+	//3. 若cache中不存在点赞记录 查询MySQL加入原有视频信息后更新 仅更新RDB(key:user, value:video)
+	err3 := s.readRecordsToCache(1, keyU, user, video)
+	if err3 != nil {
+		log.Println("FavoStatus readRecordsToCache Error")
+	}
+	// 4. 再次查询cache
+	res, err := cache.RDB.SIsMember(context.Background(), keyU, video).Result()
 	if err != nil {
-		return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Failed", IsFavorite: false}, err
+		log.Println("FavoStatus SIsMember Error")
 	}
-	if ext > 0 { //在user-video表中查到记录
-		res, err := cache.RdbFavoUser.SIsMember(context.Background(), user, video).Result()
-		if err != nil {
-			return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Failed", IsFavorite: false}, err
-		}
-		return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, err
-	} else { //查询video-user表
-		ext, err := cache.RdbFavoVideo.Exists(context.Background(), video).Result()
-		if err != nil {
-			return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Failed", IsFavorite: false}, err
-		}
-		if ext > 0 { //在video-user表中查到记录
-			res, err := cache.RdbFavoVideo.SIsMember(context.Background(), video, user).Result()
-			if err != nil {
-				return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Failed", IsFavorite: false}, err
-			}
-			return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, err
-		} else { //在cache中未查到记录 加入 default value 查询数据库
-			//加入value:DefaultRedisValue，过期删除
-			_, err := cache.RdbFavoUser.SAdd(context.Background(), user, -1).Result()
-			if err != nil {
-				cache.RdbFavoUser.Del(context.Background(), user)
-				return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Failed", IsFavorite: false}, err
-			}
-			_, errT := cache.RdbFavoUser.Expire(context.Background(), user, time.Duration(30)*time.Second).Result()
-			if errT != nil {
-				cache.RdbFavoUser.Del(context.Background(), user)
-				return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Failed", IsFavorite: false}, errT
-			}
-			//将数据查询结果加入cache
-			videoList, err := models.GetFavoVideoId(uint64(req.UserId))
-			if err != nil {
-				return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Failed", IsFavorite: false}, err
-			}
-			for _, favoVideo := range videoList {
-				str := strconv.FormatInt(int64(favoVideo), 10)
-				cache.RdbFavoUser.SAdd(context.Background(), user, str)
-			}
-			//再次查询cache
-			res, err := cache.RdbFavoUser.SIsMember(context.Background(), user, video).Result()
-			if err != nil {
-				return &userFavoPb.FavoStatusResp{StatusCode: 1, StatusMsg: "Failed", IsFavorite: false}, err
-			}
-			return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, err
-		}
-	}
+	return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, nil
 }
 
-// 查询视频被点赞总数
+// FavoCount 查询视频被点赞总数
 func (s *UserFavoRpcImpl) FavoCount(videoId int64) (int64, error) {
 	video := strconv.FormatInt(videoId, 10)
-	//查询video-user表
-	ext, err := cache.RdbFavoVideo.Exists(context.Background(), video).Result()
-	if err != nil {
-		//return false, errors.New("Function IsFavorite Error")
-		return 0, err
+	key := "VideoIdsToUserIds" + video
+	// 1. 查询RDB(key:video, value:user)
+	ext, err1 := cache.RDB.Exists(context.Background(), key).Result()
+	if err1 != nil {
+		log.Println("FavoCount Exists Error")
 	}
-	if ext > 0 { //在user-video表中查到记录
-		res, err := cache.RdbFavoVideo.SCard(context.Background(), video).Result()
-		if err != nil {
-			return 0, err
-		}
-		return res - 1, nil //减去 default value
-	} else { //在cache中未查到记录 加入 default value 查询数据库
-		//加入value:DefaultRedisValue，过期删除
-		_, err := cache.RdbFavoVideo.SAdd(context.Background(), video, -1).Result()
-		if err != nil {
-			cache.RdbFavoVideo.Del(context.Background(), video)
-			return 0, err
-		}
-		_, errT := cache.RdbFavoVideo.Expire(context.Background(), video, time.Duration(30)*time.Second).Result()
-		if errT != nil {
-			cache.RdbFavoVideo.Del(context.Background(), video)
-			return 0, errT
-		}
-		//将数据查询结果加入cache
-		userList, err := models.GetFavoUserId(uint64(videoId))
-		if err != nil {
-			return 0, err
-		}
-		for _, favoUser := range userList {
-			str := strconv.FormatInt(int64(favoUser), 10)
-			cache.RdbFavoUser.SAdd(context.Background(), video, str)
-		}
-		//再次查询cache
-		res, err := cache.RdbFavoUser.SCard(context.Background(), video).Result()
-		if err != nil {
-			return 0, err
+	if ext > 0 {
+		res, err2 := cache.RDB.SCard(context.Background(), key).Result()
+		if err2 != nil {
+			log.Println("FavoCount SCard Error")
 		}
 		return res - 1, nil //减去 default value
 	}
+	// 2. 若cache中不存在点赞记录 查询MySQL加入原有视频信息后更新 仅更新RDB(key:video, value:user)
+	err3 := s.readRecordsToCache(2, key, "", video)
+	if err3 != nil {
+		log.Println("FavoCount readRecordsToCache Error")
+	}
+	// 3. 再次查询cache
+	res, err4 := cache.RdbFavoUser.SCard(context.Background(), video).Result()
+	if err4 != nil {
+		log.Println("FavoCount SCard Error")
+	}
+	return res - 1, nil //减去 default value
+}
+
+// userFavoActionImpl 根据点赞类型操作RDB(key:userId, value:videoId)
+func (s *UserFavoRpcImpl) userFavoActionImpl(actionType int, user string, video string) error {
+	msg := strings.Builder{}
+	msg.WriteString(user)
+	msg.WriteString(" ")
+	msg.WriteString(video)
+	key := "UserIdsToVideoIds" + user
+	// 1. 查询cache
+	ext, err0 := cache.RDB.Exists(context.Background(), key).Result()
+	if err0 != nil {
+		log.Println("FavoAction Rdb.Exist Error")
+	}
+	// 2. 若cache中存在点赞用户信息 更新cache和数据库
+	if ext > 0 {
+		if actionType == 1 { //点赞
+			_, err1 := cache.RDB.SAdd(context.Background(), key, video).Result()
+			if err1 != nil {
+				log.Println("FavoAction Rdb.SAdd Error")
+			}
+			rabbitmq.RmqFavoAdd.Publish(msg.String())
+		} else { // 取消点赞
+			_, err2 := cache.RDB.SRem(context.Background(), key, video).Result()
+			if err2 != nil {
+				log.Println("FavoAction Rdb.SRem Error")
+			}
+			rabbitmq.RmqFavoDel.Publish(msg.String())
+		}
+		return nil
+	}
+	// 3. 若cache中不存在用户信息 查询MySQL加入原有视频信息后更新RDB(key:user, value:video)
+	err3 := s.readRecordsToCache(1, key, user, video)
+	if err3 != nil {
+		log.Println("userFavoActionImpl readRecordsToCache Error")
+	}
+	// 4. 将本次点赞操作更新到cache和数据库
+	if actionType == 1 { // 点赞
+		_, err4 := cache.RDB.SAdd(context.Background(), key, video).Result()
+		if err4 != nil {
+			cache.RDB.Del(context.Background(), key)
+			log.Println("FavoAction Rdb.SAdd Error")
+		}
+	} else if actionType == 2 { // 取消点赞
+		_, err5 := cache.RDB.SRem(context.Background(), key, video).Result()
+		if err5 != nil {
+			cache.RDB.Del(context.Background(), key)
+			log.Println("FavoAction Rdb.SRem Error")
+		}
+	} else {
+		return errors.New("userFavoActionImpl Parameters Error")
+	}
+	rabbitmq.RmqFavoAdd.Publish(msg.String())
+	return nil
+}
+
+// videoFavoActionImpl 根据点赞类型操作RDB(key:videoId, value:userId) 仅当取消点赞时更新
+func (s *UserFavoRpcImpl) videoFavoActionImpl(actionType int, user string, video string) error {
+	if actionType == 1 {
+		return nil
+	} else if actionType != 2 {
+		return errors.New("videoFavoActionImpl Parameters Error")
+	}
+	key := "VideoIdsToUserIds" + video
+	// 1. 查询cache
+	ext, err0 := cache.RDB.Exists(context.Background(), key).Result()
+	if err0 != nil {
+		log.Println("FavoAction Rdb.Exists Error")
+	}
+	// 2. 若cache中存在点赞用户信息 更新cache
+	if ext > 0 {
+		_, err1 := cache.RDB.SRem(context.Background(), key, user).Result()
+		if err1 != nil {
+			log.Println("FavoAction Rdb.SRem Error")
+		}
+		return nil
+	}
+	// 3. 若cache中不存在用户信息 查询MySQL加入原有视频信息后更新RDB(key:video, value:user)
+	err2 := s.readRecordsToCache(2, key, user, video)
+	if err2 != nil {
+		log.Println("userFavoActionImpl readRecordsToCache Error")
+	}
+	// 4. 将本次点赞操作更新到cache
+	_, err3 := cache.RDB.SRem(context.Background(), key, user).Result()
+	if err3 != nil {
+		cache.RDB.Del(context.Background(), key)
+		log.Println("FavoAction GetFavoUserId Error")
+	}
+	return nil
+}
+
+// readRecordsToCache 查询MySQL加入原有视频信息后更新RDB redType==1->更新UserIdsToVideoIds readType==2->更新VideoIdsToUserIds
+func (s *UserFavoRpcImpl) readRecordsToCache(readType int, key string, user string, video string) error {
+	// 1. 加入Default Value 防止脏数据
+	_, err1 := cache.RDB.SAdd(context.Background(), key, -1).Result()
+	if err1 != nil {
+		cache.RDB.Del(context.Background(), key)
+		log.Println("FavoAction Rdb.SAdd Error")
+	}
+	// 4. 设置数据有效期
+	_, err2 := cache.RDB.Expire(context.Background(), key, time.Duration(30)*time.Second).Result()
+	if err2 != nil {
+		cache.RDB.Del(context.Background(), key)
+		log.Println("FavoAction Rdb.Expire Error")
+	}
+	// 5. 查询MySQL原有信息 加入cache
+	if readType == 1 { //读取视频信息 更新UserIdsToVideoIds
+		userId, _ := strconv.Atoi(user)
+		videoIdList, err3 := models.GetFavoVideoId(uint64(userId))
+		if err3 != nil {
+			log.Println("FavoAction GetFavoVideoId Error")
+		}
+		for _, favoVideoId := range videoIdList {
+			_, err := cache.RDB.SAdd(context.Background(), key, favoVideoId).Result()
+			if err != nil {
+				cache.RDB.Del(context.Background(), key)
+				log.Println("FavoAction Rdb.SAdd Error")
+			}
+		}
+	} else if readType == 2 { // 读取用户信息 更新VideoIdsToUserIds
+		videoId, _ := strconv.Atoi(video)
+		UserIdList, err4 := models.GetFavoUserId(uint64(videoId))
+		if err4 != nil {
+			log.Println("FavoAction GetFavoUserId Error")
+		}
+		for _, favoUserId := range UserIdList {
+			_, err := cache.RDB.SAdd(context.Background(), key, favoUserId).Result()
+			if err != nil {
+				cache.RdbFavoVideo.Del(context.Background(), key)
+				log.Println("FavoAction SAdd Error")
+			}
+		}
+	} else {
+		return errors.New("readRecordsToCache Parameters Error")
+	}
+	return nil
+}
+
+// GetVideoList 获取videoOperator客户端 读取视频对象
+func (s *UserFavoRpcImpl) GetVideoList(ctx context.Context, videoIdList []uint64) (resp *userFavoPb.FavoListResp, err error) {
+	myResp, err6 := rpcClient.VideoOpClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
+	if err6 != nil {
+		return &userFavoPb.FavoListResp{
+				StatusCode: 1,
+				StatusMsg:  "Failed",
+				VideoList:  nil},
+			errors.New("FavoList GetVideoList Failed")
+	}
+	var favoList []*userFavoPb.Video
+	for _, respVideo := range myResp.VideoList {
+		author := userFavoPb.User{
+			Id:            respVideo.Author.Id,
+			Name:          respVideo.Author.Name,
+			FollowCount:   respVideo.Author.FollowCount,
+			FollowerCount: respVideo.Author.FollowerCount,
+			IsFollow:      false,
+		}
+		video := userFavoPb.Video{
+			Id:            respVideo.Id,
+			Author:        &author,
+			PlayUrl:       respVideo.PlayUrl,
+			CoverUrl:      respVideo.CoverUrl,
+			FavoriteCount: respVideo.FavoriteCount,
+			CommentCount:  respVideo.CommentCount,
+			IsFavorite:    respVideo.IsFavorite,
+			Title:         respVideo.Title,
+		}
+		favoList = append(favoList, &video)
+	}
+	return &userFavoPb.FavoListResp{
+			StatusCode: 0,
+			StatusMsg:  "Success",
+			VideoList:  favoList},
+		nil
 }

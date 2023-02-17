@@ -42,7 +42,7 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 		req.CommentId = 0
 		CommentText, isOk := c.Get("comment_text")
 		if !isOk {
-			c.JSON(400, "get current comment_id error in delete comment")
+			c.JSON(400, "get current comment_text error in add comment")
 			return
 		}
 		if len(CommentText.(string)) == 0 {

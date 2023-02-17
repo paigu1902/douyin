@@ -7,64 +7,72 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
-	"strconv"
 )
 
+type FavoActionReq struct {
+	UserId     int64 `query:"userId"`
+	VideId     int64 `query:"VideoId"`
+	ActionType int32 `query:"type" vd:"$==1 || $==2"`
+}
+
+type FavoListReq struct {
+	UserId int64 `query:"userId"`
+}
+
+type FavoStatusReq struct {
+	UserId int64 `query:"userId"`
+	VideId int64 `query:"VideoId"`
+}
+
 func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
-	userId, err1 := c.GetQuery("userId")
-	videoId, err2 := c.GetQuery("VideoId")
-	actionType, err3 := c.GetQuery("type")
-	if !(err1 && err2 && err3) {
-		c.String(400, "Get parameters failed")
+	req := new(FavoActionReq)
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(400, err.Error())
 		return
 	}
-	userid, _ := strconv.Atoi(userId)
-	videoid, _ := strconv.Atoi(videoId)
-	actiontype, _ := strconv.Atoi(actionType)
 	resp, err := rpcClient.UserFavo.FavoAction(ctx, &userFavoPb.FavoActionReq{
-		UserId:  int64(userid),
-		VideoId: int64(videoid),
-		Type:    int32(actiontype),
+		UserId:  req.UserId,
+		VideoId: req.VideId,
+		Type:    req.ActionType,
 	})
 	if err != nil {
-		c.String(400, err.Error())
+		c.JSON(400, err.Error())
+		return
 	}
 	c.JSON(200, &resp)
 	return
 }
 
 func FavoListMethod(ctx context.Context, c *app.RequestContext) {
-	userId, err1 := c.GetQuery("userId")
-	if !err1 {
-		c.String(400, "Get parameters failed")
+	req := new(FavoListReq)
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(400, err.Error())
 		return
 	}
-	userid, _ := strconv.Atoi(userId)
 	resp, err := rpcClient.UserFavo.FavoList(ctx, &userFavoPb.FavoListReq{
-		UserId: int64(userid),
+		UserId: req.UserId,
 	})
 	if err != nil {
-		c.String(400, err.Error())
+		c.JSON(400, err.Error())
+		return
 	}
 	c.JSON(200, &resp)
 	return
 }
 
 func FavoStatusMethod(ctx context.Context, c *app.RequestContext) {
-	userId, err1 := c.GetQuery("userId")
-	videoId, err2 := c.GetQuery("VideoId")
-	if !(err1 && err2) {
-		c.String(400, "Get parameters failed")
+	req := new(FavoStatusReq)
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(400, err.Error())
 		return
 	}
-	userid, _ := strconv.Atoi(userId)
-	videoid, _ := strconv.Atoi(videoId)
 	resp, err := rpcClient.UserFavo.FavoStatus(ctx, &userFavoPb.FavoStatusReq{
-		UserId:  int64(userid),
-		VideoId: int64(videoid),
+		UserId:  req.UserId,
+		VideoId: req.VideId,
 	})
 	if err != nil {
-		c.String(400, err.Error())
+		c.JSON(400, err.Error())
+		return
 	}
 	c.JSON(200, &resp)
 	return
