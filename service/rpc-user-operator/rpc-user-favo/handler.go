@@ -154,7 +154,7 @@ func (s *UserFavoRpcImpl) FavoCount(videoId int64) (int64, error) {
 	// 1. 查询RDB(key:video, value:user)
 	ext, err1 := cache.RDB.Exists(context.Background(), key).Result()
 	if err1 != nil {
-		log.Println("FavoCount Exisits Error")
+		log.Println("FavoCount Exists Error")
 	}
 	if ext > 0 {
 		res, err2 := cache.RDB.SCard(context.Background(), key).Result()
@@ -320,7 +320,7 @@ func (s *UserFavoRpcImpl) GetVideoList(ctx context.Context, videoIdList []uint64
 				StatusCode: 1,
 				StatusMsg:  "Failed",
 				VideoList:  nil},
-			errors.New("FavoList GetVidoeList Failed")
+			errors.New("FavoList GetVideoList Failed")
 	}
 	var favoList []*userFavoPb.Video
 	for _, respVideo := range myResp.VideoList {
