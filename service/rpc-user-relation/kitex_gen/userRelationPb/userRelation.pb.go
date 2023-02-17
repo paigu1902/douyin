@@ -147,11 +147,11 @@ type User struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	UserId        uint64 `protobuf:"varint,1,opt,name=userId,proto3" json:"userId,omitempty"`               //userId
-	UserName      string `protobuf:"bytes,2,opt,name=userName,proto3" json:"userName,omitempty"`            //name
-	FollowCount   int64  `protobuf:"varint,3,opt,name=followCount,proto3" json:"followCount,omitempty"`     //followCount
-	FollowerCount int64  `protobuf:"varint,4,opt,name=followerCount,proto3" json:"followerCount,omitempty"` //followerCount
-	IsFollow      bool   `protobuf:"varint,5,opt,name=isFollow,proto3" json:"isFollow,omitempty"`
+	UserId        uint64 `protobuf:"varint,1,opt,name=userId,proto3" json:"id,omitempty"`               //userId
+	UserName      string `protobuf:"bytes,2,opt,name=userName,proto3" json:"name,omitempty"`            //name
+	FollowCount   int64  `protobuf:"varint,3,opt,name=followCount,proto3" json:"follow_count,omitempty"`     //followCount
+	FollowerCount int64  `protobuf:"varint,4,opt,name=followerCount,proto3" json:"follower_count,omitempty"` //followerCount
+	IsFollow      bool   `protobuf:"varint,5,opt,name=isFollow,proto3" json:"is_follow,omitempty"`
 }
 
 func (x *User) Reset() {

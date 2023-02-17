@@ -4,47 +4,73 @@ package userInfo
 
 import (
 	"context"
+	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/app/server/binding"
 	"log"
-	//"paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"strconv"
 )
 
+type LoginReq struct {
+	UserName string `query:"username"`               //userName
+	Password string `query:"password" vd:"login($)"` //password
+}
+
+func init() {
+	binding.MustRegValidateFunc("login", func(args ...interface{}) error {
+		s, _ := args[0].(string)
+		if len(s) < 6 || len(s) > 20 {
+			return fmt.Errorf("登陆信息输入格式有误")
+		}
+		return nil
+	})
+}
 func LoginMethod(ctx context.Context, c *app.RequestContext) {
-	var req userInfoPb.LoginReq
-	var isok bool
-	req.UserName, isok = c.GetQuery("username")
-	req.Password, isok = c.GetQuery("password")
-	if !isok {
-		c.String(400, "获取参数失败")
-		return
-	}
-	resp, err := rpcClient.UserInfo.Login(ctx, &userInfoPb.LoginReq{UserName: req.UserName, Password: req.Password})
+	var req LoginReq
+	// 1.绑定参数
+	err := c.BindAndValidate(&req)
 	if err != nil {
-		c.String(400, err.Error())
+		respErr := &userInfoPb.LoginResp{StatusMsg: err.Error(), StatusCode: 1}
+		c.JSON(200, respErr)
 		return
 	}
+	// 2.调用rpc
+	resp, err := rpcClient.UserInfo.Login(ctx, &userInfoPb.LoginReq{
+		UserName: req.UserName,
+		Password: req.Password,
+	})
+	// 3.异常处理
+	if err != nil {
+		respErr := &userInfoPb.LoginResp{StatusMsg: err.Error(), StatusCode: 1}
+		c.JSON(200, respErr)
+		return
+	}
+	// 4.正常返回
 	log.Println("resp", resp)
 	c.JSON(200, resp)
 
 }
 
 func RegisterMethod(ctx context.Context, c *app.RequestContext) {
-	var req userInfoPb.RegisterReq
-	var isok bool
-	req.UserName, isok = c.GetQuery("username")
-	req.Password, isok = c.GetQuery("password")
-	if !isok {
-		c.String(400, "获取参数失败")
-		return
-	}
-	resp, err := rpcClient.UserInfo.Register(ctx, &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
+	var req LoginReq
+	// 1.绑定参数
+	err := c.BindAndValidate(&req)
 	if err != nil {
-		c.String(400, err.Error())
+		respErr := &userInfoPb.LoginResp{StatusMsg: err.Error(), StatusCode: 1}
+		c.JSON(200, respErr)
 		return
 	}
+	// 2.调用rpc
+	resp, err := rpcClient.UserInfo.Register(ctx, &userInfoPb.RegisterReq{UserName: req.UserName, Password: req.Password})
+	// 3.异常处理
+	if err != nil {
+		respErr := &userInfoPb.LoginResp{StatusMsg: err.Error(), StatusCode: 1}
+		c.JSON(200, respErr)
+		return
+	}
+	// 4.正常返回
 	log.Println("resp", resp)
 	c.JSON(200, resp)
 }
@@ -53,17 +79,19 @@ func InfoMethod(ctx context.Context, c *app.RequestContext) {
 	var req userInfoPb.UserInfoReq
 	var isok bool
 	fromId, _ := c.Get("from_id")
-	user_id, isok := c.GetQuery("user_id")
-	uid, _ := strconv.Atoi(user_id)
+	userId, isok := c.GetQuery("user_id")
+	uid, _ := strconv.Atoi(userId)
 	req.ToId = uint64(uid)
 	req.FromId = uint64(fromId.(uint))
 	if !isok {
-		c.String(400, "获取参数失败")
+		respErr := &userInfoPb.UserInfoResp{StatusMsg: "获取用户参数失败", StatusCode: 1}
+		c.JSON(200, respErr)
 		return
 	}
 	resp, err := rpcClient.UserInfo.Info(ctx, &req)
 	if err != nil {
-		c.String(400, err.Error())
+		respErr := &userInfoPb.UserInfoResp{StatusMsg: err.Error(), StatusCode: 1}
+		c.JSON(200, respErr)
 		return
 	}
 	log.Println("resp", resp)

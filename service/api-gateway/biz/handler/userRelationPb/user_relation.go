@@ -13,11 +13,11 @@ import (
 )
 
 type UserHttp struct {
-	UserId        uint64
-	UserName      string
-	FollowCount   int64
-	FollowerCount int64
-	IsFollow      bool
+	UserId        uint64 `json:"id"`
+	UserName      string `json:"name"`
+	FollowCount   int64  `json:"follow_count"`
+	FollowerCount int64  `json:"follower_count"`
+	IsFollow      bool   `json:"is_follow"`
 }
 
 type FollowActionReq struct {
