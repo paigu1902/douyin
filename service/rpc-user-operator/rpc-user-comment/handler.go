@@ -40,33 +40,32 @@ func (s *UserCommRpcImpl) GetCommentNumberByVideo(ctx context.Context, req *User
 			StatusMsg:  "OTHER_ERROR",
 			Count:      -1,
 		}, err
-	} else {
-		go func() {
-			getList, _ := models.GetCommentList(videoId)
-			_, err2 := cache.RdbUserOp.SAdd(ctx, "VideoIdToCommentIds:"+strconv.Itoa(int(videoId)), -1).Result()
-			if err2 != nil {
-				log.Println("redis save one vId - cId -1 failed")
-				return
-			}
-			// 设置过期时间
-			_, err := cache.RdbUserOp.Expire(ctx, "VideoIdToCommentIds:"+strconv.Itoa(int(videoId)),
-				time.Duration(60*60*24*30)*time.Second).Result()
-			if err != nil {
-				log.Println("redis save one vId - cId expire failed")
-			}
-			// 存入redis
-			for _, CommentId := range getList {
-				InsertRedisComment(ctx, videoId, CommentId)
-			}
-			log.Println("save in redis success")
-		}()
-
-		return &UserCommPb.DouyinCommentNumberResponse{
-			StatusCode: 0,
-			StatusMsg:  "SUCCESS",
-			Count:      count,
-		}, nil
 	}
+	go func() {
+		getList, _ := models.GetCommentList(videoId)
+		_, err2 := cache.RdbUserOp.SAdd(ctx, "VideoIdToCommentIds:"+strconv.Itoa(int(videoId)), -1).Result()
+		if err2 != nil {
+			log.Println("redis save one vId - cId -1 failed")
+			return
+		}
+		// 设置过期时间
+		_, err := cache.RdbUserOp.Expire(ctx, "VideoIdToCommentIds:"+strconv.Itoa(int(videoId)),
+			time.Duration(60*60*24*30)*time.Second).Result()
+		if err != nil {
+			log.Println("redis save one vId - cId expire failed")
+		}
+		// 存入redis
+		for _, CommentId := range getList {
+			InsertRedisComment(ctx, videoId, CommentId)
+		}
+		log.Println("save in redis success")
+	}()
+
+	return &UserCommPb.DouyinCommentNumberResponse{
+		StatusCode: 0,
+		StatusMsg:  "SUCCESS",
+		Count:      count,
+	}, nil
 }
 
 // CommentAction implements the UserCommRpcImpl interface.
