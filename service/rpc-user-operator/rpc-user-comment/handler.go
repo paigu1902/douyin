@@ -105,68 +105,10 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 	}
 	if req.ActionType == 1 {
 		// 发表评论
-		commentTmp := models.UserComm{
-			UserName: user.UserName,
-			VideoId:  videoId,
-			CommText: commentTxt,
-			UserId:   user.UserId,
-			Status:   1,
-		}
-		err := models.InsertComment(commentTmp)
-		if err != nil {
-			return &UserCommPb.DouyinCommentActionResponse{
-				StatusCode: 2,
-				StatusMsg:  "OTHER_ERROR",
-			}, err
-		}
-		//将此发表的评论id存入redis
-		go func() {
-			InsertRedisComment(ctx, videoId, strconv.Itoa(int(commentTmp.ID)))
-			log.Println("send comment save in redis")
-		}()
-		return &UserCommPb.DouyinCommentActionResponse{
-			StatusCode: 0,
-			StatusMsg:  "SUCCESS",
-			Comment:    &comment,
-		}, nil
+		return AddComment(ctx, &comment, videoId, commentTxt)
 	} else {
 		// 删除评论
-		// 先对redis中去删除
-		n, err := cache.RdbUserOp.Exists(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
-		if err != nil {
-			log.Println(err)
-		}
-		if n > 0 { // redis 有数据
-			vid, _ := cache.RdbUserOp.Get(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
-			del1, err := cache.RdbUserOp.Del(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
-			if err != nil {
-				log.Println("Del in CV table err", err)
-			}
-			del2, err := cache.RdbUserOp.SRem(ctx, "VideoIdToCommentIds:"+vid, strconv.FormatInt(commentId, 10)).Result()
-			if err != nil {
-				log.Println("Del in VC table err", err)
-			}
-			log.Println("del comment in Redis success:", del1, del2)
-		}
-		err = models.DeleteComment(req.CommentId)
-		if err != nil {
-			if err.Error() == "del comment is not exist" {
-				return &UserCommPb.DouyinCommentActionResponse{
-					StatusCode: 1,
-					StatusMsg:  "NOT_EXIST_ERROR",
-				}, err
-			} else {
-				return &UserCommPb.DouyinCommentActionResponse{
-					StatusCode: 2,
-					StatusMsg:  "OTHER_ERROR",
-				}, err
-			}
-		}
-		return &UserCommPb.DouyinCommentActionResponse{
-			StatusCode: 0,
-			StatusMsg:  "SUCCESS",
-			Comment:    &comment,
-		}, nil
+		return DelComment(ctx, &comment, commentId)
 	}
 }
 
@@ -229,16 +171,17 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 	}, nil
 }
 
-func InsertRedisComment(ctx context.Context, VideoId int64, CommentId string) {
+func InsertRedisComment(ctx context.Context, videoId int64, CommentId string) {
 	// 在VideoId下存储CommentId
-	_, err := cache.RdbUserOp.SAdd(ctx, "VideoIdToCommentIds:"+strconv.FormatInt(VideoId, 10), CommentId).Result()
+	// Redis update
+	_, err := cache.RdbUserOp.SAdd(ctx, "VideoIdToCommentIds:"+strconv.FormatInt(videoId, 10), CommentId).Result()
 	if err != nil {
 		log.Println("redis save send: vId - cId failed, key deleted")
-		cache.RdbUserOp.Del(ctx, "VideoIdToCommentIds:"+strconv.FormatInt(VideoId, 10))
+		cache.RdbUserOp.Del(ctx, "VideoIdToCommentIds:"+strconv.FormatInt(videoId, 10))
 		return
 	}
 	// 在CommentId 存储 VideoId
-	_, err = cache.RdbUserOp.Set(ctx, "CommentIdToVideoId:"+CommentId, VideoId, 0).Result()
+	_, err = cache.RdbUserOp.Set(ctx, "CommentIdToVideoId:"+CommentId, videoId, 0).Result()
 	if err != nil {
 		log.Println("redis save one cId - vId failed")
 	}
@@ -280,4 +223,71 @@ func FillCommentListFields(comments []models.UserComm, videoId int64) ([]*UserCo
 		})
 	}
 	return commentListPb, nil
+}
+
+func AddComment(ctx context.Context, comment *UserCommPb.Comment, videoId int64, commentTxt string) (resp *UserCommPb.DouyinCommentActionResponse, err error) {
+	commentTmp := models.UserComm{
+		UserName: comment.User.Name,
+		VideoId:  videoId,
+		CommText: commentTxt,
+		UserId:   uint64(comment.User.Id),
+		Status:   1,
+	}
+	err = models.InsertComment(commentTmp)
+	if err != nil {
+		return &UserCommPb.DouyinCommentActionResponse{
+			StatusCode: 2,
+			StatusMsg:  "OTHER_ERROR",
+		}, err
+	}
+	//将此发表的评论id存入redis
+	go func() {
+		InsertRedisComment(ctx, videoId, strconv.Itoa(int(commentTmp.ID)))
+		log.Println("send comment save in redis")
+	}()
+	comment.Id = int64(commentTmp.ID)
+	return &UserCommPb.DouyinCommentActionResponse{
+		StatusCode: 0,
+		StatusMsg:  "SUCCESS",
+		Comment:    comment,
+	}, nil
+}
+
+func DelComment(ctx context.Context, comment *UserCommPb.Comment, commentId int64) (resp *UserCommPb.DouyinCommentActionResponse, err error) {
+	// 先对redis中去删除
+	n, err := cache.RdbUserOp.Exists(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
+	if err != nil {
+		log.Println(err)
+	}
+	if n > 0 { // redis 有数据
+		vid, _ := cache.RdbUserOp.Get(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
+		del1, err := cache.RdbUserOp.Del(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
+		if err != nil {
+			log.Println("Del in CV table err", err)
+		}
+		del2, err := cache.RdbUserOp.SRem(ctx, "VideoIdToCommentIds:"+vid, strconv.FormatInt(commentId, 10)).Result()
+		if err != nil {
+			log.Println("Del in VC table err", err)
+		}
+		log.Println("del comment in Redis success:", del1, del2)
+	}
+	err = models.DeleteComment(commentId)
+	if err != nil {
+		if err.Error() == "del comment is not exist" {
+			return &UserCommPb.DouyinCommentActionResponse{
+				StatusCode: 1,
+				StatusMsg:  "NOT_EXIST_ERROR",
+			}, err
+		} else {
+			return &UserCommPb.DouyinCommentActionResponse{
+				StatusCode: 2,
+				StatusMsg:  "OTHER_ERROR",
+			}, err
+		}
+	}
+	return &UserCommPb.DouyinCommentActionResponse{
+		StatusCode: 0,
+		StatusMsg:  "SUCCESS",
+		Comment:    comment,
+	}, nil
 }
