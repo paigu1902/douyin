@@ -23,10 +23,6 @@ func CreateVideoInfo(videoInfo *VideoInfo) error {
 	return DB.Create(videoInfo).Error
 }
 
-func UpdateVideoInfo(info *VideoInfo) error {
-	return DB.Model(info).Update("play_url", info.PlayUrl).Error
-}
-
 func GetVideoInfo(latestTime string, limit int, videoList *[]VideoInfo) error {
 	return DB.Where("deleted_at is NULL and created_at<=?", latestTime).Limit(limit).Find(videoList).Error
 }
