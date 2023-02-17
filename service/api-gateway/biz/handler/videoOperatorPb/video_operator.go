@@ -79,15 +79,6 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 }
 
 func FeedMethod(ctx context.Context, c *app.RequestContext) {
-	//r, err := resolver.NewDefaultNacosResolver()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//newClient := videooperator.MustNewClient(
-	//	"videoOperatorImpl",
-	//	client.WithResolver(r),
-	//	client.WithRPCTimeout(time.Second*5),
-	//)
 	var req FeedReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
@@ -105,15 +96,6 @@ func FeedMethod(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, resp)
 }
 func PublishListMethod(ctx context.Context, c *app.RequestContext) {
-	//r, err := resolver.NewDefaultNacosResolver()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//client := videooperator.MustNewClient(
-	//	"videoOperatorImpl",
-	//	client.WithResolver(r),
-	//	client.WithRPCTimeout(time.Second*5),
-	//)
 	req := new(PublishListReq)
 	// 1. 绑定校验参数
 	if err := c.BindAndValidate(req); err != nil {
@@ -136,23 +118,3 @@ func PublishListMethod(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, resp)
 	return
 }
-
-//func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
-//	r, err := resolver.NewDefaultNacosResolver()
-//	if err != nil {
-//		panic(err)
-//	}
-//	client := videooperator.MustNewClient(
-//		"videoOperatorImpl",
-//		client.WithResolver(r),
-//		client.WithRPCTimeout(time.Second*5),
-//	)
-//	var req videoOperatorPb.VideoUploadReq
-//	if err = c.BindAndValidate(&req); err != nil {
-//		c.String(400, err.Error())
-//		return
-//	}
-//	resp, err := client.Upload(ctx, &req)
-//	c.JSON(200, resp)
-//	return
-//}
