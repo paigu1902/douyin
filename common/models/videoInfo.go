@@ -20,7 +20,20 @@ func (t *VideoInfo) TableName() string {
 }
 
 func CreateVideoInfo(videoInfo *VideoInfo) error {
-	return DB.Create(videoInfo).Error
+	// video_info插入一条新视频，同时user_info中的video_count加一
+	return DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(videoInfo).Error; err != nil {
+			return err
+		}
+		userInfo := UserInfo{}
+		if err := tx.Where("id=?", videoInfo.AuthorId).First(&userInfo).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&userInfo).UpdateColumn("video_count", gorm.Expr("video_count + ?", 1)).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func GetVideoInfo(latestTime string, limit int, videoList *[]VideoInfo) error {

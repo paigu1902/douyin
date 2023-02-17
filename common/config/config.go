@@ -1,10 +1,11 @@
 package config
 
 type Config struct {
-	Redis RedisConfig `yaml:"redis"`
-	Mysql MysqlConfig `yaml:"mysql"`
-	Nacos NacosConfig `yaml:"nacos"`
-	OSS   OSSConfig   `yaml:"oss"`
+	Redis    RedisConfig    `yaml:"redis"`
+	Mysql    MysqlConfig    `yaml:"mysql"`
+	Nacos    NacosConfig    `yaml:"nacos"`
+	OSS      OSSConfig      `yaml:"oss"`
+	RabbitMQ RabbitMQConfig `yaml:"rabbitmq"`
 }
 
 type RedisConfig struct {
