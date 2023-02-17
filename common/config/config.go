@@ -4,8 +4,8 @@ type Config struct {
 	Redis    RedisConfig    `yaml:"redis"`
 	Mysql    MysqlConfig    `yaml:"mysql"`
 	Nacos    NacosConfig    `yaml:"nacos"`
-	RabbitMQ RabbitMQConfig `yaml:"rabbitmq"`
 	OSS      OSSConfig      `yaml:"oss"`
+	RabbitMQ RabbitMQConfig `yaml:"rabbitmq"`
 }
 
 type RedisConfig struct {
