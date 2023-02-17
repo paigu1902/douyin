@@ -13,7 +13,6 @@ import (
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 )
@@ -99,7 +98,7 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 	//没滑到底
 	if len(videoList) > limit {
 		videoList = videoList[:len(videoList)-1]
-		nextTime = videoList[len(videoList)-1].CreatedAt.Unix()
+		nextTime = videoList[len(videoList)-1].CreatedAt.UnixMilli()
 	} else { //到底了
 		nextTime = 1
 	}
@@ -149,9 +148,6 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 
 		videoRespList = append(videoRespList, &video)
 	}
-	sort.Slice(videoList, func(i, j int) bool {
-		return videoList[i].CreatedAt.After(videoList[j].CreatedAt)
-	})
 	feedResp := &videoOperatorPb.FeedResp{
 		StatusCode: 0,
 		StatusMsg:  "成功",
