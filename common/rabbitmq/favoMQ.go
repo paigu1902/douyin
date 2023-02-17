@@ -87,6 +87,8 @@ func (favo *RabbitMQ) Consume() {
 		go favo.ConsumeFavoAdd(messages)
 	case "favoDel": //取消赞
 		go favo.ConsumeFavoDel(messages)
+	default:
+		log.Println("RabbitMQ Actiontype Error")
 	}
 	log.Printf("[*] Waiting for messagees,To exit press CTRL+C")
 	<-ch //由协程从channel中pop一个值或阻塞

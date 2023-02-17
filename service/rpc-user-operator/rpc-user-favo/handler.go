@@ -51,13 +51,13 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 	user := strconv.FormatInt(req.UserId, 10)
 	key := "UserIdsToVideoIds" + user
 	// 1. 查询cache
-	ext, err1 := cache.RDB.Exists(context.Background(), key).Result()
+	ext, err1 := cache.RDB.Exists(ctx, key).Result()
 	if err1 != nil {
 		log.Println("FavoList Exists Error")
 	}
 	// 2. cache中存在点赞用户信息 获取视频列表
 	if ext > 0 {
-		videoIdListStr, err2 := cache.RDB.SMembers(context.Background(), key).Result()
+		videoIdListStr, err2 := cache.RDB.SMembers(ctx, key).Result()
 		if err2 != nil {
 			log.Println("FavoList SMembers Error")
 		}
@@ -83,7 +83,7 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 		log.Println("FavoList readRecordsToCache Error")
 	}
 	// 4. 重新读取缓存中的video列表
-	videoIdListStr, err5 := cache.RDB.SMembers(context.Background(), key).Result()
+	videoIdListStr, err5 := cache.RDB.SMembers(ctx, key).Result()
 	if err5 != nil {
 		log.Println("FavoList SMembers Error")
 	}
@@ -111,24 +111,24 @@ func (s *UserFavoRpcImpl) FavoStatus(ctx context.Context, req *userFavoPb.FavoSt
 	keyU := "UserIdsToVideoIds" + user
 	keyV := "VideoIdsToUserIds" + video
 	// 1. 查询RDB(key:user, value:video)
-	ext1, err1 := cache.RDB.Exists(context.Background(), keyU).Result()
+	ext1, err1 := cache.RDB.Exists(ctx, keyU).Result()
 	if err1 != nil {
 		log.Println("FavoStatus Exists Error")
 	}
 	if ext1 > 0 {
-		res, err := cache.RDB.SIsMember(context.Background(), keyU, video).Result()
+		res, err := cache.RDB.SIsMember(ctx, keyU, video).Result()
 		if err != nil {
 			log.Println("FavoStatus Exists Error")
 		}
 		return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, nil
 	}
 	// 2. 若RDB(key:user, value:video)中不存在点赞记录 查询RDB(key:video, value:user)
-	ext2, err2 := cache.RDB.Exists(context.Background(), keyV).Result()
+	ext2, err2 := cache.RDB.Exists(ctx, keyV).Result()
 	if err2 != nil {
 		log.Println("FavoStatus Exists Error")
 	}
 	if ext2 > 0 {
-		res, err := cache.RDB.SIsMember(context.Background(), keyV, user).Result()
+		res, err := cache.RDB.SIsMember(ctx, keyV, user).Result()
 		if err != nil {
 			log.Println("FavoStatus SIsMember Error")
 		}
@@ -140,7 +140,7 @@ func (s *UserFavoRpcImpl) FavoStatus(ctx context.Context, req *userFavoPb.FavoSt
 		log.Println("FavoStatus readRecordsToCache Error")
 	}
 	// 4. 再次查询cache
-	res, err := cache.RDB.SIsMember(context.Background(), keyU, video).Result()
+	res, err := cache.RDB.SIsMember(ctx, keyU, video).Result()
 	if err != nil {
 		log.Println("FavoStatus SIsMember Error")
 	}
