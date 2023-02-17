@@ -1,9 +1,9 @@
 mysql:
-  host: 127.0.0.1
+  host: 124.222.182.66
   port: 3306
   dbname: douyin
   username: root
-  password: 123456
+  password: Wqx1761391865.
 
 redis:
   host: 127.0.0.1

@@ -2,7 +2,11 @@ package models
 
 import (
 	"log"
+	"paigu1902/douyin/common/config"
+	"strconv"
+	"time"
 
+	mc "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -10,7 +14,18 @@ import (
 var DB *gorm.DB
 
 func init() {
-	dsn := "root:Wqx1761391865.@tcp(124.222.182.66:3306)/douyin?charset=utf8mb4&parseTime=True&loc=Local"
+	mysqlConfig := mc.Config{
+		User:                 config.C.Mysql.Username,
+		Passwd:               config.C.Mysql.Password,
+		Net:                  "tcp",
+		Addr:                 config.C.Mysql.Host + ":" + strconv.Itoa(config.C.Mysql.Port),
+		DBName:               config.C.Mysql.Dbname,
+		Loc:                  time.Local,
+		ParseTime:            true,
+		Collation:            "utf8mb4_general_ci",
+		AllowNativePasswords: true,
+	}
+	dsn := mysqlConfig.FormatDSN()
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{SkipDefaultTransaction: true})
 	if err != nil {
 		log.Println("gorm Init Error : ", err)

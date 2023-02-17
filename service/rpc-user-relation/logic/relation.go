@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/cloudwego/kitex/tool/internal_pkg/log"
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
