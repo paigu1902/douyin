@@ -169,7 +169,7 @@ func (s *UserFavoRpcImpl) FavoCount(videoId int64) (int64, error) {
 		log.Println("FavoCount readRecordsToCache Error")
 	}
 	// 3. 再次查询cache
-	res, err4 := cache.RdbFavoUser.SCard(context.Background(), video).Result()
+	res, err4 := cache.RDB.SCard(context.Background(), key).Result()
 	if err4 != nil {
 		log.Println("FavoCount SCard Error")
 	}

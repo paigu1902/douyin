@@ -36,32 +36,6 @@ func (favo *RabbitMQ) Publish(msg string) {
 		log.Printf("Declare Queue Failed", err)
 		return
 	}
-	//// 声明交换器
-	//err = favo.Channel.ExchangeDeclare(
-	//	favo.Exchange, // 交换器名
-	//	"topic",     // exchange type：一般用fanout、direct、topic
-	//	true,        // 是否持久化
-	//	false,       // 是否自动删除（自动删除的前提是至少有一个队列或者交换器与这和交换器绑定，之后所有与这个交换器绑定的队列或者交换器都与此解绑）
-	//	false,       // 设置是否内置的。true表示是内置的交换器，客户端程序无法直接发送消息到这个交换器中，只能通过交换器路由到交换器这种方式
-	//	false,       // 是否阻塞
-	//	nil,         // 额外属性
-	//)
-	//if err != nil {
-	//	fmt.Println("Declare Exchange Failed", err)
-	//	return
-	//}
-	//// 建立Binding(可随心所欲建立多个绑定关系)
-	//err = favo.Channel.QueueBind(
-	//	favo.QueueName,  // 绑定的队列名称
-	//	favo.RoutingKey, // bindkey 用于消息路由分发的key
-	//	favo.Exchange,   // 绑定的exchange名
-	//	false,         // 是否阻塞
-	//	nil,           // 额外属性
-	//)
-	//if err != nil {
-	//	fmt.Println("Bind Queue Failed", err)
-	//	return
-	//}
 	// 发送消息
 	errP := favo.Channel.Publish(
 		favo.Exchange,   // 交换器名
