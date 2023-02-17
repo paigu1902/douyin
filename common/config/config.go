@@ -4,6 +4,7 @@ type Config struct {
 	Redis RedisConfig `yaml:"redis"`
 	Mysql MysqlConfig `yaml:"mysql"`
 	Nacos NacosConfig `yaml:"nacos"`
+	OSS   OSSConfig   `yaml:"oss"`
 }
 
 type RedisConfig struct {
@@ -23,4 +24,19 @@ type MysqlConfig struct {
 type NacosConfig struct {
 	Host string `yaml:"host"`
 	Port uint64 `yaml:"port"`
+}
+
+type RabbitMQConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Hostname string `yaml:"hostname"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+}
+
+type OSSConfig struct {
+	BucketName      string `ymal:"bucketName"`
+	Endpoint        string `yaml:"endpoint"`
+	AccessKeyId     string `yaml:"accessKeyId"`
+	AccessKeySecret string `yaml:"accessKeySecret"`
 }

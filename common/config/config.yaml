@@ -13,3 +13,16 @@ redis:
 nacos:
   host: 127.0.0.1
   port: 8848
+
+rabbitmq:
+  host: 172.30.16.1
+  port: 15672
+  hostname: dyhost
+  username: admin
+  password: RabbitMQ
+
+oss:
+  bucketName: paigu-douyin-videos
+  endpoint: oss-cn-nanjing.aliyuncs.com
+  accessKeyId: LTAI5tKz8Jg67pok7LjZ3rus
+  accessKeySecret: BUpR46wYSyON68Qpy7aGwEvCSCvzxf
