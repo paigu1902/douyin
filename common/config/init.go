@@ -17,6 +17,7 @@ func init() {
 	configViperConfig.SetConfigName("config")
 	configViperConfig.SetConfigType("yaml")
 	configViperConfig.AddConfigPath(path.Dir(filename))
+
 	//读取配置文件内容
 	if err := configViperConfig.ReadInConfig(); err != nil {
 		panic(err)

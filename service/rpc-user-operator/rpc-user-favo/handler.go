@@ -302,7 +302,7 @@ func (s *UserFavoRpcImpl) readRecordsToCache(readType int, key string, user stri
 		for _, favoUserId := range UserIdList {
 			_, err := cache.RDB.SAdd(context.Background(), key, favoUserId).Result()
 			if err != nil {
-				cache.RdbFavoVideo.Del(context.Background(), key)
+				cache.RDB.Del(context.Background(), key)
 				log.Println("FavoAction SAdd Error")
 			}
 		}

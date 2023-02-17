@@ -18,24 +18,13 @@ var RdbUserOp *redis.Client
 
 // video -> comment "VideoIdToCommentIds:*" 一对多
 // comment -> video "CommentIdToVideoId:*" 一对一
-
-var RdbFavoUser *redis.Client  //key:UserId,value:VideoId
-var RdbFavoVideo *redis.Client //key:VideoId,value:UserId
+// video -> user "VideoIdsToUserIdsIds:*" 多对多
+// user -> video "UserIdsToVideoIds:*" 多对多
 
 func init() {
 	RdbUserOp = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       1,
-	})
-	RdbFavoUser = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       3,
-	})
-	RdbFavoVideo = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       4,
 	})
 }
