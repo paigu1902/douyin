@@ -11,7 +11,7 @@ import (
 
 type FavoActionReq struct {
 	UserId     int64 `query:"userId"`
-	VideId     int64 `query:"VideoId"`
+	VideId     int64 `query:"videoId"`
 	ActionType int32 `query:"type" vd:"$==1 || $==2"`
 }
 
@@ -21,7 +21,7 @@ type FavoListReq struct {
 
 type FavoStatusReq struct {
 	UserId int64 `query:"userId"`
-	VideId int64 `query:"VideoId"`
+	VideId int64 `query:"videoId"`
 }
 
 func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
