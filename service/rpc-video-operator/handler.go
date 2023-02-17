@@ -13,6 +13,7 @@ import (
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -86,16 +87,22 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 
 	timestamp := req.LatestTime
 	if timestamp == 0 {
-		timestamp = time.Now().Unix()
+		timestamp = time.Now().UnixMilli()
 	}
-	latestTime := time.Unix(timestamp, 0).Format("2006-01-02 15:04:05")
+	latestTime := time.UnixMilli(timestamp).Format("2006-01-02 15:04:05")
 	var videoList []models.VideoInfo
 	err = models.GetVideoInfo(latestTime, limit+1, &videoList)
 	if err != nil {
 		return nil, err
 	}
-	nextTime := videoList[len(videoList)-1].CreatedAt.Unix()
-	videoList = videoList[:len(videoList)-1]
+	nextTime := int64(0)
+	//没滑到底
+	if len(videoList) > limit {
+		videoList = videoList[:len(videoList)-1]
+		nextTime = videoList[len(videoList)-1].CreatedAt.Unix()
+	} else { //到底了
+		nextTime = 1
+	}
 	var videoRespList []*videoOperatorPb.Video
 	for _, videoInfo := range videoList {
 		userInfoReq := userInfoPb.UserInfoReq{
@@ -142,6 +149,9 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 
 		videoRespList = append(videoRespList, &video)
 	}
+	sort.Slice(videoList, func(i, j int) bool {
+		return videoList[i].CreatedAt.After(videoList[j].CreatedAt)
+	})
 	feedResp := &videoOperatorPb.FeedResp{
 		StatusCode: 0,
 		StatusMsg:  "成功",

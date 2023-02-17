@@ -26,9 +26,9 @@ func (UserComm) TableName() string {
 // 通过视频id获得视频的所有评论id列表
 
 func GetCommentList(VideoId int64) ([]string, error) {
-	log.Println("Running-Get CommentList By VideoId: ", VideoId)
+	log.Println("Running-Get CommentList By Video_Id: ", VideoId)
 	var CommentList []string
-	err := Db.Model(UserComm{}).Select("ID").Where("VideoId = ? and Status = ?", VideoId, 1).Find(&CommentList).Error
+	err := Db.Model(UserComm{}).Select("ID").Where("Video_Id = ? and Status = ?", VideoId, 1).Find(&CommentList).Error
 	if err != nil {
 		log.Println("GetCommentList: ", err)
 		return nil, err
@@ -72,9 +72,9 @@ func DeleteComment(CommentId int64) error {
 // 通过VideoId 获取评论列表
 
 func GetCommentsByVideo(VideoId int64) ([]UserComm, error) {
-	log.Println("running-Get Comment by VideoId:", VideoId)
+	log.Println("running-Get Comment by Video_Id:", VideoId)
 	var CommentList []UserComm
-	comm := Db.Model(UserComm{}).Where("VideoId = ? and Status = ?", VideoId, 1).Order("CreatedAt desc").Find(&CommentList)
+	comm := Db.Model(UserComm{}).Where("Video_Id = ? and Status = ?", VideoId, 1).Order("Created_At desc").Find(&CommentList)
 	if comm.RowsAffected == 0 {
 		log.Println("There are no Comment in this Video")
 		return nil, nil
@@ -93,7 +93,7 @@ func GetCommentsByVideo(VideoId int64) ([]UserComm, error) {
 func GetCommentsNumByVideo(VideoId int64) (int64, error) {
 	log.Println("running-Get Comment by VideoId:", VideoId)
 	var count int64
-	err := Db.Model(UserComm{}).Where("VideoId = ? and Status = ?", VideoId, 1).Count(&count).Error
+	err := Db.Model(UserComm{}).Where("Video_Id = ? and Status = ?", VideoId, 1).Count(&count).Error
 
 	if err != nil {
 		log.Println(err.Error())

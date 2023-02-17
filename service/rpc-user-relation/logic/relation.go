@@ -180,7 +180,7 @@ func FollowAction(ctx context.Context, req *userRelationPb.FollowActionReq) (res
 			return resp, err
 		}
 
-	} else if req.Type == "0" {
+	} else if req.Type == "2" {
 		err = models.DB.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Where(&models.Relation{FromId: req.FromId, ToId: req.ToId}).Delete(&models.Relation{}).Error; err != nil {
 				return err
