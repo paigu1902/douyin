@@ -24,3 +24,11 @@ type NacosConfig struct {
 	Host string `yaml:"host"`
 	Port uint64 `yaml:"port"`
 }
+
+type RabbitMQConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Hostname string `yaml:"hostname"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+}

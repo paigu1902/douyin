@@ -13,3 +13,10 @@ redis:
 nacos:
   host: 127.0.0.1
   port: 8848
+
+rabbitmq:
+  host: 172.30.16.1
+  port: 15672
+  hostname: dyhost
+  username: admin
+  password: RabbitMQ
