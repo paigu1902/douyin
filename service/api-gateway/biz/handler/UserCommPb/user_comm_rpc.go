@@ -7,37 +7,60 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
-	"strconv"
 )
 
-func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
-	UserId, Exist1 := c.GetQuery("user_id")
-	CommentId, Exist2 := c.GetQuery("comment_id")
-	VideoId, Exist3 := c.GetQuery("video_id")
-	ActionType, Exist4 := c.GetQuery("action_type")
-	CommentText, Exist5 := c.GetQuery("comment_text")
+type CommentActionReq struct {
+	UserId      int64 `query:"user_id"`
+	CommentId   int64
+	VideId      int64  `query:"video_id"`
+	ActionType  int32  `query:"action_type" vd:"$==1 || $==2"`
+	CommentText string `vd:"len($)>=0 && len($)<30"`
+}
 
-	// 特判Exist2 因为 当发布评论时没有CommentId
-	if !(((!Exist2 && ActionType == "1") || Exist2) && Exist1 && Exist3 && Exist4 && Exist5) {
-		c.String(400, "获取参数失败")
+type CommentsInfoReq struct {
+	UserId int64 `query:"user_id"`
+	VideId int64 `query:"video_id"`
+}
+
+func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
+	req := new(CommentActionReq)
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(400, err.Error())
 		return
 	}
-	if !Exist2 {
-		CommentId = "0"
+	if req.ActionType == 2 {
+		// 删除评论 comment_text = ""
+		req.CommentText = ""
+		CommentId, isOk := c.Get("comment_id")
+		if !isOk {
+			c.JSON(400, "get current comment_id error in delete comment")
+			return
+		}
+		req.CommentId = CommentId.(int64)
+	} else {
+		// 添加评论 comment_id = 0
+		req.CommentId = 0
+		CommentText, isOk := c.Get("comment_text")
+		if !isOk {
+			c.JSON(400, "get current comment_id error in delete comment")
+			return
+		}
+		if len(CommentText.(string)) == 0 {
+			c.JSON(400, "add_op: the length of comment should not be 0")
+			return
+		}
+		req.CommentText = CommentText.(string)
 	}
-	userid, _ := strconv.Atoi(UserId)
-	commentid, _ := strconv.Atoi(CommentId)
-	videoid, _ := strconv.Atoi(VideoId)
-	actiontype, _ := strconv.Atoi(ActionType)
+
 	resp, err := rpcClient.UserComm.CommentAction(ctx, &UserCommPb.DouyinCommentActionRequest{
-		UserId:      int64(userid),
-		VideoId:     int64(videoid),
-		ActionType:  int32(actiontype),
-		CommentText: CommentText,
-		CommentId:   int64(commentid),
+		UserId:      req.UserId,
+		VideoId:     req.VideId,
+		ActionType:  req.ActionType,
+		CommentText: req.CommentText,
+		CommentId:   req.CommentId,
 	})
 	if err != nil {
-		c.String(400, err.Error())
+		c.JSON(400, err.Error())
 		return
 	}
 	c.JSON(200, &resp)
@@ -45,21 +68,17 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 }
 
 func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
-	UserId, Exist1 := c.GetQuery("user_id")
-	VideoId, Exist2 := c.GetQuery("video_id")
-	if !(Exist1 && Exist2) {
-		c.String(400, "获取参数失败")
+	req := new(CommentsInfoReq)
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(400, err.Error())
 		return
 	}
-	userid, _ := strconv.Atoi(UserId)
-	videoid, _ := strconv.Atoi(VideoId)
-
 	resp, err := rpcClient.UserComm.GetCommentsByVideo(ctx, &UserCommPb.DouyinCommentListRequest{
-		UserId:  int64(userid),
-		VideoId: int64(videoid),
+		UserId:  req.UserId,
+		VideoId: req.VideId,
 	})
 	if err != nil {
-		c.String(400, err.Error())
+		c.JSON(400, err.Error())
 		return
 	}
 	c.JSON(200, &resp)
@@ -67,21 +86,17 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 }
 
 func CommentNumberMethod(ctx context.Context, c *app.RequestContext) {
-	UserId, Exist1 := c.GetQuery("user_id")
-	VideoId, Exist2 := c.GetQuery("video_id")
-	if !(Exist1 && Exist2) {
-		c.String(400, "获取参数失败")
+	req := new(CommentsInfoReq)
+	if err := c.BindAndValidate(req); err != nil {
+		c.JSON(400, err.Error())
 		return
 	}
-	userid, _ := strconv.Atoi(UserId)
-	videoid, _ := strconv.Atoi(VideoId)
-
 	resp, err := rpcClient.UserComm.GetCommentNumberByVideo(ctx, &UserCommPb.DouyinCommentNumberRequest{
-		UserId:  int64(userid),
-		VideoId: int64(videoid),
+		UserId:  req.UserId,
+		VideoId: req.VideId,
 	})
 	if err != nil {
-		c.String(400, err.Error())
+		c.JSON(400, err.Error())
 		return
 	}
 	c.JSON(200, &resp)
