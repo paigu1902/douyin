@@ -8,7 +8,7 @@ import (
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	UserInfo "paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
-	UserCommPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
+	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
 	"strconv"
 	"time"
 )
@@ -18,10 +18,9 @@ type UserCommRpcImpl struct{}
 
 // GetCommentNumberByVideo implements the UserCommRpcImpl interface.
 func (s *UserCommRpcImpl) GetCommentNumberByVideo(ctx context.Context, req *UserCommPb.DouyinCommentNumberRequest) (resp *UserCommPb.DouyinCommentNumberResponse, err error) {
-	// TODO: Your code here...
 	videoId := req.VideoId
 	//先在缓存中查
-	cnt, err := cache.RdbVCid.SCard(cache.Ctx, strconv.FormatInt(videoId, 10)).Result()
+	cnt, err := cache.RdbUserOp.SCard(ctx, "VideoIdToCommentIds:"+strconv.FormatInt(videoId, 10)).Result()
 	if err != nil { //若查询缓存出错，则打印log
 		log.Println("count from redis error:", err)
 	}
@@ -43,21 +42,21 @@ func (s *UserCommRpcImpl) GetCommentNumberByVideo(ctx context.Context, req *User
 		}, err
 	} else {
 		go func() {
-			get_list, _ := models.GetCommentList(videoId)
-			_, err_2 := cache.RdbVCid.SAdd(cache.Ctx, strconv.Itoa(int(videoId)), -1).Result()
-			if err_2 != nil {
+			getList, _ := models.GetCommentList(videoId)
+			_, err2 := cache.RdbUserOp.SAdd(ctx, "VideoIdToCommentIds:"+strconv.Itoa(int(videoId)), -1).Result()
+			if err2 != nil {
 				log.Println("redis save one vId - cId -1 failed")
 				return
 			}
 			// 设置过期时间
-			_, err := cache.RdbVCid.Expire(cache.Ctx, strconv.Itoa(int(videoId)),
+			_, err := cache.RdbUserOp.Expire(ctx, "VideoIdToCommentIds:"+strconv.Itoa(int(videoId)),
 				time.Duration(60*60*24*30)*time.Second).Result()
 			if err != nil {
 				log.Println("redis save one vId - cId expire failed")
 			}
 			// 存入redis
-			for _, commentid := range get_list {
-				InsertRedisComment(videoId, commentid)
+			for _, CommentId := range getList {
+				InsertRedisComment(ctx, videoId, CommentId)
 			}
 			log.Println("save in redis success")
 		}()
@@ -72,7 +71,6 @@ func (s *UserCommRpcImpl) GetCommentNumberByVideo(ctx context.Context, req *User
 
 // CommentAction implements the UserCommRpcImpl interface.
 func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.DouyinCommentActionRequest) (resp *UserCommPb.DouyinCommentActionResponse, err error) {
-	// TODO: Your code here...
 	IDs := []uint64{uint64(req.UserId)}
 	videoId := req.VideoId
 	var videos []models.VideoInfo
@@ -88,11 +86,8 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 		Batchids: IDs,
 		Fromid:   videos[0].AuthorId,
 	}
-	get_result, _ := rpcClient.UserInfo.BatchInfo(ctx, &myReq)
-	user := get_result.Batchusers[0] // get user
-
-	// get_result.Batchusers
-	//user := UserInfo.FindUserByID(ID)
+	getResult, _ := rpcClient.UserInfo.BatchInfo(ctx, &myReq)
+	user := getResult.Batchusers[0] // get user
 	commentTxt := req.CommentText
 	commentId := req.CommentId // del用
 
@@ -110,43 +105,44 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 	}
 	if req.ActionType == 1 {
 		// 发表评论
-		comment_tmp := models.UserComm{
+		commentTmp := models.UserComm{
 			UserName: user.UserName,
 			VideoId:  videoId,
 			CommText: commentTxt,
+			UserId:   user.UserId,
+			Status:   1,
 		}
-		err := models.InsertComment(comment_tmp)
+		err := models.InsertComment(commentTmp)
 		if err != nil {
 			return &UserCommPb.DouyinCommentActionResponse{
 				StatusCode: 2,
 				StatusMsg:  "OTHER_ERROR",
 			}, err
-		} else {
-			//将此发表的评论id存入redis
-			go func() {
-				InsertRedisComment(videoId, strconv.Itoa(int(comment_tmp.ID)))
-				log.Println("send comment save in redis")
-			}()
-			return &UserCommPb.DouyinCommentActionResponse{
-				StatusCode: 0,
-				StatusMsg:  "SUCCESS",
-				Comment:    &comment,
-			}, nil
 		}
+		//将此发表的评论id存入redis
+		go func() {
+			InsertRedisComment(ctx, videoId, strconv.Itoa(int(commentTmp.ID)))
+			log.Println("send comment save in redis")
+		}()
+		return &UserCommPb.DouyinCommentActionResponse{
+			StatusCode: 0,
+			StatusMsg:  "SUCCESS",
+			Comment:    &comment,
+		}, nil
 	} else {
 		// 删除评论
 		// 先对redis中去删除
-		n, err := cache.RdbCVid.Exists(cache.Ctx, strconv.FormatInt(commentId, 10)).Result()
+		n, err := cache.RdbUserOp.Exists(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
 		if err != nil {
 			log.Println(err)
 		}
 		if n > 0 { // redis 有数据
-			vid, _ := cache.RdbCVid.Get(cache.Ctx, strconv.FormatInt(commentId, 10)).Result()
-			del1, err := cache.RdbCVid.Del(cache.Ctx, strconv.FormatInt(commentId, 10)).Result()
+			vid, _ := cache.RdbUserOp.Get(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
+			del1, err := cache.RdbUserOp.Del(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
 			if err != nil {
 				log.Println("Del in CV table err", err)
 			}
-			del2, err := cache.RdbVCid.SRem(cache.Ctx, vid, strconv.FormatInt(commentId, 10)).Result()
+			del2, err := cache.RdbUserOp.SRem(ctx, "VideoIdToCommentIds:"+vid, strconv.FormatInt(commentId, 10)).Result()
 			if err != nil {
 				log.Println("Del in VC table err", err)
 			}
@@ -165,19 +161,17 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 					StatusMsg:  "OTHER_ERROR",
 				}, err
 			}
-		} else {
-			return &UserCommPb.DouyinCommentActionResponse{
-				StatusCode: 0,
-				StatusMsg:  "SUCCESS",
-				Comment:    &comment,
-			}, nil
 		}
+		return &UserCommPb.DouyinCommentActionResponse{
+			StatusCode: 0,
+			StatusMsg:  "SUCCESS",
+			Comment:    &comment,
+		}, nil
 	}
 }
 
 // GetCommentsByVideo implements the UserCommRpcImpl interface.
 func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommPb.DouyinCommentListRequest) (resp *UserCommPb.DouyinCommentListResponse, err error) {
-	// TODO: Your code here...
 	videoId := req.VideoId
 	commentList, err := models.GetCommentsByVideo(videoId)
 	if err != nil {
@@ -185,72 +179,66 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 			StatusCode: 2,
 			StatusMsg:  "OTHER_ERROR",
 		}, err
-	} else {
-		respCommentList, err := FillCommentListFields(commentList, videoId)
-		if err != nil {
-			// 评论为空，此时应该只是提示，不报错
-			if err.Error() == "Find List is Empty" {
-				return &UserCommPb.DouyinCommentListResponse{
-					StatusCode: 0,
-					StatusMsg:  "SUCCESS BUT NOT_EXIST_LIST",
-					//CommentList: UserCommPb.Comment{
-					//	Id: comment_list
-					//},
-					CommentList: respCommentList,
-				}, nil
-			} else {
-				return &UserCommPb.DouyinCommentListResponse{
-					StatusCode: 1,
-					StatusMsg:  "ERROR",
-					//CommentList: UserCommPb.Comment{
-					//	Id: comment_list
-					//},
-					CommentList: respCommentList,
-				}, nil
-			}
-		}
-		// redis 更新评论id
-		go func() {
-			cnt, err := cache.RdbVCid.SCard(cache.Ctx, strconv.FormatInt(videoId, 10)).Result()
-			if err != nil {
-				log.Println("get cnt from VC error", err)
-			}
-			if cnt > 0 {
-				return
-			}
-			_, err = cache.RdbVCid.SAdd(cache.Ctx, strconv.Itoa(int(videoId)), -1).Result()
-			if err != nil {
-				log.Println("redis save -1 error")
-				return
-			}
-			//设置key值过期时间
-			_, err2 := cache.RdbVCid.Expire(cache.Ctx, strconv.Itoa(int(videoId)),
-				time.Duration(60*60*24*30)*time.Second).Result()
-			if err2 != nil {
-				log.Println("redis save one vId - cId expire failed")
-			}
-			for _, _comment := range commentList {
-				InsertRedisComment(videoId, strconv.Itoa(int(_comment.ID)))
-			}
-		}()
-		return &UserCommPb.DouyinCommentListResponse{
-			StatusCode:  0,
-			StatusMsg:   "SUCCESS",
-			CommentList: respCommentList,
-		}, nil
 	}
+	respCommentList, err := FillCommentListFields(commentList, videoId)
+	if err != nil {
+		// 评论为空，此时应该只是提示，不报错
+		if err.Error() == "find list is empty" {
+			return &UserCommPb.DouyinCommentListResponse{
+				StatusCode:  0,
+				StatusMsg:   "SUCCESS BUT NOT_EXIST_LIST",
+				CommentList: respCommentList,
+			}, nil
+		} else {
+			return &UserCommPb.DouyinCommentListResponse{
+				StatusCode:  1,
+				StatusMsg:   "ERROR",
+				CommentList: respCommentList,
+			}, nil
+		}
+	}
+	// redis 更新评论id
+	go func() {
+		cnt, err := cache.RdbUserOp.SCard(ctx, "VideoIdToCommentIds:"+strconv.FormatInt(videoId, 10)).Result()
+		if err != nil {
+			log.Println("get cnt from VC error", err)
+		}
+		if cnt > 0 {
+			// 已经有正确的值在里面了，无需更新
+			return
+		}
+		_, err = cache.RdbUserOp.SAdd(ctx, "VideoIdToCommentIds:"+strconv.Itoa(int(videoId)), -1).Result()
+		if err != nil {
+			log.Println("redis save -1 error")
+			return
+		}
+		//设置key值过期时间
+		_, err2 := cache.RdbUserOp.Expire(ctx, "VideoIdToCommentIds:"+strconv.Itoa(int(videoId)),
+			time.Duration(60*60*24*30)*time.Second).Result()
+		if err2 != nil {
+			log.Println("redis save one vId - cId expire failed")
+		}
+		for _, _comment := range commentList {
+			InsertRedisComment(ctx, videoId, strconv.Itoa(int(_comment.ID)))
+		}
+	}()
+	return &UserCommPb.DouyinCommentListResponse{
+		StatusCode:  0,
+		StatusMsg:   "SUCCESS",
+		CommentList: respCommentList,
+	}, nil
 }
 
-func InsertRedisComment(VideoId int64, CommentId string) {
+func InsertRedisComment(ctx context.Context, VideoId int64, CommentId string) {
 	// 在VideoId下存储CommentId
-	_, err := cache.RdbVCid.SAdd(cache.Ctx, strconv.FormatInt(VideoId, 10), CommentId).Result()
+	_, err := cache.RdbUserOp.SAdd(ctx, "VideoIdToCommentIds:"+strconv.FormatInt(VideoId, 10), CommentId).Result()
 	if err != nil {
 		log.Println("redis save send: vId - cId failed, key deleted")
-		cache.RdbVCid.Del(cache.Ctx, strconv.FormatInt(VideoId, 10))
+		cache.RdbUserOp.Del(ctx, "VideoIdToCommentIds:"+strconv.FormatInt(VideoId, 10))
 		return
 	}
 	// 在CommentId 存储 VideoId
-	_, err = cache.RdbCVid.Set(cache.Ctx, CommentId, VideoId, 0).Result()
+	_, err = cache.RdbUserOp.Set(ctx, "CommentIdToVideoId:"+CommentId, VideoId, 0).Result()
 	if err != nil {
 		log.Println("redis save one cId - vId failed")
 	}
@@ -260,25 +248,23 @@ func FillCommentListFields(comments []models.UserComm, videoId int64) ([]*UserCo
 	size := len(comments)
 	var commentListPb []*UserCommPb.Comment
 	if comments == nil || size == 0 {
-		return commentListPb, errors.New("Find List is Empty")
+		return commentListPb, errors.New("find list is empty")
 	}
-	var userids []uint64
+	var UserIds []uint64
 	for _, com := range comments {
-		userids = append(userids, com.UserId)
+		UserIds = append(UserIds, com.UserId)
 	}
 	var videos []models.VideoInfo
 	err := models.GetVideosByIds([]uint64{uint64(videoId)}, &videos)
 	if err != nil {
-		return commentListPb, err
+		return commentListPb, errors.New("get video info by ids error")
 	}
 	myReq := UserInfo.BatchUserReq{
-		Batchids: userids,
+		Batchids: UserIds,
 		Fromid:   videos[0].AuthorId,
 	}
 	myRes, _ := rpcClient.UserInfo.BatchInfo(context.Background(), &myReq)
 	for i, v := range comments {
-		//userid := v.UserId
-		//user := UserInfo.FindUserByID(uint64(userid))
 		user := myRes.Batchusers[i]
 		commentListPb = append(commentListPb, &UserCommPb.Comment{
 			Id: int64(v.ID),
