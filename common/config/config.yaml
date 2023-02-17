@@ -6,7 +6,7 @@ mysql:
   password: Wqx1761391865.
 
 redis:
-  host: 127.0.0.1
+  host: 183.253.74.204
   port: 6379
   database: 0
 
