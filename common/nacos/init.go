@@ -11,7 +11,7 @@ var Cli naming_client.INamingClient
 
 func init() {
 	sc := []constant.ServerConfig{
-		*constant.NewServerConfig("127.0.0.1", 8848),
+		*constant.NewServerConfig("192.168.1.115", 8848),
 	}
 
 	// the nacos client config
