@@ -172,11 +172,12 @@ func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoP
 }
 
 func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInfoPb.BtachUserResp, err error) {
-	resp = new(userInfoPb.BtachUserResp)
-	isfollows := make(map[uint64]bool)
 	var userinfo models.UserInfo
 	var limitids []uint64
 	var userinfors []*models.UserInfo
+	countLimit := make(map[uint64]int)
+	resp = new(userInfoPb.BtachUserResp)
+	isfollows := make(map[uint64]bool)
 	batchIds := req.Batchids
 	isfollowresp, err := client.UserRelation.IsFollowList(ctx, &userRelationPb.IsFollowListReq{FromId: req.Fromid, ToId: batchIds})
 	for i, v := range isfollowresp.GetIsFollow() {
@@ -188,7 +189,7 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 			err := json.Unmarshal([]byte(u), &userinfo)
 			if err == nil {
 				resp.Batchusers = append(resp.Batchusers, &userInfoPb.User{
-					UserId:        uint64(userinfo.ID),
+					UserId:        id,
 					UserName:      userinfo.UserName,
 					FollowCount:   userinfo.FollowCount,
 					FollowerCount: userinfo.FollowedCount,
@@ -198,6 +199,7 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 			}
 		}
 		limitids = append(limitids, id)
+		countLimit[id] += 1
 	}
 	err = models.DB.Where("id IN ?", limitids).Find(&userinfors).Error
 	for _, user := range userinfors {
@@ -213,7 +215,9 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 			FollowerCount: user.FollowedCount,
 			IsFollow:      isfollows[uint64(user.ID)],
 		}
-		resp.Batchusers = append(resp.Batchusers, userdetail)
+		for i := 0; i < countLimit[userdetail.UserId]; i++ {
+			resp.Batchusers = append(resp.Batchusers, userdetail)
+		}
 	}
 	resp.StatusCode = 0
 	resp.StatusMsg = "查询成功"
