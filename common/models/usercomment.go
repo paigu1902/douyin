@@ -117,9 +117,9 @@ func DeleteComment(CommentId int64) error {
 //	return CommentList, nil
 //}
 
-func GetCommentsByVideo(VideoId int64, CommentList *[]UserComm) error {
+func GetCommentsByVideo(VideoId int64, CommentList *[]UserComm, LimitCommentIds *[]uint) error {
 	log.Println("running-Get Comment by Video_Id:", VideoId)
-	return DB.Model(UserComm{}).Where("video_id=? and status=?", VideoId, 1).Find(&CommentList).Error
+	return DB.Model(UserComm{}).Where("video_id=? and status=? id NOT IN ?", VideoId, 1, LimitCommentIds).Find(&CommentList).Error
 }
 
 // 获取评论数量

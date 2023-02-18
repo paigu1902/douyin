@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"paigu1902/douyin/common/cache"
@@ -86,17 +87,23 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 	var commentList []models.UserComm
 	var respCommentList []*UserCommPb.Comment
 
-	//var LimitCommentIds []uint64
-	//var comm models.UserComm
+	var LimitCommentIds []uint
+	var comm models.UserComm
 	//c, err := cache.RdbUserOp.Do(ctx, "get").Text()
+	values, err := cache.RdbUserOp.SMembers(ctx, "VideoIdToComments:"+strconv.FormatInt(videoId, 10)).Result()
 	//val, err := cache.RdbUserOp.Get(ctx, "VideoIdToComments:"+strconv.FormatInt(videoId, 10)).Result()
-	//if err == nil {
-	//	log.Println("asdhuashakshfjak")
-	//	for valI := range val{
-	//		log.Println(valI)
-	//	}
-	//}
-	err = models.GetCommentsByVideo(videoId, &commentList)
+	if err == nil {
+		for _, valI := range values {
+			err := json.Unmarshal([]byte(valI), &comm)
+			if err == nil {
+				commentList = append(commentList, comm)
+				LimitCommentIds = append(LimitCommentIds, comm.ID)
+			}
+		}
+	}
+	var commentList1 []models.UserComm
+	err = models.GetCommentsByVideo(videoId, &commentList1, &LimitCommentIds)
+	commentList = append(commentList, commentList1...)
 	if err != nil {
 		return &UserCommPb.DouyinCommentListResponse{
 			StatusCode: 2,
@@ -160,7 +167,7 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 }
 
 func InsertRedisComment(ctx context.Context, videoId int64, CommentText string) {
-	// 在VideoId下存储CommentId
+	// 在VideoId下存储Comments
 	// Redis update
 	_, err := cache.RdbUserOp.SAdd(ctx, "VideoIdToComments:"+strconv.FormatInt(videoId, 10), CommentText).Result()
 	if err != nil {
@@ -185,13 +192,14 @@ func FillCommentListFields(ctx context.Context, comments []models.UserComm, vide
 	if err != nil {
 		return commentListPb, errors.New("get video info by ids error")
 	}
-
+	log.Println(UserIds)
 	myReq := UserInfo.BatchUserReq{
 		Batchids: UserIds,
 		Fromid:   videos[0].AuthorId,
 	}
 	myRes, _ := rpcClient.UserInfo.BatchInfo(ctx, &myReq)
-
+	//log.Println(comments)
+	log.Println(myRes.Batchusers)
 	for i, v := range comments {
 		user := myRes.Batchusers[i]
 		commentListPb = append(commentListPb, &UserCommPb.Comment{
@@ -207,7 +215,6 @@ func FillCommentListFields(ctx context.Context, comments []models.UserComm, vide
 			CreateDate: v.CreatedAt.Format("1-2"),
 		})
 	}
-	log.Println("fool")
 	return commentListPb, nil
 }
 
