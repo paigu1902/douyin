@@ -10,9 +10,9 @@ import (
 )
 
 type FavoActionReq struct {
-	UserId     int64 `query:"userId"`
-	VideId     int64 `query:"videoId"`
-	ActionType int32 `query:"type" vd:"$==1 || $==2"`
+	UserId int64 `query:"userId"`
+	VideId int64 `query:"videoId"`
+	Type   int32 `query:"type" `
 }
 
 type FavoListReq struct {
@@ -33,7 +33,7 @@ func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
 	resp, err := rpcClient.UserFavo.FavoAction(ctx, &userFavoPb.FavoActionReq{
 		UserId:  req.UserId,
 		VideoId: req.VideId,
-		Type:    req.ActionType,
+		Type:    req.Type,
 	})
 	if err != nil {
 		c.JSON(400, err.Error())

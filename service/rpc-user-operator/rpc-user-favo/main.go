@@ -7,12 +7,10 @@ import (
 	"log"
 	"net"
 	"paigu1902/douyin/common/nacos"
-	"paigu1902/douyin/common/rabbitmq"
 	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb/userfavorpc"
 )
 
 func main() {
-	rabbitmq.InitFavoRmq()
 	svr := userFavoPb.NewServer(
 		new(UserFavoRpcImpl),
 		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "UserFavoriteImpl"}),

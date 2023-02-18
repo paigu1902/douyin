@@ -6,7 +6,7 @@ mysql:
   password: Wqx1761391865.
 
 redis:
-  host: 183.253.74.204
+  host: 127.0.0.1
   port: 6379
   Password:
   database: 0
@@ -17,7 +17,7 @@ nacos:
 
 rabbitmq:
   host: 127.0.0.1
-  port: 15672
+  port: 5672
   username: guest
   password: guest
 

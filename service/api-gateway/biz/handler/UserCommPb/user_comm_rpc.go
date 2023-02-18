@@ -14,13 +14,13 @@ import (
 type CommentActionReq struct {
 	UserId      int64 `query:"user_id"`
 	CommentId   int64
-	VideoId      int64  `query:"video_id"`
+	VideoId     int64  `query:"video_id"`
 	ActionType  int32  `query:"action_type"`
 	CommentText string `vd:"len($)>=0 && len($)<30"`
 }
 
 type CommentsInfoReq struct {
-	UserId int64 `query:"user_id"`
+	UserId  int64 `query:"user_id"`
 	VideoId int64 `query:"video_id"`
 }
 
