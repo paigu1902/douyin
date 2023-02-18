@@ -9,9 +9,10 @@ type Config struct {
 }
 
 type RedisConfig struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
-	Db   int    `yaml:"db"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Db       int    `yaml:"db"`
+	Password string `yaml:"password"`
 }
 
 type MysqlConfig struct {

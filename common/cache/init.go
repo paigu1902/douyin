@@ -2,15 +2,16 @@ package cache
 
 import (
 	"github.com/go-redis/redis/v8"
+	"paigu1902/douyin/common/config"
 )
 
 var RDB = InitRedisDB()
 
 func InitRedisDB() *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Addr:     config.C.Redis.Host + ":6379",
+		Password: config.C.Redis.Password, // no password set
+		DB:       config.C.Redis.Db,       // use default DB
 	})
 }
 
@@ -22,8 +23,8 @@ var RdbUserOp *redis.Client
 
 func init() {
 	RdbUserOp = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       1,
+		Addr:     config.C.Redis.Host + ":6379",
+		Password: config.C.Redis.Password, // no password set
+		DB:       config.C.Redis.Db,       // use default DB
 	})
 }

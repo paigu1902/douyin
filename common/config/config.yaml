@@ -8,6 +8,7 @@ mysql:
 redis:
   host: 183.253.74.204
   port: 6379
+  Password:
   database: 0
 
 nacos:
