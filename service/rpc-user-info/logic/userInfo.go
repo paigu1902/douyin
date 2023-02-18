@@ -174,7 +174,7 @@ func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoP
 func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInfoPb.BtachUserResp, err error) {
 	resp = new(userInfoPb.BtachUserResp)
 	isfollows := make(map[uint64]bool)
-	var userinfo userInfoPb.User
+	var userinfo models.UserInfo
 	var limitids []uint64
 	var userinfors []*models.UserInfo
 	batchIds := req.Batchids
@@ -188,10 +188,10 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 			err := json.Unmarshal([]byte(u), &userinfo)
 			if err == nil {
 				resp.Batchusers = append(resp.Batchusers, &userInfoPb.User{
-					UserId:        userinfo.GetUserId(),
-					UserName:      userinfo.GetUserName(),
-					FollowCount:   userinfo.GetFollowCount(),
-					FollowerCount: userinfo.GetFollowerCount(),
+					UserId:        uint64(userinfo.ID),
+					UserName:      userinfo.UserName,
+					FollowCount:   userinfo.FollowCount,
+					FollowerCount: userinfo.FollowedCount,
 					IsFollow:      isfollows[id],
 				})
 				continue
