@@ -16,10 +16,10 @@ nacos:
   port: 8848
 
 rabbitmq:
-  host: 172.30.16.1
+  host: 127.0.0.1
   port: 5672
-  username: admin
-  password: RabbitMQ
+  username: guest
+  password: guest
 
 oss:
   bucketName: paigu-douyin-videos
