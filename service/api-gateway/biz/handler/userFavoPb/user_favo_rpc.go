@@ -7,7 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"log"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
-	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
+	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 )
 
 type FavoActionReq struct {

@@ -9,13 +9,8 @@ import (
 	"strings"
 )
 
-//var RmqFavoAdd = InitRabbitMQ("favoAdd")
-//var RmqFavoDel = InitRabbitMQ("favoDel")
-
 var RmqFavoAdd *RabbitMQ
 var RmqFavoDel *RabbitMQ
-
-//rabbitmq.InitFavoRmq()
 
 // 初始化RabbitMQ
 func init() {
@@ -25,7 +20,7 @@ func init() {
 	go RmqFavoDel.Consume()
 }
 
-// 生产者
+// Publish 生产者
 func (favo *RabbitMQ) Publish(msg string) {
 	// 1. 声明队列
 	_, err := favo.Channel.QueueDeclare(
@@ -38,7 +33,7 @@ func (favo *RabbitMQ) Publish(msg string) {
 	)
 	if err != nil {
 		//panic(err)
-		log.Printf("Declare Queue Failed", err)
+		log.Println("Declare Queue Failed", err)
 		return
 	}
 	// 2. 发送消息
@@ -52,12 +47,12 @@ func (favo *RabbitMQ) Publish(msg string) {
 			Body:        []byte(msg),
 		})
 	if errP != nil {
-		log.Printf("Publish Message Failed", err)
+		log.Println("Publish Message Failed", err)
 		return
 	}
 }
 
-// 消费者
+// Consume 消费者
 func (favo *RabbitMQ) Consume() {
 	// 1. 声明队列
 	_, err := favo.Channel.QueueDeclare(
@@ -69,7 +64,7 @@ func (favo *RabbitMQ) Consume() {
 		nil,   //额外属性
 	)
 	if err != nil {
-		log.Printf("Declare Queue Failed", err)
+		log.Println("Declare Queue Failed", err)
 		return
 	}
 	// 2. 接收消息
@@ -83,7 +78,7 @@ func (favo *RabbitMQ) Consume() {
 		nil,            // 额外属性
 	)
 	if err != nil {
-		log.Printf("Consume Message Failed", err)
+		log.Println("Consume Message Failed", err)
 		return
 	}
 	ch := make(chan int) //无缓冲区channel
@@ -99,7 +94,7 @@ func (favo *RabbitMQ) Consume() {
 	<-ch //由协程从channel中pop一个值或阻塞
 }
 
-// 执行点赞操作的消费者
+// ConsumeFavoAdd 执行点赞操作的消费者
 func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 	for msg := range messages {
 		// 1. 参数解析
@@ -128,7 +123,7 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 	}
 }
 
-// 执行取消赞操作的消费者
+// ConsumeFavoDel 执行取消赞操作的消费者
 func (favo *RabbitMQ) ConsumeFavoDel(messages <-chan amqp.Delivery) {
 	for msg := range messages {
 		// 1. 参数解析

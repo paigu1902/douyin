@@ -10,7 +10,7 @@ func TestFavorite(t *testing.T) {
 	e := newExpect(t)
 
 	feedResp := e.GET("/douyin/feed/").Expect().Status(http.StatusOK).JSON().Object()
-	feedResp.Value("status_code").Number().Equal(0)
+	feedResp.Value("status_code").Number().IsEqual(0)
 	feedResp.Value("video_list").Array().Length().Gt(0)
 	firstVideo := feedResp.Value("video_list").Array().First().Object()
 	videoId := firstVideo.Value("id").Number().Raw()
@@ -23,7 +23,7 @@ func TestFavorite(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	favoriteResp.Value("status_code").Number().Equal(0)
+	favoriteResp.Value("status_code").Number().IsEqual(0)
 
 	favoriteListResp := e.GET("/douyin/favorite/list/").
 		WithQuery("token", token).WithQuery("user_id", userId).
@@ -31,7 +31,7 @@ func TestFavorite(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	favoriteListResp.Value("status_code").Number().Equal(0)
+	favoriteListResp.Value("status_code").Number().IsEqual(0)
 	for _, element := range favoriteListResp.Value("video_list").Array().Iter() {
 		video := element.Object()
 		video.ContainsKey("id")
@@ -45,7 +45,7 @@ func TestComment(t *testing.T) {
 	e := newExpect(t)
 
 	feedResp := e.GET("/douyin/feed/").Expect().Status(http.StatusOK).JSON().Object()
-	feedResp.Value("status_code").Number().Equal(0)
+	feedResp.Value("status_code").Number().IsEqual(0)
 	feedResp.Value("video_list").Array().Length().Gt(0)
 	firstVideo := feedResp.Value("video_list").Array().First().Object()
 	videoId := firstVideo.Value("id").Number().Raw()
@@ -58,7 +58,7 @@ func TestComment(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	addCommentResp.Value("status_code").Number().Equal(0)
+	addCommentResp.Value("status_code").Number().IsEqual(0)
 	addCommentResp.Value("comment").Object().Value("id").Number().Gt(0)
 	commentId := int(addCommentResp.Value("comment").Object().Value("id").Number().Raw())
 
@@ -68,7 +68,7 @@ func TestComment(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	commentListResp.Value("status_code").Number().Equal(0)
+	commentListResp.Value("status_code").Number().IsEqual(0)
 	containTestComment := false
 	for _, element := range commentListResp.Value("comment_list").Array().Iter() {
 		comment := element.Object()
@@ -89,5 +89,5 @@ func TestComment(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	delCommentResp.Value("status_code").Number().Equal(0)
+	delCommentResp.Value("status_code").Number().IsEqual(0)
 }
