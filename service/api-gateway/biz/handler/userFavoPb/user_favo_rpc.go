@@ -13,7 +13,7 @@ import (
 type FavoActionReq struct {
 	UserId int64 `query:"userId"`
 	VideId int64 `query:"videoId"`
-	Type   int32 `query:"actionType" `
+	Type   int32 `query:"type" `
 }
 
 type FavoListReq struct {
@@ -26,36 +26,43 @@ type FavoStatusReq struct {
 }
 
 func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
-	req := new(FavoActionReq)
-	if err := c.BindAndValidate(req); err != nil {
-		log.Println(err.Error())
-		c.JSON(400, err.Error())
+	//req := new(FavoActionReq)
+	var req FavoActionReq
+	// 1.绑定参数
+	if err := c.BindAndValidate(&req); err != nil {
+		respErr := &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: err.Error()}
+		c.JSON(200, respErr)
 		return
 	}
+	// 2.调用rpc
 	resp, err := rpcClient.UserFavo.FavoAction(ctx, &userFavoPb.FavoActionReq{
 		UserId:  req.UserId,
 		VideoId: req.VideId,
 		Type:    req.Type,
 	})
+	// 3.异常处理
 	if err != nil {
-		c.JSON(400, err.Error())
+		respErr := &userFavoPb.FavoActionResp{StatusCode: 1, StatusMsg: err.Error()}
+		c.JSON(200, respErr)
 		return
 	}
-	c.JSON(200, &resp)
+	// 4.正常返回
+	log.Println("resp", resp)
+	c.JSON(200, resp)
 	return
 }
 
 func FavoListMethod(ctx context.Context, c *app.RequestContext) {
 	req := new(FavoListReq)
 	if err := c.BindAndValidate(req); err != nil {
-		c.JSON(400, err.Error())
+		c.JSON(200, err.Error())
 		return
 	}
 	resp, err := rpcClient.UserFavo.FavoList(ctx, &userFavoPb.FavoListReq{
 		UserId: req.UserId,
 	})
 	if err != nil {
-		c.JSON(400, err.Error())
+		c.JSON(200, err.Error())
 		return
 	}
 	c.JSON(200, &resp)
@@ -65,7 +72,7 @@ func FavoListMethod(ctx context.Context, c *app.RequestContext) {
 func FavoStatusMethod(ctx context.Context, c *app.RequestContext) {
 	req := new(FavoStatusReq)
 	if err := c.BindAndValidate(req); err != nil {
-		c.JSON(400, err.Error())
+		c.JSON(200, err.Error())
 		return
 	}
 	resp, err := rpcClient.UserFavo.FavoStatus(ctx, &userFavoPb.FavoStatusReq{
@@ -73,7 +80,7 @@ func FavoStatusMethod(ctx context.Context, c *app.RequestContext) {
 		VideoId: req.VideId,
 	})
 	if err != nil {
-		c.JSON(400, err.Error())
+		c.JSON(200, err.Error())
 		return
 	}
 	c.JSON(200, &resp)

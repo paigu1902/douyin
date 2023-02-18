@@ -10,7 +10,7 @@ import (
 var UserFavo userfavorpc.Client
 
 func init() {
-	c, err := userfavorpc.NewClient("userFavoImpl", client.WithResolver(resolver.NewNacosResolver(nacos.Cli)))
+	c, err := userfavorpc.NewClient("UserFavoriteImpl", client.WithResolver(resolver.NewNacosResolver(nacos.Cli)))
 	if err != nil {
 		panic(err)
 	}

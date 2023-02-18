@@ -31,9 +31,8 @@ func GetFavoUserId(videoId uint64) ([]uint64, error) {
 			log.Println(err.Error())
 			return nil, errors.New("Get favoUserId Failed")
 		}
-	} else {
-		return favoUserId, nil
 	}
+	return favoUserId, nil
 }
 
 // 根据用户id查询其点赞的视频id列表
@@ -49,9 +48,8 @@ func GetFavoVideoId(userId uint64) ([]uint64, error) {
 			log.Println(err.Error())
 			return nil, errors.New("Get favoVideoId Failed")
 		}
-	} else {
-		return favoVideoId, nil
 	}
+	return favoVideoId, nil
 }
 
 // 查询用户-视频点赞信息
@@ -67,9 +65,9 @@ func GetFavoRecord(userId uint64, videoId uint64) (UserFavo, error) {
 			log.Println(err.Error())
 			return favoRecord, errors.New("Get LikeRecord Failed")
 		}
-	} else {
-		return favoRecord, nil
 	}
+	return favoRecord, nil
+
 }
 
 // 更新点赞状态 双击取消
@@ -79,19 +77,26 @@ func UpdateFavoStatus(userId uint64, videoId uint64, status uint32) error {
 	if err != nil {
 		log.Println(err.Error())
 		return errors.New("Update Record Failed")
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // 创建点赞记录
-func CreateFavoRecord(userId uint64, videoId uint64) error {
-	favoRecord := UserFavo{UserId: userId, VideoId: videoId, Status: 1}
+func CreateFavoRecord(favoRecord *UserFavo) error {
 	err := DB.Model(&UserFavo{}).Create(&favoRecord).Error
 	if err != nil {
 		log.Println(err.Error())
 		return errors.New("Create Record Failed")
-	} else {
-		return nil
 	}
+	return nil
 }
+
+//func CreateFavoRecord(userId uint64, videoId uint64) error {
+//	favoRecord := UserFavo{UserId: userId, VideoId: videoId, Status: 1}
+//	err := DB.Model(&UserFavo{}).Create(&favoRecord).Error
+//	if err != nil {
+//		log.Println(err.Error())
+//		return errors.New("Create Record Failed")
+//	}
+//	return nil
+//}

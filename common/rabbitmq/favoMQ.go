@@ -22,8 +22,9 @@ func init() {
 
 // Publish 生产者
 func (favo *RabbitMQ) Publish(msg string) {
+	log.Println(msg)
 	// 1. 声明队列
-	_, err := favo.Channel.QueueDeclare(
+	q, err := favo.Channel.QueueDeclare(
 		favo.QueueName,
 		true,  // 是否持久化
 		false, // 是否自动删除(前提是至少有一个消费者连接到这个队列，之后所有与这个队列连接的消费者都断开时，才会自动删除。注意：生产者客户端创建这个队列，或者没有消费者客户端与这个队列连接时，都不会自动删除这个队列)
@@ -33,15 +34,18 @@ func (favo *RabbitMQ) Publish(msg string) {
 	)
 	if err != nil {
 		//panic(err)
-		log.Println("Declare Queue Failed", err)
+		log.Println("Publish Declare Queue Failed", err)
 		return
 	}
+	log.Println("Publish QueueDeclare")
 	// 2. 发送消息
 	errP := favo.Channel.Publish(
-		favo.Exchange,   // 交换器名
-		favo.RoutingKey, // routing key
-		false,           // 是否返回消息(匹配队列)，如果为true, 会根据binding规则匹配queue，如未匹配queue，则把发送的消息返回给发送者
-		false,           // 是否返回消息(匹配消费者)，如果为true, 消息发送到queue后发现没有绑定消费者，则把发送的消息返回给发送者
+		//favo.Exchange,   // 交换器名
+		//favo.RoutingKey, // routing key
+		"",     // 交换器名
+		q.Name, // routing key
+		false,  // 是否返回消息(匹配队列)，如果为true, 会根据binding规则匹配queue，如未匹配queue，则把发送的消息返回给发送者
+		false,  // 是否返回消息(匹配消费者)，如果为true, 消息发送到queue后发现没有绑定消费者，则把发送的消息返回给发送者
 		amqp.Publishing{ // 消息内容
 			ContentType: "text/plain",
 			Body:        []byte(msg),
@@ -50,6 +54,8 @@ func (favo *RabbitMQ) Publish(msg string) {
 		log.Println("Publish Message Failed", err)
 		return
 	}
+	log.Println("Publish", msg)
+	return
 }
 
 // Consume 消费者
@@ -67,6 +73,7 @@ func (favo *RabbitMQ) Consume() {
 		log.Println("Declare Queue Failed", err)
 		return
 	}
+	log.Println("Consume QueueDeclare")
 	// 2. 接收消息
 	messages, err := favo.Channel.Consume(
 		favo.QueueName, // 队列名
@@ -81,11 +88,14 @@ func (favo *RabbitMQ) Consume() {
 		log.Println("Consume Message Failed", err)
 		return
 	}
+	log.Println("Consume Consume")
 	ch := make(chan int) //无缓冲区channel
 	switch favo.QueueName {
 	case "favoAdd": //点赞
+		log.Println("favoAdd Consume")
 		go favo.ConsumeFavoAdd(messages)
 	case "favoDel": //取消赞
+		log.Println("favoDel Consume")
 		go favo.ConsumeFavoDel(messages)
 	default:
 		log.Println("RabbitMQ Actiontype Error")
@@ -104,14 +114,18 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 		// 2. 操作数据库 查询点赞记录并更新
 		favoRecord, err1 := models.GetFavoRecord(uint64(userId), uint64(videoId))
 		if err1 != nil {
-			log.Printf("Get FavoRecord Failed")
+			log.Printf("ConsumeFavoAdd Get FavoRecord Failed")
 		}
+		log.Println("ConsumeFavoAdd Get FavoRecord")
 		// 3. 若数据库中不存在点赞记录 创建记录
 		if favoRecord == (models.UserFavo{}) {
-			err2 := models.CreateFavoRecord(uint64(userId), uint64(videoId))
+			record := models.UserFavo{UserId: uint64(userId), VideoId: uint64(videoId), Status: 1}
+			err2 := models.CreateFavoRecord(&record)
+			//err2 := models.CreateFavoRecord(uint64(userId), uint64(videoId))
 			if err2 != nil {
 				log.Printf("Create FavoRecord Failed")
 			}
+			log.Println("ConsumeFavoAdd Create FavoRecord")
 			return
 		}
 		// 4. 若数据库中存在点赞记录 更新状态为1

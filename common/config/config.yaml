@@ -6,7 +6,7 @@ mysql:
   password: Wqx1761391865.
 
 redis:
-  host: 183.253.74.204
+  host: 127.0.0.1
   port: 6379
   database: 0
 
@@ -15,10 +15,10 @@ nacos:
   port: 8848
 
 rabbitmq:
-  host: 127.0.0.1
-  port: 15672
-  username: guest
-  password: guest
+  host: 172.30.16.1
+  port: 5672
+  username: admin
+  password: RabbitMQ
 
 oss:
   bucketName: paigu-douyin-videos

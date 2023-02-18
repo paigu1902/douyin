@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-const MQURL = "amqp://admin:RabbitMQ@http://172.30.16.1:5672/"
+const MQURL = "amqp://admin:RabbitMQ@172.30.16.1:5672/dyhost"
 
 type RabbitMQ struct {
 	Conn       *amqp.Connection
@@ -31,7 +31,6 @@ func InitRabbitMQ(queueName string) *RabbitMQ {
 	CheckErr(err, "Establish Connection Failed")
 	RMQ.Channel, err = RMQ.Conn.Channel()
 	CheckErr(err, "Establish Channel Failed")
-	//go RMQ.Consume()
 	return &RMQ
 }
 
