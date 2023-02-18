@@ -12,7 +12,7 @@ import (
 var RmqFavoAdd *RabbitMQ
 var RmqFavoDel *RabbitMQ
 
-// 初始化RabbitMQ
+// InitFavoRmq 初始化RabbitMQ
 func InitFavoRmq() {
 	RmqFavoAdd = InitRabbitMQ("favoAdd")
 	go RmqFavoAdd.Consume()
@@ -20,7 +20,7 @@ func InitFavoRmq() {
 	go RmqFavoDel.Consume()
 }
 
-// 生产者
+// Publish 生产者
 func (favo *RabbitMQ) Publish(msg string) {
 	// 声明队列
 	_, err := favo.Channel.QueueDeclare(
@@ -52,7 +52,7 @@ func (favo *RabbitMQ) Publish(msg string) {
 	}
 }
 
-// 消费者
+// Consume 消费者
 func (favo *RabbitMQ) Consume() {
 	// 声明队列
 	_, err := favo.Channel.QueueDeclare(
@@ -94,7 +94,7 @@ func (favo *RabbitMQ) Consume() {
 	<-ch //由协程从channel中pop一个值或阻塞
 }
 
-// 执行点赞操作的消费者
+// ConsumeFavoAdd 执行点赞操作的消费者
 func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 	for msg := range messages {
 		// 1. 参数解析
@@ -123,7 +123,7 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 	}
 }
 
-// 执行取消赞操作的消费者
+// ConsumeFavoDel 执行取消赞操作的消费者
 func (favo *RabbitMQ) ConsumeFavoDel(messages <-chan amqp.Delivery) {
 	for msg := range messages {
 		// 1. 参数解析

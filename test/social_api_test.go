@@ -18,7 +18,7 @@ func TestRelation(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	relationResp.Value("status_code").Number().Equal(0)
+	relationResp.Value("status_code").Number().IsEqual(0)
 
 	followListResp := e.GET("/douyin/relation/follow/list/").
 		WithQuery("token", tokenA).WithQuery("user_id", userIdA).
@@ -26,7 +26,7 @@ func TestRelation(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	followListResp.Value("status_code").Number().Equal(0)
+	followListResp.Value("status_code").Number().IsEqual(0)
 
 	containTestUserB := false
 	for _, element := range followListResp.Value("user_list").Array().Iter() {
@@ -44,7 +44,7 @@ func TestRelation(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	followerListResp.Value("status_code").Number().Equal(0)
+	followerListResp.Value("status_code").Number().IsEqual(0)
 
 	containTestUserA := false
 	for _, element := range followerListResp.Value("user_list").Array().Iter() {
@@ -69,7 +69,7 @@ func TestChat(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	messageResp.Value("status_code").Number().Equal(0)
+	messageResp.Value("status_code").Number().IsEqual(0)
 
 	chatResp := e.GET("/douyin/message/chat/").
 		WithQuery("token", tokenA).WithQuery("to_user_id", userIdB).
@@ -77,7 +77,7 @@ func TestChat(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	chatResp.Value("status_code").Number().Equal(0)
+	chatResp.Value("status_code").Number().IsEqual(0)
 	chatResp.Value("message_list").Array().Length().Gt(0)
 
 	chatResp = e.GET("/douyin/message/chat/").
@@ -86,6 +86,6 @@ func TestChat(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	chatResp.Value("status_code").Number().Equal(0)
+	chatResp.Value("status_code").Number().IsEqual(0)
 	chatResp.Value("message_list").Array().Length().Gt(0)
 }

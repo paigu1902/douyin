@@ -12,7 +12,7 @@ import (
 	"paigu1902/douyin/service/api-gateway/middlewares"
 )
 
-// customizeRegister registers customize routers.
+// Register customizeRegister registers customize routers.
 func Register(r *server.Hertz) {
 	userinfoGroup := r.Group("/douyin/user")
 	userinfoGroup.Use(middlewares.AccessLog())

@@ -3,21 +3,16 @@ package rpcClient
 import (
 	"github.com/cloudwego/kitex/client"
 	"github.com/kitex-contrib/registry-nacos/resolver"
+	"paigu1902/douyin/common/nacos"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb/videooperator"
-	"time"
 )
 
 var VideoOperatorClient videooperator.Client
 
 func init() {
-	r, err := resolver.NewDefaultNacosResolver()
+	c, err := videooperator.NewClient("videoOperatorImpl", client.WithResolver(resolver.NewNacosResolver(nacos.Cli)))
 	if err != nil {
 		panic(err)
 	}
-	c := videooperator.MustNewClient(
-		"videoOperatorImpl",
-		client.WithResolver(r),
-		client.WithRPCTimeout(time.Second*5),
-	)
 	VideoOperatorClient = c
 }

@@ -5,6 +5,7 @@ package videoOperator
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"io"
 	"log"
 	"mime/multipart"
@@ -18,7 +19,7 @@ type VideoReq struct {
 	Title string                `form:"title"`
 }
 
-// get 方法需要标注 query 参数
+// PublishListReq get 方法需要标注 query 参数
 type PublishListReq struct {
 	UserId   uint64
 	Token    string `query:"token"`
@@ -39,7 +40,12 @@ func file2Byte(file *multipart.FileHeader) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer filepoint.Close()
+	defer func(filepoint multipart.File) {
+		err := filepoint.Close()
+		if err != nil {
+			hlog.Warnf("文件关闭失败%s", err)
+		}
+	}(filepoint)
 	var content []byte
 	buf := make([]byte, 1024)
 	for {
@@ -66,7 +72,7 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		panic(err)
 	}
-	resp, err := rpcClient.VideoOperatorClient.Upload(context.Background(), &videoOperatorPb.VideoUploadReq{
+	resp, err := rpcClient.VideoOperatorClient.Upload(ctx, &videoOperatorPb.VideoUploadReq{
 		Token: req.Token,
 		Data:  data,
 		Title: req.Title,
@@ -86,7 +92,7 @@ func FeedMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	log.Printf("req:%v", req)
-	resp, err := rpcClient.VideoOperatorClient.Feed(context.Background(), &videoOperatorPb.FeedReq{
+	resp, err := rpcClient.VideoOperatorClient.Feed(ctx, &videoOperatorPb.FeedReq{
 		LatestTime: req.LatestTime,
 		Token:      req.Token,
 	})
