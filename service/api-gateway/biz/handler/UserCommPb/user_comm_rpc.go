@@ -8,19 +8,20 @@ import (
 	"log"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
+	"strconv"
 )
 
 type CommentActionReq struct {
 	UserId      int64 `query:"user_id"`
 	CommentId   int64
-	VideId      int64  `query:"video_id"`
+	VideoId      int64  `query:"video_id"`
 	ActionType  int32  `query:"action_type"`
 	CommentText string `vd:"len($)>=0 && len($)<30"`
 }
 
 type CommentsInfoReq struct {
 	UserId int64 `query:"user_id"`
-	VideId int64 `query:"video_id"`
+	VideoId int64 `query:"video_id"`
 }
 
 func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
@@ -32,17 +33,19 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 	if req.ActionType == 2 {
 		// 删除评论 comment_text = ""
 		req.CommentText = ""
-		CommentId, isOk := c.Get("comment_id")
+		CommentId, isOk := c.GetQuery("comment_id")
+		log.Println(req.VideoId, CommentId)
 		if !isOk {
 			c.JSON(400, "get current comment_id error in delete comment")
 			return
 		}
-		req.CommentId = CommentId.(int64)
+		tmp, _ := strconv.Atoi(CommentId)
+		req.CommentId = int64(tmp)
 	} else {
 		// 添加评论 comment_id = 0
 		req.CommentId = 0
 		CommentText, isOk := c.GetQuery("comment_text")
-		log.Println(req.VideId, req.UserId, CommentText)
+		log.Println(req.VideoId, req.UserId, CommentText)
 		if !isOk {
 			c.JSON(400, "get current comment_text error in add comment")
 			return
@@ -56,7 +59,7 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 
 	resp, err := rpcClient.UserComm.CommentAction(ctx, &UserCommPb.DouyinCommentActionRequest{
 		UserId:      req.UserId,
-		VideoId:     req.VideId,
+		VideoId:     req.VideoId,
 		ActionType:  req.ActionType,
 		CommentText: req.CommentText,
 		CommentId:   req.CommentId,
@@ -78,7 +81,7 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	resp, err := rpcClient.UserComm.GetCommentsByVideo(ctx, &UserCommPb.DouyinCommentListRequest{
 		UserId:  req.UserId,
-		VideoId: req.VideId,
+		VideoId: req.VideoId,
 	})
 	if err != nil {
 		c.JSON(400, err.Error())
@@ -96,7 +99,7 @@ func CommentNumberMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	resp, err := rpcClient.UserComm.GetCommentNumberByVideo(ctx, &UserCommPb.DouyinCommentNumberRequest{
 		UserId:  req.UserId,
-		VideoId: req.VideId,
+		VideoId: req.VideoId,
 	})
 	if err != nil {
 		c.JSON(400, err.Error())
