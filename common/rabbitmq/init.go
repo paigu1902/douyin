@@ -35,9 +35,9 @@ func InitRabbitMQ(queueName string) *RabbitMQ {
 }
 
 // 关闭RabbitMQ连接与通道
-func (mq *RabbitMQ) CloseRabbitMQ() {
-	mq.Conn.Close()
-	mq.Channel.Close()
+func (favo *RabbitMQ) CloseRabbitMQ() {
+	favo.Conn.Close()
+	favo.Channel.Close()
 }
 
 // 检查连接错误
