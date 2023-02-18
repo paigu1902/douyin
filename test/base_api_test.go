@@ -12,7 +12,7 @@ func TestFeed(t *testing.T) {
 	e := newExpect(t)
 
 	feedResp := e.GET("/douyin/feed/").Expect().Status(http.StatusOK).JSON().Object()
-	feedResp.Value("status_code").Number().Equal(0)
+	feedResp.Value("status_code").Number().IsEqual(0)
 	feedResp.Value("video_list").Array().Length().Gt(0)
 
 	for _, element := range feedResp.Value("video_list").Array().Iter() {
@@ -36,7 +36,7 @@ func TestUserAction(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	registerResp.Value("status_code").Number().Equal(0)
+	registerResp.Value("status_code").Number().IsEqual(0)
 	registerResp.Value("user_id").Number().Gt(0)
 	registerResp.Value("token").String().Length().Gt(0)
 
@@ -46,7 +46,7 @@ func TestUserAction(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	loginResp.Value("status_code").Number().Equal(0)
+	loginResp.Value("status_code").Number().IsEqual(0)
 	loginResp.Value("user_id").Number().Gt(0)
 	loginResp.Value("token").String().Length().Gt(0)
 
@@ -56,7 +56,7 @@ func TestUserAction(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	userResp.Value("status_code").Number().Equal(0)
+	userResp.Value("status_code").Number().IsEqual(0)
 	userInfo := userResp.Value("user").Object()
 	userInfo.NotEmpty()
 	userInfo.Value("id").Number().Gt(0)
@@ -76,14 +76,14 @@ func TestPublish(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	publishResp.Value("status_code").Number().Equal(0)
+	publishResp.Value("status_code").Number().IsEqual(0)
 
 	publishListResp := e.GET("/douyin/publish/list/").
 		WithQuery("user_id", userId).WithQuery("token", token).
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	publishListResp.Value("status_code").Number().Equal(0)
+	publishListResp.Value("status_code").Number().IsEqual(0)
 	publishListResp.Value("video_list").Array().Length().Gt(0)
 
 	for _, element := range publishListResp.Value("video_list").Array().Iter() {
