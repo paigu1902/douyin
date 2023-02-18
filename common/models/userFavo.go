@@ -18,7 +18,7 @@ func (table *UserFavo) TableName() string {
 	return "user_favo"
 }
 
-// 根据视频id获取点赞用户id列表
+// GetFavoUserId 根据视频id获取点赞用户id列表
 func GetFavoUserId(videoId uint64) ([]uint64, error) {
 	var favoUserId []uint64
 	err := DB.Model(&UserFavo{}).Where("video_id = ? and status = ?", videoId, 1).
@@ -29,13 +29,13 @@ func GetFavoUserId(videoId uint64) ([]uint64, error) {
 			return nil, err
 		} else {
 			log.Println(err.Error())
-			return nil, errors.New("Get favoUserId Failed")
+			return nil, errors.New("get favoUserId Failed")
 		}
 	}
 	return favoUserId, nil
 }
 
-// 根据用户id查询其点赞的视频id列表
+// GetFavoVideoId 根据用户id查询其点赞的视频id列表
 func GetFavoVideoId(userId uint64) ([]uint64, error) {
 	var favoVideoId []uint64
 	err := DB.Model(&UserFavo{}).Where("user_id = ? and status = ?", userId, 1).
@@ -46,13 +46,13 @@ func GetFavoVideoId(userId uint64) ([]uint64, error) {
 			return nil, err
 		} else {
 			log.Println(err.Error())
-			return nil, errors.New("Get favoVideoId Failed")
+			return nil, errors.New("get favoVideoId Failed")
 		}
 	}
 	return favoVideoId, nil
 }
 
-// 查询用户-视频点赞信息
+// GetFavoRecord 查询用户-视频点赞信息
 func GetFavoRecord(userId uint64, videoId uint64) (UserFavo, error) {
 	var favoRecord UserFavo
 	err := DB.Model(&UserFavo{}).Where("user_id = ? and video_id = ?", userId, videoId).
@@ -63,40 +63,34 @@ func GetFavoRecord(userId uint64, videoId uint64) (UserFavo, error) {
 			return favoRecord, err
 		} else {
 			log.Println(err.Error())
-			return favoRecord, errors.New("Get LikeRecord Failed")
+			return favoRecord, errors.New("get LikeRecord Failed")
 		}
 	}
 	return favoRecord, nil
 
 }
 
-// 更新点赞状态 双击取消
-func UpdateFavoStatus(userId uint64, videoId uint64, status uint32) error {
-	err := DB.Model(&UserFavo{}).Where("user_id = ? and video_id = ?", userId, videoId).
-		Update("status = ?", status).Error
-	if err != nil {
-		log.Println(err.Error())
-		return errors.New("Update Record Failed")
-	}
-	return nil
+// UpdateFavoStatus 更新点赞状态 双击取消
+func UpdateFavoStatus(favoRecord *UserFavo) error {
+	return DB.Transaction(func(tx *gorm.DB) error {
+		result := UserFavo{}
+		log.Println(favoRecord)
+		if err := tx.Where("user_id = ? and video_id = ?", favoRecord.UserId, favoRecord.VideoId).First(&result).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&result).UpdateColumn("status", favoRecord.Status).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
-// 创建点赞记录
+// CreateFavoRecord 创建点赞记录
 func CreateFavoRecord(favoRecord *UserFavo) error {
 	err := DB.Model(&UserFavo{}).Create(&favoRecord).Error
 	if err != nil {
 		log.Println(err.Error())
-		return errors.New("Create Record Failed")
+		return errors.New("create Record Failed")
 	}
 	return nil
 }
-
-//func CreateFavoRecord(userId uint64, videoId uint64) error {
-//	favoRecord := UserFavo{UserId: userId, VideoId: videoId, Status: 1}
-//	err := DB.Model(&UserFavo{}).Create(&favoRecord).Error
-//	if err != nil {
-//		log.Println(err.Error())
-//		return errors.New("Create Record Failed")
-//	}
-//	return nil
-//}

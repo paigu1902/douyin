@@ -22,7 +22,6 @@ func init() {
 
 // Publish 生产者
 func (favo *RabbitMQ) Publish(msg string) {
-	log.Println(msg)
 	// 1. 声明队列
 	q, err := favo.Channel.QueueDeclare(
 		favo.QueueName,
@@ -33,15 +32,11 @@ func (favo *RabbitMQ) Publish(msg string) {
 		nil,   //额外属性
 	)
 	if err != nil {
-		//panic(err)
-		log.Println("Publish Declare Queue Failed", err)
+		panic(err)
 		return
 	}
-	log.Println("Publish QueueDeclare")
 	// 2. 发送消息
 	errP := favo.Channel.Publish(
-		//favo.Exchange,   // 交换器名
-		//favo.RoutingKey, // routing key
 		"",     // 交换器名
 		q.Name, // routing key
 		false,  // 是否返回消息(匹配队列)，如果为true, 会根据binding规则匹配queue，如未匹配queue，则把发送的消息返回给发送者
@@ -54,7 +49,6 @@ func (favo *RabbitMQ) Publish(msg string) {
 		log.Println("Publish Message Failed", err)
 		return
 	}
-	log.Println("Publish", msg)
 	return
 }
 
@@ -73,7 +67,6 @@ func (favo *RabbitMQ) Consume() {
 		log.Println("Declare Queue Failed", err)
 		return
 	}
-	log.Println("Consume QueueDeclare")
 	// 2. 接收消息
 	messages, err := favo.Channel.Consume(
 		favo.QueueName, // 队列名
@@ -92,10 +85,8 @@ func (favo *RabbitMQ) Consume() {
 	ch := make(chan int) //无缓冲区channel
 	switch favo.QueueName {
 	case "favoAdd": //点赞
-		log.Println("favoAdd Consume")
 		go favo.ConsumeFavoAdd(messages)
 	case "favoDel": //取消赞
-		log.Println("favoDel Consume")
 		go favo.ConsumeFavoDel(messages)
 	default:
 		log.Println("RabbitMQ Actiontype Error")
@@ -108,7 +99,7 @@ func (favo *RabbitMQ) Consume() {
 func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 	for msg := range messages {
 		// 1. 参数解析
-		params := strings.Split(fmt.Sprintf("%s", msg.Body), " ")
+		params := strings.Split(fmt.Sprintf("%s s b add ", msg.Body), " ")
 		userId, _ := strconv.ParseInt(params[0], 10, 64)
 		videoId, _ := strconv.ParseInt(params[1], 10, 64)
 		// 2. 操作数据库 查询点赞记录并更新
@@ -116,24 +107,21 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 		if err1 != nil {
 			log.Printf("ConsumeFavoAdd Get FavoRecord Failed")
 		}
-		log.Println("ConsumeFavoAdd Get FavoRecord")
 		// 3. 若数据库中不存在点赞记录 创建记录
 		if favoRecord == (models.UserFavo{}) {
 			record := models.UserFavo{UserId: uint64(userId), VideoId: uint64(videoId), Status: 1}
 			err2 := models.CreateFavoRecord(&record)
-			//err2 := models.CreateFavoRecord(uint64(userId), uint64(videoId))
 			if err2 != nil {
 				log.Printf("Create FavoRecord Failed")
 			}
-			log.Println("ConsumeFavoAdd Create FavoRecord")
-			return
+		} else { // 4. 若数据库中存在点赞记录 更新状态为1
+			req := models.UserFavo{UserId: uint64(userId), VideoId: uint64(videoId), Status: 1}
+			err3 := models.UpdateFavoStatus(&req)
+			if err3 != nil {
+				log.Printf("Update FavoRecord Failed")
+			}
+
 		}
-		// 4. 若数据库中存在点赞记录 更新状态为1
-		err3 := models.UpdateFavoStatus(uint64(userId), uint64(videoId), 1)
-		if err3 != nil {
-			log.Printf("Update FavoRecord Failed")
-		}
-		return
 	}
 }
 
@@ -152,13 +140,12 @@ func (favo *RabbitMQ) ConsumeFavoDel(messages <-chan amqp.Delivery) {
 		// 3. 若数据库中不存在点赞记录
 		if favoRecord == (models.UserFavo{}) {
 			log.Printf("Find FavoRecord Failed")
-			return
+		} else { // 4. 若数据库中存在点赞记录 更新状态为0
+			req := models.UserFavo{UserId: uint64(userId), VideoId: uint64(videoId), Status: 0}
+			err2 := models.UpdateFavoStatus(&req)
+			if err2 != nil {
+				log.Printf("Update FavoRecord Failed")
+			}
 		}
-		// 4. 若数据库中存在点赞记录 更新状态为0
-		err2 := models.UpdateFavoStatus(uint64(userId), uint64(videoId), 0)
-		if err2 != nil {
-			log.Printf("Update FavoRecord Failed")
-		}
-		return
 	}
 }
