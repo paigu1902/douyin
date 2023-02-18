@@ -13,7 +13,7 @@ import (
 func main() {
 	svr := UserCommPb.NewServer(
 		new(UserCommRpcImpl),
-		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "UserCommentImpl"}),
+		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: "UserCommRpcImpl"}),
 		server.WithRegistry(registry.NewNacosRegistry(nacos.Cli)),
 		server.WithServiceAddr(&net.TCPAddr{Port: 12345, IP: net.IPv4(127, 0, 0, 1)}),
 	)

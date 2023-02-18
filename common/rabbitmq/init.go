@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-const MQURL = "amqp://admin:RabbitMQ@172.30.16.1:5672/dyhost"
+const MQURL = "amqp://guest:guest@127.0.0.1:5672"
 
 type RabbitMQ struct {
 	Conn       *amqp.Connection

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cloudwego/kitex/tool/internal_pkg/log"
 	"gorm.io/gorm"
-	"log"
 	"math/rand"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
@@ -86,7 +86,7 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 	resp.StatusMsg = "查询成功"
 	userDetail := &userInfoPb.User{UserId: uint64(user.ID), IsFollow: isFollow, UserName: user.UserName, FollowCount: user.FollowCount, FollowerCount: user.FollowedCount}
 	resp.User = userDetail
-	log.Println("user", resp)
+	log.Info("resp", resp)
 	return resp, nil
 }
 
@@ -124,32 +124,27 @@ func Actcion(ctx context.Context, fromId uint64, toId uint64, actionType string)
 
 func InfoRDB(ctx context.Context, fromId uint64, toId uint64) (*models.UserInfo, bool, error) {
 	var userinfo models.UserInfo
-	var err error
-	var isFollowResp *userRelationPb.IsFollowResp
+	isFollowResp, err := client.UserRelation.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: toId})
+	if err != nil {
+		return nil, false, err
+	}
 	userCache, err := cache.RDB.Do(ctx, "get", "UserInfo:"+strconv.Itoa(int(toId))).Text()
 	if err == nil {
-		isFollowResp, err = client.UserRelation.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: toId})
 		err = json.Unmarshal([]byte(userCache), &userinfo)
 		if err == nil {
 			return &userinfo, isFollowResp.GetIsFollow(), nil
 		}
-	} else {
-		err = models.DB.Where("id = ?", toId).First(&userinfo).Error
-		if err != nil {
-			return nil, false, errors.New("用户不存在")
-		}
-		u, _ := json.Marshal(userinfo)
-		err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(userinfo.ID)), 1000, string(u)).Err()
-		if err != nil {
-			return nil, false, errors.New("写入异常")
-		}
-		isFollowResp, err = client.UserRelation.IsFollow(ctx, &userRelationPb.IsFollowReq{FromId: fromId, ToId: toId})
-		if err != nil {
-			return nil, false, err
-		}
+	}
+	err = models.DB.Where("id = ?", toId).First(&userinfo).Error
+	if err != nil {
+		return nil, false, errors.New("用户不存在")
+	}
+	u, _ := json.Marshal(userinfo)
+	err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(userinfo.ID)), 1000, string(u)).Err()
+	if err != nil {
+		log.Warn("缓存写入异常")
 	}
 	return &userinfo, isFollowResp.GetIsFollow(), nil
-
 }
 
 func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoPb.ActionDBResp, err error) {
@@ -167,16 +162,17 @@ func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoP
 	if err != nil {
 		return nil, err
 	}
-	log.Println("操作成功", resp)
+	log.Info("操作成功", resp)
 	return &userInfoPb.ActionDBResp{StatusCode: 1, StatusMsg: "成功"}, nil
 }
 
 func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInfoPb.BtachUserResp, err error) {
-	resp = new(userInfoPb.BtachUserResp)
-	isfollows := make(map[uint64]bool)
-	var userinfo userInfoPb.User
+	var userinfo models.UserInfo
 	var limitids []uint64
 	var userinfors []*models.UserInfo
+	countLimit := make(map[uint64]int)
+	resp = new(userInfoPb.BtachUserResp)
+	isfollows := make(map[uint64]bool)
 	batchIds := req.Batchids
 	isfollowresp, err := client.UserRelation.IsFollowList(ctx, &userRelationPb.IsFollowListReq{FromId: req.Fromid, ToId: batchIds})
 	for i, v := range isfollowresp.GetIsFollow() {
@@ -188,23 +184,24 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 			err := json.Unmarshal([]byte(u), &userinfo)
 			if err == nil {
 				resp.Batchusers = append(resp.Batchusers, &userInfoPb.User{
-					UserId:        userinfo.GetUserId(),
-					UserName:      userinfo.GetUserName(),
-					FollowCount:   userinfo.GetFollowCount(),
-					FollowerCount: userinfo.GetFollowerCount(),
+					UserId:        id,
+					UserName:      userinfo.UserName,
+					FollowCount:   userinfo.FollowCount,
+					FollowerCount: userinfo.FollowedCount,
 					IsFollow:      isfollows[id],
 				})
 				continue
 			}
 		}
 		limitids = append(limitids, id)
+		countLimit[id] += 1
 	}
 	err = models.DB.Where("id IN ?", limitids).Find(&userinfors).Error
 	for _, user := range userinfors {
 		u, _ := json.Marshal(user)
 		err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(user.ID)), 1000, string(u)).Err()
 		if err != nil {
-			return resp, errors.New("异常")
+			log.Warn("写入缓存失败")
 		}
 		userdetail := &userInfoPb.User{
 			UserId:        uint64(user.ID),
@@ -213,10 +210,12 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 			FollowerCount: user.FollowedCount,
 			IsFollow:      isfollows[uint64(user.ID)],
 		}
-		resp.Batchusers = append(resp.Batchusers, userdetail)
+		for i := 0; i < countLimit[userdetail.UserId]; i++ {
+			resp.Batchusers = append(resp.Batchusers, userdetail)
+		}
 	}
 	resp.StatusCode = 0
 	resp.StatusMsg = "查询成功"
-	log.Println("resp", resp)
+	log.Info("resp", resp)
 	return resp, nil
 }

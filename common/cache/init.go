@@ -2,25 +2,29 @@ package cache
 
 import (
 	"github.com/go-redis/redis/v8"
+	"paigu1902/douyin/common/config"
 )
 
-var RdbUserOp *redis.Client
-var RDB *redis.Client
+var RDB = InitRedisDB()
 
-// video -> comment "VideoIdToCommentIds:*" 一对多
-// comment -> video "CommentIdToVideoId:*" 一对一
+func InitRedisDB() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     config.C.Redis.Host + ":6379",
+		Password: config.C.Redis.Password, // no password set
+		DB:       config.C.Redis.Db,       // use default DB
+	})
+}
+
+var RdbUserOp *redis.Client
+
+// video -> comment "VideoIdToComments:*" 一对多
 // video -> user "VideoIdsToUserIdsIds:*" 多对多
 // user -> video "UserIdsToVideoIds:*" 多对多
 
 func init() {
 	RdbUserOp = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       1,
-	})
-	RDB = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       2,
+		Addr:     config.C.Redis.Host + ":6379",
+		Password: config.C.Redis.Password, // no password set
+		DB:       config.C.Redis.Db,       // use default DB
 	})
 }
