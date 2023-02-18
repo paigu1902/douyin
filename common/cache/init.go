@@ -16,8 +16,7 @@ func InitRedisDB() *redis.Client {
 
 var RdbUserOp *redis.Client
 
-// video -> comment "VideoIdToCommentIds:*" 一对多
-// comment -> video "CommentIdToVideoId:*" 一对一
+// video -> comment "VideoIdToComments:*" 一对多
 // video -> user "VideoIdsToUserIdsIds:*" 多对多
 // user -> video "UserIdsToVideoIds:*" 多对多
 

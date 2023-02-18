@@ -89,19 +89,19 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 
 	var LimitCommentIds []uint
 	var comm models.UserComm
-	//c, err := cache.RdbUserOp.Do(ctx, "get").Text()
 	values, err := cache.RdbUserOp.SMembers(ctx, "VideoIdToComments:"+strconv.FormatInt(videoId, 10)).Result()
-	//val, err := cache.RdbUserOp.Get(ctx, "VideoIdToComments:"+strconv.FormatInt(videoId, 10)).Result()
 	if err == nil {
 		for _, valI := range values {
 			err := json.Unmarshal([]byte(valI), &comm)
 			if err == nil {
+				log.Println(comm)
 				commentList = append(commentList, comm)
 				LimitCommentIds = append(LimitCommentIds, comm.ID)
 			}
 		}
 	}
 	var commentList1 []models.UserComm
+	log.Println(LimitCommentIds)
 	err = models.GetCommentsByVideo(videoId, &commentList1, &LimitCommentIds)
 	commentList = append(commentList, commentList1...)
 	if err != nil {
@@ -110,9 +110,7 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 			StatusMsg:  "OTHER_ERROR",
 		}, err
 	}
-	log.Println("im here")
 	respCommentList, err = FillCommentListFields(ctx, commentList, videoId)
-	log.Println("im here2")
 	if err != nil {
 		// 评论为空，此时应该只是提示，不报错
 		if err.Error() == "find list is empty" {
@@ -131,9 +129,7 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 	}
 	// redis 更新评论id
 	go func() {
-		log.Println("im here")
 		cnt, err := cache.RdbUserOp.SCard(ctx, "VideoIdToComments:"+strconv.FormatInt(videoId, 10)).Result()
-		log.Println("im here1")
 		if err != nil {
 			log.Println("get cnt from VC error", err)
 		}
@@ -141,7 +137,6 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 			// 正确，无需更新
 			return
 		}
-
 		cache.RdbUserOp.FlushAll(ctx)
 		_, err = cache.RdbUserOp.SAdd(ctx, "VideoIdToComments:"+strconv.Itoa(int(videoId)), -1).Result()
 		if err != nil {
@@ -192,14 +187,11 @@ func FillCommentListFields(ctx context.Context, comments []models.UserComm, vide
 	if err != nil {
 		return commentListPb, errors.New("get video info by ids error")
 	}
-	log.Println(UserIds)
 	myReq := UserInfo.BatchUserReq{
 		Batchids: UserIds,
 		Fromid:   videos[0].AuthorId,
 	}
 	myRes, _ := rpcClient.UserInfo.BatchInfo(ctx, &myReq)
-	//log.Println(comments)
-	log.Println(myRes.Batchusers)
 	for i, v := range comments {
 		user := myRes.Batchusers[i]
 		commentListPb = append(commentListPb, &UserCommPb.Comment{
@@ -253,16 +245,11 @@ func DelComment(ctx context.Context, comment *UserCommPb.Comment, commentId int6
 		log.Println(err)
 	}
 	if n > 0 { // redis 有数据
-		vid, _ := cache.RdbUserOp.Get(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
 		del1, err := cache.RdbUserOp.Del(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
 		if err != nil {
 			log.Println("Del in CV table err", err)
 		}
-		del2, err := cache.RdbUserOp.SRem(ctx, "VideoIdToCommentIds:"+vid, strconv.FormatInt(commentId, 10)).Result()
-		if err != nil {
-			log.Println("Del in VC table err", err)
-		}
-		log.Println("del comment in Redis success:", del1, del2)
+		log.Println("del comment in Redis success:", del1)
 	}
 	err = models.DeleteComment(commentId)
 	if err != nil {
