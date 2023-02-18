@@ -9,11 +9,16 @@ import (
 	"strings"
 )
 
+//var RmqFavoAdd = InitRabbitMQ("favoAdd")
+//var RmqFavoDel = InitRabbitMQ("favoDel")
+
 var RmqFavoAdd *RabbitMQ
 var RmqFavoDel *RabbitMQ
 
+//rabbitmq.InitFavoRmq()
+
 // 初始化RabbitMQ
-func InitFavoRmq() {
+func init() {
 	RmqFavoAdd = InitRabbitMQ("favoAdd")
 	go RmqFavoAdd.Consume()
 	RmqFavoDel = InitRabbitMQ("favoDel")
@@ -22,7 +27,7 @@ func InitFavoRmq() {
 
 // 生产者
 func (favo *RabbitMQ) Publish(msg string) {
-	// 声明队列
+	// 1. 声明队列
 	_, err := favo.Channel.QueueDeclare(
 		favo.QueueName,
 		true,  // 是否持久化
@@ -36,7 +41,7 @@ func (favo *RabbitMQ) Publish(msg string) {
 		log.Printf("Declare Queue Failed", err)
 		return
 	}
-	// 发送消息
+	// 2. 发送消息
 	errP := favo.Channel.Publish(
 		favo.Exchange,   // 交换器名
 		favo.RoutingKey, // routing key
@@ -54,7 +59,7 @@ func (favo *RabbitMQ) Publish(msg string) {
 
 // 消费者
 func (favo *RabbitMQ) Consume() {
-	// 声明队列
+	// 1. 声明队列
 	_, err := favo.Channel.QueueDeclare(
 		favo.QueueName,
 		true,  // 是否持久化
@@ -67,7 +72,7 @@ func (favo *RabbitMQ) Consume() {
 		log.Printf("Declare Queue Failed", err)
 		return
 	}
-	// 接收消息
+	// 2. 接收消息
 	messages, err := favo.Channel.Consume(
 		favo.QueueName, // 队列名
 		"",             // 消费者名，用来区分多个消费者，以实现公平分发或均等分发策略
@@ -106,7 +111,7 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 		if err1 != nil {
 			log.Printf("Get FavoRecord Failed")
 		}
-		// 若数据库中不存在点赞记录 创建记录
+		// 3. 若数据库中不存在点赞记录 创建记录
 		if favoRecord == (models.UserFavo{}) {
 			err2 := models.CreateFavoRecord(uint64(userId), uint64(videoId))
 			if err2 != nil {
@@ -114,7 +119,7 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 			}
 			return
 		}
-		// 若数据库中存在点赞记录 更新状态为1
+		// 4. 若数据库中存在点赞记录 更新状态为1
 		err3 := models.UpdateFavoStatus(uint64(userId), uint64(videoId), 1)
 		if err3 != nil {
 			log.Printf("Update FavoRecord Failed")

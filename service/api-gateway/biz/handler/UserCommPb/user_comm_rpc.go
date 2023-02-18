@@ -13,7 +13,7 @@ type CommentActionReq struct {
 	UserId      int64 `query:"user_id"`
 	CommentId   int64
 	VideId      int64  `query:"video_id"`
-	ActionType  int32  `query:"action_type" vd:"$==1 || $==2"`
+	ActionType  int32  `query:"action_type" `
 	CommentText string `vd:"len($)>=0 && len($)<30"`
 }
 

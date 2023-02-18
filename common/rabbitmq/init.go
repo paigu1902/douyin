@@ -31,6 +31,7 @@ func InitRabbitMQ(queueName string) *RabbitMQ {
 	CheckErr(err, "Establish Connection Failed")
 	RMQ.Channel, err = RMQ.Conn.Channel()
 	CheckErr(err, "Establish Channel Failed")
+	//go RMQ.Consume()
 	return &RMQ
 }
 

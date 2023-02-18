@@ -5,14 +5,15 @@ package userFavo
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
+	"log"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	userFavoPb "paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 )
 
 type FavoActionReq struct {
-	UserId     int64 `query:"userId"`
-	VideId     int64 `query:"videoId"`
-	ActionType int32 `query:"type" vd:"$==1 || $==2"`
+	UserId int64 `query:"userId"`
+	VideId int64 `query:"videoId"`
+	Type   int32 `query:"actionType" `
 }
 
 type FavoListReq struct {
@@ -27,13 +28,14 @@ type FavoStatusReq struct {
 func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
 	req := new(FavoActionReq)
 	if err := c.BindAndValidate(req); err != nil {
+		log.Println(err.Error())
 		c.JSON(400, err.Error())
 		return
 	}
 	resp, err := rpcClient.UserFavo.FavoAction(ctx, &userFavoPb.FavoActionReq{
 		UserId:  req.UserId,
 		VideoId: req.VideId,
-		Type:    req.ActionType,
+		Type:    req.Type,
 	})
 	if err != nil {
 		c.JSON(400, err.Error())
