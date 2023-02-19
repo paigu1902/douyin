@@ -4,6 +4,7 @@ package UserCommPb
 
 import (
 	"context"
+	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
 	"log"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
@@ -12,16 +13,24 @@ import (
 )
 
 type CommentActionReq struct {
-	UserId      int64 `query:"user_id"`
-	CommentId   int64
-	VideoId     int64  `query:"video_id"`
-	ActionType  int32  `query:"action_type"`
-	CommentText string `vd:"len($)>=0 && len($)<30"`
+	CommentId   string `query:"comment_id"`
+	VideoId     string `query:"video_id"`
+	ActionType  string `query:"action_type"`
+	CommentText string `query:"comment_text" vd:"len($)>=0 && len($)<30"`
 }
 
 type CommentsInfoReq struct {
 	UserId  int64 `query:"user_id"`
 	VideoId int64 `query:"video_id"`
+}
+
+func getFromId(c *app.RequestContext) (uint64, error) {
+	value, exists := c.Get("from_id")
+	if exists != true {
+		return 0, errors.New("token解析失败")
+	}
+	fromId := uint64(value.(uint))
+	return fromId, nil
 }
 
 func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
@@ -30,39 +39,22 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	if req.ActionType == 2 {
-		// 删除评论 comment_text = ""
-		req.CommentText = ""
-		CommentId, isOk := c.GetQuery("comment_id")
-		log.Println(req.VideoId, CommentId)
-		if !isOk {
-			c.JSON(400, "get current comment_id error in delete comment")
-			return
-		}
-		tmp, _ := strconv.Atoi(CommentId)
-		req.CommentId = int64(tmp)
-	} else {
-		// 添加评论 comment_id = 0
-		req.CommentId = 0
-		CommentText, isOk := c.GetQuery("comment_text")
-		log.Println(req.VideoId, req.UserId, CommentText)
-		if !isOk {
-			c.JSON(400, "get current comment_text error in add comment")
-			return
-		}
-		if len(CommentText) == 0 {
-			c.JSON(400, "add_op: the length of comment should not be 0")
-			return
-		}
-		req.CommentText = CommentText
-	}
 
+	id, err := getFromId(c)
+	if err != nil {
+		c.JSON(400, err.Error())
+	}
+	userId := id
+
+	actionType, _ := strconv.Atoi(req.ActionType)
+	videoId, _ := strconv.Atoi(req.VideoId)
+	commentId, _ := strconv.Atoi(req.CommentId)
 	resp, err := rpcClient.UserComm.CommentAction(ctx, &UserCommPb.DouyinCommentActionRequest{
-		UserId:      req.UserId,
-		VideoId:     req.VideoId,
-		ActionType:  req.ActionType,
+		UserId:      int64(userId),
+		VideoId:     int64(videoId),
+		ActionType:  int32(actionType),
 		CommentText: req.CommentText,
-		CommentId:   req.CommentId,
+		CommentId:   int64(commentId),
 	})
 	if err != nil {
 		log.Println("400 le")
