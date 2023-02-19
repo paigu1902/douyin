@@ -104,7 +104,7 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 		videoId, _ := strconv.ParseInt(params[1], 10, 64)
 		// 2. 操作数据库 查询点赞记录并更新
 		favoRecord, err1 := models.GetFavoRecord(uint64(userId), uint64(videoId))
-		if err1 != nil {
+		if err1 != nil && err1.Error() != "record not found" {
 			log.Printf("ConsumeFavoAdd Get FavoRecord Failed")
 			continue
 		}
