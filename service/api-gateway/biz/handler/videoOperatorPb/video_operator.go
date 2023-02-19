@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"io"
 	"log"
 	"mime/multipart"
@@ -81,7 +82,10 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 		log.Fatal(err)
 	}
 	log.Println("resp", resp)
-	c.JSON(200, resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatus(),
+		"status_msg":  resp.GetStatusMsg(),
+	})
 }
 
 func FeedMethod(ctx context.Context, c *app.RequestContext) {
@@ -99,7 +103,12 @@ func FeedMethod(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		panic(err)
 	}
-	c.JSON(200, resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"next_time":   resp.GetNextTime(),
+		"video_list":  resp.GetVideoList(),
+	})
 }
 func PublishListMethod(ctx context.Context, c *app.RequestContext) {
 	req := new(PublishListReq)

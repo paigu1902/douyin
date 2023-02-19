@@ -6,23 +6,18 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
+	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 )
 
 type FavoActionReq struct {
-	UserId int64 `query:"userId"`
-	VideId int64 `query:"videoId"`
-	Type   int32 `query:"type" `
+	VideId int64 `query:"video_id"`
+	Type   int32 `query:"action_type" `
 }
 
 type FavoListReq struct {
-	UserId int64 `query:"userId"`
-}
-
-type FavoStatusReq struct {
-	UserId int64 `query:"userId"`
-	VideId int64 `query:"videoId"`
+	UserId int64 `query:"user_id"`
 }
 
 type UserHttp struct {
@@ -79,8 +74,14 @@ func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+
+	id, err := dyUtils.GetFromId(c)
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
 	resp, err := rpcClient.UserFavo.FavoAction(ctx, &userFavoPb.FavoActionReq{
-		UserId:  req.UserId,
+		UserId:  int64(id),
 		VideoId: req.VideId,
 		Type:    req.Type,
 	})
@@ -111,29 +112,7 @@ func FavoListMethod(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
-		"favo_list":   GetVideoList(resp.GetVideoList()),
-	})
-	return
-}
-
-func FavoStatusMethod(ctx context.Context, c *app.RequestContext) {
-	req := new(FavoStatusReq)
-	if err := c.BindAndValidate(req); err != nil {
-		c.JSON(400, err.Error())
-		return
-	}
-	resp, err := rpcClient.UserFavo.FavoStatus(ctx, &userFavoPb.FavoStatusReq{
-		UserId:  req.UserId,
-		VideoId: req.VideId,
-	})
-	if err != nil {
-		c.JSON(400, err.Error())
-		return
-	}
-	c.JSON(200, utils.H{
-		"status_code": resp.GetStatusCode(),
-		"status_msg":  resp.GetStatusMsg(),
-		"favo_status": resp.GetIsFavorite(),
+		"video_list":  GetVideoList(resp.GetVideoList()),
 	})
 	return
 }

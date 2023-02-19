@@ -4,10 +4,10 @@ package UserCommPb
 
 import (
 	"context"
-	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"log"
+	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
 	"strconv"
@@ -66,22 +66,13 @@ func getComments(comments []*UserCommPb.Comment) []*CommentHttp {
 	return res
 }
 
-func getFromId(c *app.RequestContext) (uint64, error) {
-	value, exists := c.Get("from_id")
-	if exists != true {
-		return 0, errors.New("token解析失败")
-	}
-	fromId := uint64(value.(uint))
-	return fromId, nil
-}
-
 func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 	req := new(CommentActionReq)
 	if err := c.BindAndValidate(req); err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
-	id, err := getFromId(c)
+	id, err := dyUtils.GetFromId(c)
 	if err != nil {
 		c.JSON(400, err.Error())
 	}
@@ -114,7 +105,7 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	id, err := getFromId(c)
+	id, err := dyUtils.GetFromId(c)
 	if err != nil {
 		c.JSON(400, err.Error())
 	}
@@ -127,37 +118,6 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, utils.H{
-		"status_code": resp.GetStatusCode(),
-		"status_msg":  resp.GetStatusMsg(),
-		"comment":     getComments(resp.GetCommentList()),
-	})
-	return
-}
-
-func CommentNumberMethod(ctx context.Context, c *app.RequestContext) {
-	req := new(CommentsInfoReq)
-	if err := c.BindAndValidate(req); err != nil {
-		c.JSON(400, err.Error())
-		return
-	}
-	id, err := getFromId(c)
-	if err != nil {
-		c.JSON(400, err.Error())
-	}
-	userId := id
-	resp, err := rpcClient.UserComm.GetCommentNumberByVideo(ctx, &UserCommPb.DouyinCommentNumberRequest{
-		UserId:  int64(userId),
-		VideoId: req.VideoId,
-	})
-	if err != nil {
-		c.JSON(400, err.Error())
-		return
-	}
-	c.JSON(200, utils.H{
-		"status_code":   resp.GetStatusCode(),
-		"status_msg":    resp.GetStatusMsg(),
-		"comment_count": resp.GetCount(),
-	})
+	c.JSON(200, resp)
 	return
 }

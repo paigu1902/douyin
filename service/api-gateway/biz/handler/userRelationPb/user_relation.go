@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
+	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"strconv"
@@ -57,15 +58,6 @@ func stringToUint64(intStr string) (uint64, error) {
 	return uint64(atoi), nil
 }
 
-func getFromId(c *app.RequestContext) (uint64, error) {
-	value, exists := c.Get("from_id")
-	if exists != true {
-		return 0, errors.New("token解析失败")
-	}
-	fromId := uint64(value.(uint))
-	return fromId, nil
-}
-
 func FollowAction(ctx context.Context, c *app.RequestContext) {
 	req := new(FollowActionReq)
 	// 1. 绑定校验参数
@@ -80,7 +72,7 @@ func FollowAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	fromId, err := getFromId(c)
+	fromId, err := dyUtils.GetFromId(c)
 	if err != nil {
 		c.JSON(400, err)
 		return
@@ -187,7 +179,7 @@ func MessageAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	fromId, err := getFromId(c)
+	fromId, err := dyUtils.GetFromId(c)
 	if err != nil {
 		c.JSON(400, err)
 		return
@@ -220,7 +212,7 @@ func MessageHistory(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	fromId, err := getFromId(c)
+	fromId, err := dyUtils.GetFromId(c)
 	if err != nil {
 		c.JSON(400, err)
 		return
