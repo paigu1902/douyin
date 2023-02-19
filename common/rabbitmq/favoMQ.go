@@ -106,6 +106,7 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 		favoRecord, err1 := models.GetFavoRecord(uint64(userId), uint64(videoId))
 		if err1 != nil {
 			log.Printf("ConsumeFavoAdd Get FavoRecord Failed")
+			continue
 		}
 		// 3. 若数据库中不存在点赞记录 创建记录
 		if favoRecord == (models.UserFavo{}) {
@@ -120,7 +121,6 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 			if err3 != nil {
 				log.Printf("Update FavoRecord Failed")
 			}
-
 		}
 	}
 }
@@ -136,6 +136,7 @@ func (favo *RabbitMQ) ConsumeFavoDel(messages <-chan amqp.Delivery) {
 		favoRecord, err1 := models.GetFavoRecord(uint64(userId), uint64(videoId))
 		if err1 != nil {
 			log.Printf("Get FavoRecord Failed")
+			continue
 		}
 		// 3. 若数据库中不存在点赞记录
 		if favoRecord == (models.UserFavo{}) {
