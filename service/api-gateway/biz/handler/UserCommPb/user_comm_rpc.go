@@ -5,6 +5,7 @@ package UserCommPb
 import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"log"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
@@ -22,6 +23,41 @@ type CommentActionReq struct {
 type CommentsInfoReq struct {
 	UserId  int64 `query:"user_id"`
 	VideoId int64 `query:"video_id"`
+}
+
+type CommentHttp struct {
+	Id         int64     `json:"comment_id"`
+	User       *UserHttp `json:"user"`
+	Content    string    `json:"content"`
+	CreateDate string    `json:"c_time"`
+}
+
+type UserHttp struct {
+	UserId        int64  `json:"id"`
+	UserName      string `json:"name"`
+	FollowCount   int64  `json:"follow_count"`
+	FollowerCount int64  `json:"follower_count"`
+	IsFollow      bool   `json:"is_follow"`
+}
+
+func getComments(comments []*UserCommPb.Comment) []*CommentHttp {
+	res := make([]*CommentHttp, len(comments))
+	log.Println(comments)
+	for i, v := range comments {
+		res[i] = &CommentHttp{
+			Id: v.GetId(),
+			User: &UserHttp{
+				UserId:        v.GetUser().GetId(),
+				UserName:      v.GetUser().GetName(),
+				FollowerCount: v.GetUser().GetFollowerCount(),
+				FollowCount:   v.GetUser().GetFollowCount(),
+				IsFollow:      v.GetUser().GetIsFollow(),
+			},
+			Content:    v.GetContent(),
+			CreateDate: v.GetCreateDate(),
+		}
+	}
+	return res
 }
 
 func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
@@ -65,11 +101,13 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 		CommentId:   req.CommentId,
 	})
 	if err != nil {
-		log.Println("400 le")
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, &resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+	})
 	return
 }
 
@@ -87,7 +125,11 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, &resp)
+	c.JSON(200, utils.H{
+		"status_code":  resp.GetStatusCode(),
+		"status_msg":   resp.GetStatusMsg(),
+		"comment_list": getComments(resp.GetCommentList()),
+	})
 	return
 }
 
@@ -105,6 +147,10 @@ func CommentNumberMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, &resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg": resp.GetStatusMsg(),
+		"comment_count": resp.GetCount(),
+	})
 	return
 }
