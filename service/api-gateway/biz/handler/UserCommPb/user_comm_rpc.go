@@ -4,6 +4,7 @@ package UserCommPb
 
 import (
 	"context"
+	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"log"
@@ -13,11 +14,10 @@ import (
 )
 
 type CommentActionReq struct {
-	UserId      int64 `query:"user_id"`
-	CommentId   int64
-	VideoId     int64  `query:"video_id"`
-	ActionType  int32  `query:"action_type"`
-	CommentText string `vd:"len($)>=0 && len($)<30"`
+	CommentId   string `query:"comment_id"`
+	VideoId     string `query:"video_id"`
+	ActionType  string `query:"action_type"`
+	CommentText string `query:"comment_text" vd:"len($)>=0 && len($)<30"`
 }
 
 type CommentsInfoReq struct {
@@ -26,18 +26,24 @@ type CommentsInfoReq struct {
 }
 
 type CommentHttp struct {
-	Id         int64     `json:"comment_id"`
+	Id         int64     `json:"id"`
 	User       *UserHttp `json:"user"`
 	Content    string    `json:"content"`
-	CreateDate string    `json:"c_time"`
+	CreateDate string    `json:"create_date"`
 }
 
 type UserHttp struct {
-	UserId        int64  `json:"id"`
-	UserName      string `json:"name"`
-	FollowCount   int64  `json:"follow_count"`
-	FollowerCount int64  `json:"follower_count"`
-	IsFollow      bool   `json:"is_follow"`
+	UserId          int64  `json:"id"`
+	UserName        string `json:"name"`
+	FollowCount     int64  `json:"follow_count"`
+	FollowerCount   int64  `json:"follower_count"`
+	IsFollow        bool   `json:"is_follow"`
+	Avatar          string `json:"avatar" default:""`
+	BackgroundImage string `json:"background_image" default:""`
+	Signature       string `json:"signature" default:""`
+	TotalFavorited  string `json:"total_favorited" default:""`
+	WorkCount       int64  `json:"work_count" default:"0"`
+	FavoriteCount   int64  `json:"favorite_count" default:"0"`
 }
 
 func getComments(comments []*UserCommPb.Comment) []*CommentHttp {
@@ -60,45 +66,36 @@ func getComments(comments []*UserCommPb.Comment) []*CommentHttp {
 	return res
 }
 
+func getFromId(c *app.RequestContext) (uint64, error) {
+	value, exists := c.Get("from_id")
+	if exists != true {
+		return 0, errors.New("token解析失败")
+	}
+	fromId := uint64(value.(uint))
+	return fromId, nil
+}
+
 func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 	req := new(CommentActionReq)
 	if err := c.BindAndValidate(req); err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
-	if req.ActionType == 2 {
-		// 删除评论 comment_text = ""
-		req.CommentText = ""
-		CommentId, isOk := c.GetQuery("comment_id")
-		log.Println(req.VideoId, CommentId)
-		if !isOk {
-			c.JSON(400, "get current comment_id error in delete comment")
-			return
-		}
-		tmp, _ := strconv.Atoi(CommentId)
-		req.CommentId = int64(tmp)
-	} else {
-		// 添加评论 comment_id = 0
-		req.CommentId = 0
-		CommentText, isOk := c.GetQuery("comment_text")
-		log.Println(req.VideoId, req.UserId, CommentText)
-		if !isOk {
-			c.JSON(400, "get current comment_text error in add comment")
-			return
-		}
-		if len(CommentText) == 0 {
-			c.JSON(400, "add_op: the length of comment should not be 0")
-			return
-		}
-		req.CommentText = CommentText
+	id, err := getFromId(c)
+	if err != nil {
+		c.JSON(400, err.Error())
 	}
+	userId := id
 
+	actionType, _ := strconv.Atoi(req.ActionType)
+	videoId, _ := strconv.Atoi(req.VideoId)
+	commentId, _ := strconv.Atoi(req.CommentId)
 	resp, err := rpcClient.UserComm.CommentAction(ctx, &UserCommPb.DouyinCommentActionRequest{
-		UserId:      req.UserId,
-		VideoId:     req.VideoId,
-		ActionType:  req.ActionType,
+		UserId:      int64(userId),
+		VideoId:     int64(videoId),
+		ActionType:  int32(actionType),
 		CommentText: req.CommentText,
-		CommentId:   req.CommentId,
+		CommentId:   int64(commentId),
 	})
 	if err != nil {
 		c.JSON(400, err.Error())
@@ -117,8 +114,13 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+	id, err := getFromId(c)
+	if err != nil {
+		c.JSON(400, err.Error())
+	}
+	userId := id
 	resp, err := rpcClient.UserComm.GetCommentsByVideo(ctx, &UserCommPb.DouyinCommentListRequest{
-		UserId:  req.UserId,
+		UserId:  int64(userId),
 		VideoId: req.VideoId,
 	})
 	if err != nil {
@@ -139,8 +141,13 @@ func CommentNumberMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+	id, err := getFromId(c)
+	if err != nil {
+		c.JSON(400, err.Error())
+	}
+	userId := id
 	resp, err := rpcClient.UserComm.GetCommentNumberByVideo(ctx, &UserCommPb.DouyinCommentNumberRequest{
-		UserId:  req.UserId,
+		UserId:  int64(userId),
 		VideoId: req.VideoId,
 	})
 	if err != nil {
@@ -148,8 +155,8 @@ func CommentNumberMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	c.JSON(200, utils.H{
-		"status_code": resp.GetStatusCode(),
-		"status_msg": resp.GetStatusMsg(),
+		"status_code":   resp.GetStatusCode(),
+		"status_msg":    resp.GetStatusMsg(),
 		"comment_count": resp.GetCount(),
 	})
 	return

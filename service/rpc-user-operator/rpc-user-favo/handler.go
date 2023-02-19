@@ -318,7 +318,6 @@ func (s *UserFavoRpcImpl) readRecordsToCache(ctx context.Context, readType int, 
 // GetVideoList 获取videoOperator客户端 读取视频对象
 func (s *UserFavoRpcImpl) GetVideoList(ctx context.Context, videoIdList []uint64) (resp *userFavoPb.FavoListResp, err error) {
 	myResp, err6 := rpcClient.VideoOpClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: videoIdList})
-	log.Println("he im here ", myResp, videoIdList)
 	if err6 != nil {
 		return &userFavoPb.FavoListResp{
 				StatusCode: 1,
