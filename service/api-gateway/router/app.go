@@ -23,8 +23,8 @@ func Register(r *server.Hertz) {
 
 	publishGroup := r.Group("/douyin/publish/")
 	publishGroup.Use(middlewares.AccessLog())
+	publishGroup.Use(middlewares.AuthUserCheck())
 	publishGroup.GET("/list/", videoOperator.PublishListMethod)
-	//publishGroup.POST("/action", videoOperator.PublishActionMethod)
 	publishGroup.POST("/action/", videoOperator.PublishActionMethod)
 
 	userMessageGroup := r.Group("/douyin/message/")

@@ -8,10 +8,10 @@ import (
 
 type UserFavo struct {
 	gorm.Model
-	UserId   uint64 `gorm:"not null;default:0"` //用户id
-	VideoId  uint64 `gorm:"not null;default:0"` //点赞视频id
-	UserName string `gorm:"not null"`           //用户名
-	Status   uint32 `gorm:"not null;default:1"` //点赞状态 默认1点赞 0取消
+	UserId   uint64 `gorm:"not null;default:0;index:idx_user_id;index:idx_fromTo,unique"`  //用户id
+	VideoId  uint64 `gorm:"not null;default:0;index:idx_video_id;index:idx_fromTo,unique"` //点赞视频id
+	UserName string `gorm:"not null"`                                                      //用户名
+	Status   uint32 `gorm:"not null;default:1"`                                            //点赞状态 默认1点赞 0取消
 }
 
 func (table *UserFavo) TableName() string {
