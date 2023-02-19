@@ -95,13 +95,12 @@ func FeedMethod(ctx context.Context, c *app.RequestContext) {
 		c.String(400, err.Error())
 		return
 	}
-	log.Printf("req:%v", req)
 	resp, err := rpcClient.VideoOperatorClient.Feed(ctx, &videoOperatorPb.FeedReq{
 		LatestTime: req.LatestTime,
 		Token:      req.Token,
 	})
 	if err != nil {
-		panic(err)
+		hlog.Error(err)
 	}
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),

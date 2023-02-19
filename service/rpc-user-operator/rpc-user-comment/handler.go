@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/cloudwego/kitex/pkg/klog"
 	"log"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
@@ -37,7 +38,6 @@ func (s *UserCommRpcImpl) GetCommentNumberByVideo(ctx context.Context, req *User
 
 // CommentAction implements the UserCommRpcImpl interface.
 func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.DouyinCommentActionRequest) (resp *UserCommPb.DouyinCommentActionResponse, err error) {
-	IDs := []uint64{uint64(req.UserId)}
 	videoId := req.VideoId
 	var videos []models.VideoInfo
 
@@ -48,15 +48,16 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 			StatusMsg:  "GET VIDEO AUTHOR ERROR",
 		}, errors.New("VIDEO FIND Error")
 	}
-	myReq := UserInfo.BatchUserReq{
-		Batchids: IDs,
-		Fromid:   videos[0].AuthorId,
+
+	userInfo, err := rpcClient.UserInfo.Info(ctx, &UserInfo.UserInfoReq{FromId: uint64(req.UserId), ToId: uint64(req.UserId)})
+	user := userInfo.GetUser()
+	if err != nil {
+		klog.Error("远程调用UserInfo.BatchInfo失败")
+		return &UserCommPb.DouyinCommentActionResponse{
+			StatusCode: 3,
+			StatusMsg:  "GET VIDEO AUTHOR ERROR",
+		}, errors.New("VIDEO FIND Error")
 	}
-	//log.Println(myReq.Batchids, myReq.Fromid)
-	getResult, _ := rpcClient.UserInfo.BatchInfo(ctx, &myReq)
-	//log.Println(getResult)
-	user := getResult.Batchusers[0] // get user
-	//log.Println(user)
 	commentTxt := req.CommentText
 	commentId := req.CommentId // del用
 
@@ -110,22 +111,13 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 			StatusMsg:  "OTHER_ERROR",
 		}, err
 	}
-	respCommentList, err = FillCommentListFields(ctx, commentList, videoId)
+	respCommentList, err = FillCommentListFields(ctx, commentList, uint64(req.UserId))
 	if err != nil {
-		// 评论为空，此时应该只是提示，不报错
-		if err.Error() == "find list is empty" {
-			return &UserCommPb.DouyinCommentListResponse{
-				StatusCode:  0,
-				StatusMsg:   "SUCCESS BUT NOT_EXIST_LIST",
-				CommentList: respCommentList,
-			}, nil
-		} else {
-			return &UserCommPb.DouyinCommentListResponse{
-				StatusCode:  1,
-				StatusMsg:   "ERROR",
-				CommentList: respCommentList,
-			}, nil
-		}
+		return &UserCommPb.DouyinCommentListResponse{
+			StatusCode:  1,
+			StatusMsg:   "ERROR",
+			CommentList: respCommentList,
+		}, err
 	}
 	// redis 更新评论id
 	go func() {
@@ -172,28 +164,26 @@ func InsertRedisComment(ctx context.Context, videoId int64, CommentText string) 
 	}
 }
 
-func FillCommentListFields(ctx context.Context, comments []models.UserComm, videoId int64) ([]*UserCommPb.Comment, error) {
+func FillCommentListFields(ctx context.Context, comments []models.UserComm, userId uint64) ([]*UserCommPb.Comment, error) {
 	size := len(comments)
 	var commentListPb []*UserCommPb.Comment
 	if comments == nil || size == 0 {
-		return commentListPb, errors.New("find list is empty")
+		return commentListPb, nil
 	}
 	var UserIds []uint64
 	for _, com := range comments {
 		UserIds = append(UserIds, com.UserId)
 	}
-	var videos []models.VideoInfo
-	err := models.GetVideosByIds([]uint64{uint64(videoId)}, &videos)
-	if err != nil {
-		return commentListPb, errors.New("get video info by ids error")
-	}
 	myReq := UserInfo.BatchUserReq{
 		Batchids: UserIds,
-		Fromid:   videos[0].AuthorId,
+		Fromid:   userId,
 	}
-	myRes, _ := rpcClient.UserInfo.BatchInfo(ctx, &myReq)
+	myRes, err := rpcClient.UserInfo.BatchInfo(ctx, &myReq)
+	if err != nil {
+		return commentListPb, err
+	}
 	for i, v := range comments {
-		user := myRes.Batchusers[i]
+		user := myRes.GetBatchusers()[i]
 		commentListPb = append(commentListPb, &UserCommPb.Comment{
 			Id: int64(v.ID),
 			User: &UserCommPb.User{

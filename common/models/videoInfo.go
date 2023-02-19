@@ -7,7 +7,7 @@ import (
 
 type VideoInfo struct {
 	gorm.Model
-	AuthorId      uint64 `gorm:"not null"`           //作者Id
+	AuthorId      uint64 `gorm:"not null;index"`     //作者Id
 	Title         string `gorm:"not null"`           //视频标题
 	PlayUrl       string `gorm:"not null"`           //视频地址
 	CoverUrl      string `gorm:"not null"`           //封面地址

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/tool/internal_pkg/log"
 	"gorm.io/gorm"
 	"math/rand"
@@ -179,7 +180,7 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 		isfollows[uint64(i)] = v
 	}
 	for _, id := range batchIds {
-		u, err := cache.RDB.Do(ctx, "get", "UserInfo:"+strconv.Itoa(int(id))).Text()
+		u, err := cache.RDB.Get(ctx, "UserInfo:"+strconv.Itoa(int(id))).Result()
 		if err == nil {
 			err := json.Unmarshal([]byte(u), &userinfo)
 			if err == nil {
@@ -197,21 +198,25 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 		countLimit[id] += 1
 	}
 	err = models.DB.Where("id IN ?", limitids).Find(&userinfors).Error
+	if err != nil {
+		klog.Error("查询数据错误")
+		return nil, errors.New("查询数据库错误")
+	}
 	for _, user := range userinfors {
 		u, _ := json.Marshal(user)
-		err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(user.ID)), 1000, string(u)).Err()
+		err = cache.RDB.Set(ctx, "UserInfo:"+strconv.Itoa(int(user.ID)), string(u), 1000).Err()
 		if err != nil {
 			log.Warn("写入缓存失败")
 		}
-		userdetail := &userInfoPb.User{
+		userDetail := &userInfoPb.User{
 			UserId:        uint64(user.ID),
 			UserName:      user.UserName,
 			FollowCount:   user.FollowCount,
 			FollowerCount: user.FollowedCount,
 			IsFollow:      isfollows[uint64(user.ID)],
 		}
-		for i := 0; i < countLimit[userdetail.UserId]; i++ {
-			resp.Batchusers = append(resp.Batchusers, userdetail)
+		for i := 0; i < countLimit[userDetail.UserId]; i++ {
+			resp.Batchusers = append(resp.Batchusers, userDetail)
 		}
 	}
 	resp.StatusCode = 0
