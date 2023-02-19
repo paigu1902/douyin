@@ -128,9 +128,9 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	c.JSON(200, utils.H{
-		"status_code":  resp.GetStatusCode(),
-		"status_msg":   resp.GetStatusMsg(),
-		"comment_list": getComments(resp.GetCommentList()),
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"comment":     getComments(resp.GetCommentList()),
 	})
 	return
 }
