@@ -52,11 +52,11 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 		Batchids: IDs,
 		Fromid:   videos[0].AuthorId,
 	}
-	log.Println(myReq.Batchids, myReq.Fromid)
+	//log.Println(myReq.Batchids, myReq.Fromid)
 	getResult, _ := rpcClient.UserInfo.BatchInfo(ctx, &myReq)
-	log.Println(getResult)
+	//log.Println(getResult)
 	user := getResult.Batchusers[0] // get user
-	log.Println(user)
+	//log.Println(user)
 	commentTxt := req.CommentText
 	commentId := req.CommentId // del用
 

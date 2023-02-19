@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"log"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
@@ -24,6 +25,47 @@ type CommentsInfoReq struct {
 	VideoId int64 `query:"video_id"`
 }
 
+type CommentHttp struct {
+	Id         int64     `json:"id"`
+	User       *UserHttp `json:"user"`
+	Content    string    `json:"content"`
+	CreateDate string    `json:"create_date"`
+}
+
+type UserHttp struct {
+	UserId          int64  `json:"id"`
+	UserName        string `json:"name"`
+	FollowCount     int64  `json:"follow_count"`
+	FollowerCount   int64  `json:"follower_count"`
+	IsFollow        bool   `json:"is_follow"`
+	Avatar          string `json:"avatar" default:""`
+	BackgroundImage string `json:"background_image" default:""`
+	Signature       string `json:"signature" default:""`
+	TotalFavorited  string `json:"total_favorited" default:""`
+	WorkCount       int64  `json:"work_count" default:"0"`
+	FavoriteCount   int64  `json:"favorite_count" default:"0"`
+}
+
+func getComments(comments []*UserCommPb.Comment) []*CommentHttp {
+	res := make([]*CommentHttp, len(comments))
+	log.Println(comments)
+	for i, v := range comments {
+		res[i] = &CommentHttp{
+			Id: v.GetId(),
+			User: &UserHttp{
+				UserId:        v.GetUser().GetId(),
+				UserName:      v.GetUser().GetName(),
+				FollowerCount: v.GetUser().GetFollowerCount(),
+				FollowCount:   v.GetUser().GetFollowCount(),
+				IsFollow:      v.GetUser().GetIsFollow(),
+			},
+			Content:    v.GetContent(),
+			CreateDate: v.GetCreateDate(),
+		}
+	}
+	return res
+}
+
 func getFromId(c *app.RequestContext) (uint64, error) {
 	value, exists := c.Get("from_id")
 	if exists != true {
@@ -39,7 +81,6 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-
 	id, err := getFromId(c)
 	if err != nil {
 		c.JSON(400, err.Error())
@@ -57,11 +98,13 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 		CommentId:   int64(commentId),
 	})
 	if err != nil {
-		log.Println("400 le")
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, &resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+	})
 	return
 }
 
@@ -71,15 +114,24 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+	id, err := getFromId(c)
+	if err != nil {
+		c.JSON(400, err.Error())
+	}
+	userId := id
 	resp, err := rpcClient.UserComm.GetCommentsByVideo(ctx, &UserCommPb.DouyinCommentListRequest{
-		UserId:  req.UserId,
+		UserId:  int64(userId),
 		VideoId: req.VideoId,
 	})
 	if err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, &resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"comment":     getComments(resp.GetCommentList()),
+	})
 	return
 }
 
@@ -89,14 +141,23 @@ func CommentNumberMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+	id, err := getFromId(c)
+	if err != nil {
+		c.JSON(400, err.Error())
+	}
+	userId := id
 	resp, err := rpcClient.UserComm.GetCommentNumberByVideo(ctx, &UserCommPb.DouyinCommentNumberRequest{
-		UserId:  req.UserId,
+		UserId:  int64(userId),
 		VideoId: req.VideoId,
 	})
 	if err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, &resp)
+	c.JSON(200, utils.H{
+		"status_code":   resp.GetStatusCode(),
+		"status_msg":    resp.GetStatusMsg(),
+		"comment_count": resp.GetCount(),
+	})
 	return
 }
