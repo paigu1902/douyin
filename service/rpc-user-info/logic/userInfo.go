@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/tool/internal_pkg/log"
 	"gorm.io/gorm"
 	"math/rand"
@@ -172,6 +171,7 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 	var limitids []uint64
 	var userinfors []*models.UserInfo
 	countLimit := make(map[uint64]int)
+	respTmp := make(map[uint64]*userInfoPb.User)
 	resp = new(userInfoPb.BtachUserResp)
 	isfollows := make(map[uint64]bool)
 	batchIds := req.Batchids
@@ -180,45 +180,42 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 		isfollows[uint64(i)] = v
 	}
 	for _, id := range batchIds {
-		u, err := cache.RDB.Get(ctx, "UserInfo:"+strconv.Itoa(int(id))).Result()
+		u, err := cache.RDB.Do(ctx, "get", "UserInfo:"+strconv.Itoa(int(id))).Text()
 		if err == nil {
 			err := json.Unmarshal([]byte(u), &userinfo)
 			if err == nil {
-				resp.Batchusers = append(resp.Batchusers, &userInfoPb.User{
+				respTmp[id] = &userInfoPb.User{
 					UserId:        id,
 					UserName:      userinfo.UserName,
 					FollowCount:   userinfo.FollowCount,
 					FollowerCount: userinfo.FollowedCount,
 					IsFollow:      isfollows[id],
-				})
+				}
 				continue
 			}
 		}
 		limitids = append(limitids, id)
-		countLimit[id] += 1
+		countLimit[id] = 1
 	}
 	err = models.DB.Where("id IN ?", limitids).Find(&userinfors).Error
-	if err != nil {
-		klog.Error("查询数据错误")
-		return nil, errors.New("查询数据库错误")
-	}
 	for _, user := range userinfors {
 		u, _ := json.Marshal(user)
-		err = cache.RDB.Set(ctx, "UserInfo:"+strconv.Itoa(int(user.ID)), string(u), 1000).Err()
+		err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(user.ID)), 1000, string(u)).Err()
 		if err != nil {
 			log.Warn("写入缓存失败")
 		}
-		userDetail := &userInfoPb.User{
+		respTmp[uint64(user.ID)] = &userInfoPb.User{
 			UserId:        uint64(user.ID),
 			UserName:      user.UserName,
 			FollowCount:   user.FollowCount,
 			FollowerCount: user.FollowedCount,
 			IsFollow:      isfollows[uint64(user.ID)],
 		}
-		for i := 0; i < countLimit[userDetail.UserId]; i++ {
-			resp.Batchusers = append(resp.Batchusers, userDetail)
-		}
 	}
+	for _, id := range batchIds {
+		resp.Batchusers = append(resp.Batchusers, respTmp[id])
+	}
+
 	resp.StatusCode = 0
 	resp.StatusMsg = "查询成功"
 	log.Info("resp", resp)
