@@ -196,8 +196,8 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 		}
 		return resp, err
 	}
-	followCnt := authorInfo.User.GetFollowCount()
-	followerCnt := authorInfo.User.GetFollowerCount()
+	followCnt := authorInfo.GetUser().GetFollowCount()
+	followerCnt := authorInfo.GetUser().GetFollowerCount()
 	//3.需要判断用户是否关注该作者
 	//isFollowResp, err := rpcClient.UserRelationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
 	//	FromId: userId,
