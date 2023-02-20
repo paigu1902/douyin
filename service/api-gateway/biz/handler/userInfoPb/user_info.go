@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server/binding"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"log"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
@@ -16,6 +17,30 @@ import (
 type LoginReq struct {
 	UserName string `query:"username"`               //userName
 	Password string `query:"password" vd:"login($)"` //password
+}
+
+type UserHttp struct {
+	UserId          int64  `json:"id"`
+	UserName        string `json:"name"`
+	FollowCount     int64  `json:"follow_count" default:"0"`
+	FollowerCount   int64  `json:"follower_count" default:"0"`
+	IsFollow        bool   `json:"is_follow" default:"false"`
+	Avatar          string `json:"avatar" default:""`
+	BackgroundImage string `json:"background_image" default:""`
+	Signature       string `json:"signature" default:""`
+	TotalFavorited  string `json:"total_favorited" default:""`
+	WorkCount       int64  `json:"work_count" default:"0"`
+	FavoriteCount   int64  `json:"favorite_count" default:"0"`
+}
+
+func getUserHttp(user *userInfoPb.User) *UserHttp {
+	return &UserHttp{
+		UserId:        int64(user.GetUserId()),
+		UserName:      user.GetUserName(),
+		FollowCount:   user.GetFollowCount(),
+		FollowerCount: user.GetFollowerCount(),
+		IsFollow:      user.GetIsFollow(),
+	}
 }
 
 func init() {
@@ -49,7 +74,13 @@ func LoginMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	// 4.正常返回
 	log.Println("resp", resp)
-	c.JSON(200, resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"user_id":     resp.GetUserId(),
+		"token":       resp.GetToken()},
+	)
+	return
 
 }
 
@@ -72,7 +103,13 @@ func RegisterMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	// 4.正常返回
 	log.Println("resp", resp)
-	c.JSON(200, resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"user_id":     resp.GetUserId(),
+		"token":       resp.GetToken()},
+	)
+	return
 }
 
 func InfoMethod(ctx context.Context, c *app.RequestContext) {
@@ -95,5 +132,10 @@ func InfoMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	log.Println("resp", resp)
-	c.JSON(200, resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"user":        getUserHttp(resp.GetUser())},
+	)
+	return
 }
