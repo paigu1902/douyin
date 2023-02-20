@@ -21,6 +21,14 @@ type UserHttp struct {
 	IsFollow      bool   `json:"is_follow"`
 }
 
+type MessageHttp struct {
+	Id         int    `json:"id"`
+	ToUserId   int    `json:"to_user_id"`
+	FromUserId int    `json:"from_user_id"`
+	Content    string `json:"content"`
+	CreateTime string `json:"create_time"`
+}
+
 type FollowActionReq struct {
 	ToId       string `query:"to_user_id"`
 	ActionType string `query:"action_type"`
@@ -45,6 +53,20 @@ func getUsers(users []*userRelationPb.User) []*UserHttp {
 			FollowCount:   v.GetFollowCount(),
 			FollowerCount: v.GetFollowerCount(),
 			IsFollow:      v.GetIsFollow(),
+		}
+	}
+	return res
+}
+
+func getMessage(messages []*userRelationPb.MessageContent) []*MessageHttp {
+	res := make([]*MessageHttp, len(messages))
+	for i, v := range messages {
+		res[i] = &MessageHttp{
+			Id:         int(v.GetId()),
+			ToUserId:   int(v.GetToId()),
+			FromUserId: int(v.GetFromId()),
+			Content:    v.GetContent(),
+			CreateTime: v.GetCreateTime(),
 		}
 	}
 	return res
@@ -223,10 +245,11 @@ func MessageHistory(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+
 	c.JSON(200, utils.H{
 		"status_code":  resp.GetStatusCode(),
 		"status_msg":   resp.GetStatusMsg(),
-		"message_list": resp.GetMessageList()},
+		"message_list": getMessage(resp.GetMessageList())},
 	)
 	return
 }

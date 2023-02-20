@@ -73,6 +73,7 @@ message MessageContent{
   uint64 to_id = 2;
   string content = 3;
   string create_time = 4;
+  uint64 id = 5;
 }
 
 message HistoryMessageReq {
