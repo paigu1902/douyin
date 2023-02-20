@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.jpg
 
 # Test binary, built with `go test -c`
 *.test
@@ -14,6 +15,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 /.idea
+
 # 调试用的
 /service/rpc-video-operator/client/
 /tmp/
