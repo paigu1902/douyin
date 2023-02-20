@@ -10,8 +10,10 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
+	"strconv"
 )
 
 type VideoReq struct {
@@ -95,6 +97,13 @@ func FeedMethod(ctx context.Context, c *app.RequestContext) {
 		c.String(400, err.Error())
 		return
 	}
+	user, err := dyUtils.AnalyseToken(req.Token)
+	if err != nil {
+		req.Token = ""
+	} else {
+		req.Token = strconv.Itoa(int(user.ID))
+	}
+
 	resp, err := rpcClient.VideoOperatorClient.Feed(ctx, &videoOperatorPb.FeedReq{
 		LatestTime: req.LatestTime,
 		Token:      req.Token,

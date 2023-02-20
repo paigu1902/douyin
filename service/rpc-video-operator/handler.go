@@ -104,7 +104,7 @@ func (s *VideoOperatorImpl) Upload(ctx context.Context, req *videoOperatorPb.Vid
 	}
 	redisKey := "VideoFeed"
 	writeVideoCache(ctx, redisKey, []models.VideoInfo{info})
-	return &videoOperatorPb.VideoUploadResp{Status: 1, StatusMsg: "成功"}, nil
+	return &videoOperatorPb.VideoUploadResp{Status: 0, StatusMsg: "成功"}, nil
 }
 
 // Feed implements the VideoOperatorImpl interface.
@@ -303,8 +303,8 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 		}
 		return resp, err
 	}
-	followCnt := authorInfo.User.GetFollowCount()
-	followerCnt := authorInfo.User.GetFollowerCount()
+	followCnt := authorInfo.GetUser().GetFollowCount()
+	followerCnt := authorInfo.GetUser().GetFollowerCount()
 	//3.需要判断用户是否关注该作者
 	//isFollowResp, err := rpcClient.UserRelationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
 	//	FromId: userId,

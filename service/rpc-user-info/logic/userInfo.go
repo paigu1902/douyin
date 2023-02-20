@@ -84,7 +84,7 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 	}
 	resp.StatusCode = 0
 	resp.StatusMsg = "查询成功"
-	userDetail := &userInfoPb.User{UserId: uint64(user.ID), IsFollow: isFollow, UserName: user.UserName, FollowCount: user.FollowCount, FollowerCount: user.FollowedCount}
+	userDetail := &userInfoPb.User{UserId: uint64(user.ID), IsFollow: isFollow, UserName: user.UserName, FollowCount: user.FollowCount, FollowerCount: user.FollowedCount, WorkCount: user.VideoCount}
 	resp.User = userDetail
 	log.Info("resp", resp)
 	return resp, nil
