@@ -1,0 +1,43 @@
+version: "3.1"
+services:
+  # Nacos
+  nacos:
+    image: "nacos/nacos-server:v2.1.2-slim"
+    restart: always
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    environment:
+      - MODE=standalone
+      - JVM_XMS=512m
+      - JVM_XMX=512m
+      - JVM_XMN=256m
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
+  # Redis
+  redis:
+    image: redis
+    restart: always
+    hostname: redis
+    container_name: redis
+    privileged: true
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ../data:/data
+      - ../conf/redis.conf:/etc/redis/redis.conf
+      - ../logs:/logs
+    command: ["redis-server","/etc/redis/redis.conf"]
+
