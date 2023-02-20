@@ -30,10 +30,11 @@ type NacosConfig struct {
 
 type RabbitMQConfig struct {
 	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
+	Port     string `yaml:"port"`
 	Hostname string `yaml:"hostname"`
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
+	Vhost    string `yaml:"vhost"`
 }
 
 type OSSConfig struct {

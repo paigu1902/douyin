@@ -36,7 +36,7 @@ type UserHttp struct {
 
 type VideoListHttp struct {
 	Id            uint64    `json:"id"`
-	User          *UserHttp `json:"user"`
+	User          *UserHttp `json:"author"`
 	PlayUrl       string    `json:"play_url"`
 	CoverUrl      string    `json:"cover_url"`
 	FavoriteCount int64     `json:"favorite_count"`

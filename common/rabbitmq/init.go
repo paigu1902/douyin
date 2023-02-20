@@ -3,9 +3,9 @@ package rabbitmq
 import (
 	"github.com/streadway/amqp"
 	"log"
+	"paigu1902/douyin/common/config"
+	"strings"
 )
-
-const MQURL = "amqp://guest:guest@127.0.0.1:5672/dyhost"
 
 type RabbitMQ struct {
 	Conn       *amqp.Connection
@@ -20,11 +20,20 @@ var RMQ *RabbitMQ
 
 // 初始化RabbitMQ连接与通道
 func InitRabbitMQ(queueName string) *RabbitMQ {
+	builder := strings.Builder{}
+	builder.WriteString("amqp://")
+	builder.WriteString(config.C.RabbitMQ.Username)
+	builder.WriteString(":")
+	builder.WriteString(config.C.RabbitMQ.Password)
+	builder.WriteString("@")
+	builder.WriteString(config.C.RabbitMQ.Host)
+	builder.WriteString(":")
+	builder.WriteString(config.C.RabbitMQ.Port)
+	builder.WriteString(config.C.RabbitMQ.Vhost)
+
 	RMQ := RabbitMQ{
 		QueueName: queueName,
-		//Exchange:   exchange,
-		//RoutingKey: routingKey,
-		Mqurl: MQURL,
+		Mqurl:     builder.String(),
 	}
 	var err error
 	RMQ.Conn, err = amqp.Dial(RMQ.Mqurl)
