@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-var serverAddr = "http://10.201.71.50:3002"
-var testUserA = "douyin36326"
+var serverAddr = "http://localhost:3002"
+var testUserA = "douyinTestUserA"
 var testUserB = "douyinTestUserB"
 
 func newExpect(t *testing.T) *httpexpect.Expect {
