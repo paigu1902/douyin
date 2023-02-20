@@ -41,7 +41,7 @@ func init() {
 }
 
 func migrateDBTable(dst ...interface{}) {
-	err := DB.Set("gorm:table_options", "CHARSET=utf8").AutoMigrate(dst...)
+	err := DB.Set("gorm:table_options", "CHARSET=utf8mb4_general_ci").AutoMigrate(dst...)
 	if err != nil {
 		panic("fail to create table")
 		return
