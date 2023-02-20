@@ -12,8 +12,8 @@ import (
 )
 
 type FavoActionReq struct {
-	VideId int64 `query:"video_id"`
-	Type   int32 `query:"action_type" `
+	VideId int64 `query:"videoId"`
+	Type   int32 `query:"type" `
 }
 
 type FavoListReq struct {
@@ -74,12 +74,12 @@ func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-
 	id, err := dyUtils.GetFromId(c)
 	if err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
+	//log.Println(req, id, c)
 	resp, err := rpcClient.UserFavo.FavoAction(ctx, &userFavoPb.FavoActionReq{
 		UserId:  int64(id),
 		VideoId: req.VideId,

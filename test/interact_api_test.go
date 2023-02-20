@@ -53,7 +53,7 @@ func TestComment(t *testing.T) {
 	_, token := getTestUserToken(testUserA, e)
 
 	addCommentResp := e.POST("/douyin/comment/action/").
-		WithQuery("token", token).WithQuery("video_id", videoId).WithQuery("action_type", 1).WithQuery("comment_text", "测试评论").
+		WithQuery("token", token).WithQuery("video_id", videoId).WithQuery("action_type", 1).WithQuery("comment_text", "这个是中文").
 		WithFormField("token", token).WithFormField("video_id", videoId).WithFormField("action_type", 1).WithFormField("comment_text", "测试评论").
 		Expect().
 		Status(http.StatusOK).

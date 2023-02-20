@@ -22,8 +22,8 @@ func GenerateToken(id uint, name string) (string, error) {
 		Name:           name,
 		StandardClaims: jwt.StandardClaims{},
 	}
-	// 6小时过期
-	UserClaim.ExpiresAt = time.Now().Add(time.Hour * 6).Unix()
+	// 7天过期
+	UserClaim.ExpiresAt = time.Now().Add(time.Hour * 24 * 7).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaim)
 	tokenString, err := token.SignedString(myKey)
 	if err != nil {

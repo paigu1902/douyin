@@ -54,6 +54,6 @@ func Register(r *server.Hertz) {
 	userCommGroup := r.Group("/douyin/comment/")
 	userCommGroup.Use(middlewares.AccessLog())
 	userCommGroup.Use(middlewares.AuthUserCheck())
-	userCommGroup.POST("/action/", userComm.CommentActionMethod, middlewares.LimitCommentAction())
 	userCommGroup.GET("/list/", userComm.CommentGetListMethod)
+	userCommGroup.POST("/action/", userComm.CommentActionMethod, middlewares.LimitCommentAction())
 }

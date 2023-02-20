@@ -95,7 +95,7 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
-		"comment": resp.GetComment(),
+		"comment":     resp.GetComment(),
 	})
 	return
 }
@@ -115,14 +115,16 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 		UserId:  int64(userId),
 		VideoId: req.VideoId,
 	})
+	log.Println("---")
+	log.Println(resp)
 	if err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
 	c.JSON(200, utils.H{
-		"status_code": resp.GetStatusCode(),
-		"status_msg":  resp.GetStatusMsg(),
-		"comment_list":     getComments(resp.GetCommentList()),
+		"status_code":  resp.GetStatusCode(),
+		"status_msg":   resp.GetStatusMsg(),
+		"comment_list": getComments(resp.GetCommentList()),
 	})
 	return
 }
