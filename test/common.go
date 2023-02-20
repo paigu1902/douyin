@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-var serverAddr = "http://localhost:3002"
-var testUserA = "douyinTestUserA"
+var serverAddr = "http://10.201.71.50:3002"
+var testUserA = "douyin36326"
 var testUserB = "douyinTestUserB"
 
 func newExpect(t *testing.T) *httpexpect.Expect {
@@ -28,7 +28,6 @@ func getTestUserToken(user string, e *httpexpect.Expect) (int, string) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-
 	userId := 0
 	token := registerResp.Value("token").String().Raw()
 	if len(token) == 0 {
