@@ -180,7 +180,7 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 		isfollows[uint64(i)] = v
 	}
 	for _, id := range batchIds {
-		u, err := cache.RDB.Do(ctx, "get", "UserInfo:"+strconv.Itoa(int(id))).Text()
+		u, err := cache.RDB.Get(ctx, "UserInfo:"+strconv.Itoa(int(id))).Result()
 		if err == nil {
 			err := json.Unmarshal([]byte(u), &userinfo)
 			if err == nil {
@@ -200,7 +200,7 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 	err = models.DB.Where("id IN ?", limitids).Find(&userinfors).Error
 	for _, user := range userinfors {
 		u, _ := json.Marshal(user)
-		err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(user.ID)), 1000, string(u)).Err()
+		err = cache.RDB.Set(ctx, "UserInfo:"+strconv.Itoa(int(user.ID)), string(u), 1000).Err()
 		if err != nil {
 			log.Warn("写入缓存失败")
 		}
