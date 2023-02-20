@@ -17,7 +17,7 @@ type CommentActionReq struct {
 	CommentId   string `query:"comment_id"`
 	VideoId     string `query:"video_id"`
 	ActionType  string `query:"action_type"`
-	CommentText string `query:"comment_text" vd:"len($)>=0 && len($)<30"`
+	CommentText string `query:"comment_text" vd:"len($)>=0 && len($)<100"`
 }
 
 type CommentsInfoReq struct {
@@ -95,6 +95,7 @@ func CommentActionMethod(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
+		"comment": resp.GetComment(),
 	})
 	return
 }
@@ -118,6 +119,10 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"comment_list":     getComments(resp.GetCommentList()),
+	})
 	return
 }
