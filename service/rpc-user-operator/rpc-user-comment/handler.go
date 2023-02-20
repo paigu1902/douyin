@@ -78,7 +78,7 @@ func (s *UserCommRpcImpl) CommentAction(ctx context.Context, req *UserCommPb.Dou
 		return AddComment(ctx, &comment, videoId, commentTxt)
 	} else {
 		// 删除评论
-		return DelComment(ctx, &comment, commentId)
+		return DelComment(ctx, &comment, commentId, videoId)
 	}
 }
 
@@ -209,6 +209,11 @@ func AddComment(ctx context.Context, comment *UserCommPb.Comment, videoId int64,
 		Status:   1,
 	}
 	err = models.InsertComment(&commentTmp)
+	// 删除VideoInfo:id数据
+	_, err = cache.RDB.Del(ctx, "VideoInfo:"+strconv.Itoa(int(videoId))).Result()
+	if err != nil {
+		klog.Error("del video redis error", videoId)
+	}
 	if err != nil {
 		return &UserCommPb.DouyinCommentActionResponse{
 			StatusCode: 2,
@@ -228,7 +233,7 @@ func AddComment(ctx context.Context, comment *UserCommPb.Comment, videoId int64,
 	}, nil
 }
 
-func DelComment(ctx context.Context, comment *UserCommPb.Comment, commentId int64) (resp *UserCommPb.DouyinCommentActionResponse, err error) {
+func DelComment(ctx context.Context, comment *UserCommPb.Comment, commentId int64, videoId int64) (resp *UserCommPb.DouyinCommentActionResponse, err error) {
 	// 先对redis中去删除
 	n, err := cache.RdbUserOp.Exists(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
 	if err != nil {
@@ -241,7 +246,11 @@ func DelComment(ctx context.Context, comment *UserCommPb.Comment, commentId int6
 		}
 		log.Println("del comment in Redis success:", del1)
 	}
-	err = models.DeleteComment(commentId)
+	err = models.DeleteComment(commentId, videoId)
+	_, err = cache.RDB.Del(ctx, "VideoInfo:"+strconv.Itoa(int(videoId))).Result()
+	if err != nil {
+		klog.Error("del video redis error", videoId)
+	}
 	if err != nil {
 		if err.Error() == "del comment is not exist" {
 			return &UserCommPb.DouyinCommentActionResponse{
