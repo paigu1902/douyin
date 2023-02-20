@@ -2,23 +2,64 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/cloudwego/kitex/pkg/klog"
+	"github.com/go-redis/redis/v8"
+	"gorm.io/gorm"
 	"os"
 	"os/exec"
+	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
-	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
 
 // VideoOperatorImpl implements the last service interface defined in the IDL.
 type VideoOperatorImpl struct{}
+
+type VideoInfoCache struct {
+	Id            uint64 `redis:"Id"`
+	AuthorId      uint64 `redis:"AuthorId"`
+	Title         string `redis:"Title"`
+	PlayUrl       string `redis:"PlayUrl"`
+	CoverUrl      string `redis:"CoverUrl"`
+	FavoriteCount int64  `redis:"FavoriteCount"`
+	CommentCount  int64  `redis:"CommentCount"`
+}
+
+func writeVideoCache(ctx context.Context, redisKey string, videoDbList []models.VideoInfo) {
+	for _, v := range videoDbList {
+		err := cache.RDB.ZAdd(ctx, redisKey, &redis.Z{
+			Score:  float64(v.CreatedAt.UnixMilli()),
+			Member: v.ID,
+		}).Err()
+		if err != nil {
+			klog.Error(err)
+		}
+		if err != nil {
+			klog.Error("写入缓存错误")
+		}
+		err = cache.RDB.HSet(ctx, "VideoInfo:"+strconv.FormatUint(uint64(v.ID), 10), map[string]interface{}{
+			"AuthorId":      v.AuthorId,
+			"Title":         v.Title,
+			"PlayUrl":       v.PlayUrl,
+			"CoverUrl":      v.CoverUrl,
+			"FavoriteCount": v.FavoriteCount,
+			"CommentCount":  v.CommentCount,
+		}).Err()
+		if err != nil {
+			klog.Error(err)
+		}
+	}
+}
 
 // Upload implements the VideoOperatorImpl interface.
 func (s *VideoOperatorImpl) Upload(ctx context.Context, req *videoOperatorPb.VideoUploadReq) (resp *videoOperatorPb.VideoUploadResp, err error) {
@@ -61,6 +102,8 @@ func (s *VideoOperatorImpl) Upload(ctx context.Context, req *videoOperatorPb.Vid
 	if err != nil {
 		return nil, err
 	}
+	redisKey := "VideoFeed"
+	writeVideoCache(ctx, redisKey, []models.VideoInfo{info})
 	return &videoOperatorPb.VideoUploadResp{Status: 1, StatusMsg: "成功"}, nil
 }
 
@@ -73,26 +116,88 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 			Token:      "",
 		}
 	}
-	var id uint
+	var userId uint64
 	if req.Token != "" {
-		claims, err := utils.AnalyseToken(req.Token)
+		u, err := strconv.Atoi(req.Token)
 		if err != nil {
-			return nil, err
+			return nil, errors.New("id不正确")
 		}
-		id = claims.ID
+		userId = uint64(u)
 	}
 
 	limit := 30
+	redisKey := "VideoFeed"
 
 	timestamp := req.LatestTime
 	if timestamp == 0 {
 		timestamp = time.Now().UnixMilli()
 	}
-	latestTime := time.UnixMilli(timestamp).Format("2006-01-02 15:04:05")
+
 	var videoList []models.VideoInfo
-	err = models.GetVideoInfo(latestTime, limit+1, &videoList)
+
+	//1. redis cache
+	videoIds, err := cache.RDB.ZRevRangeByScoreWithScores(ctx, redisKey, &redis.ZRangeBy{Count: 31, Max: strconv.FormatInt(timestamp, 10)}).Result()
+	if err != nil {
+		klog.Error("redis缓存错误")
+	}
+	videoCacheList := make([]models.VideoInfo, len(videoIds))
+	videoWithoutInfo := make(map[uint64]int, 0)
+	for i, v := range videoIds {
+		videoHash, err := cache.RDB.HGetAll(ctx, "VideoInfo:"+v.Member.(string)).Result()
+		if err != nil {
+			id, _ := strconv.Atoi(v.Member.(string))
+			videoWithoutInfo[uint64(id)] = i
+			klog.Error("redis缓存错误")
+			continue
+		}
+		authorId, err := strconv.Atoi(videoHash["AuthorId"])
+		favoriteCount, err := strconv.Atoi(videoHash["FavoriteCount"])
+		commentCount, err := strconv.Atoi(videoHash["CommentCount"])
+
+		vid, err := strconv.Atoi(v.Member.(string))
+		if err != nil {
+			klog.Error("缓存错误")
+			continue
+		}
+
+		videoCacheList[i] = models.VideoInfo{
+			Model:         gorm.Model{ID: uint(vid)},
+			AuthorId:      uint64(authorId),
+			Title:         videoHash["Title"],
+			PlayUrl:       videoHash["PlayUrl"],
+			CoverUrl:      videoHash["CoverUrl"],
+			FavoriteCount: int64(favoriteCount),
+			CommentCount:  int64(commentCount),
+		}
+	}
+	ids := make([]uint64, len(videoWithoutInfo))
+	for k, _ := range videoWithoutInfo {
+		ids = append(ids, k)
+	}
+	var infos []models.VideoInfo
+	err = models.DB.Where(ids).Find(&infos).Error
 	if err != nil {
 		return nil, err
+	}
+	writeVideoCache(ctx, redisKey, infos)
+
+	var latestTime string
+	if len(videoIds) == 0 {
+		latestTime = time.UnixMilli(timestamp).Format("2006-01-02 15:04:05")
+	} else {
+		latestTime = time.UnixMilli(int64(videoIds[len(videoIds)-1].Score)).Format("2006-01-02 15:04:05")
+	}
+	videoList = videoCacheList
+
+	//2. db
+	if len(videoIds) < 31 {
+		var videoDbList []models.VideoInfo
+		err = models.GetVideoInfo(latestTime, limit+1-len(videoIds), &videoDbList)
+		if err != nil {
+			return nil, err
+		}
+		videoList = append(videoList, videoDbList...)
+		writeVideoCache(ctx, redisKey, videoDbList)
 	}
 	nextTime := int64(0)
 	//没滑到底
@@ -102,25 +207,27 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 	} else { //到底了
 		nextTime = 1
 	}
+
 	var videoRespList []*videoOperatorPb.Video
-	for _, videoInfo := range videoList {
-		userInfoReq := userInfoPb.UserInfoReq{
-			FromId: videoInfo.AuthorId,
-			ToId:   videoInfo.AuthorId,
-		}
-		if req.Token != "" {
-			userInfoReq.FromId = uint64(id)
-		}
-		authorInfo, err := rpcClient.UserInfo.Info(ctx, &userInfoReq)
-		if err != nil {
-			return nil, err
-		}
+
+	//获取作者信息
+	authorIdList := make([]uint64, len(videoList))
+	for i, v := range videoList {
+		authorIdList[i] = v.AuthorId
+	}
+	r, err := rpcClient.UserInfo.BatchInfo(ctx, &userInfoPb.BatchUserReq{
+		Fromid:   userId,
+		Batchids: authorIdList,
+	})
+	authorInfos := r.GetBatchusers()
+
+	for i, videoInfo := range videoList {
 		author := videoOperatorPb.User{
 			Id:            videoInfo.AuthorId,
-			Name:          authorInfo.User.UserName,
-			FollowCount:   authorInfo.User.FollowCount,
-			FollowerCount: authorInfo.User.FollowerCount,
-			IsFollow:      authorInfo.User.IsFollow,
+			Name:          authorInfos[i].UserName,
+			FollowCount:   authorInfos[i].FollowCount,
+			FollowerCount: authorInfos[i].FollowerCount,
+			IsFollow:      authorInfos[i].IsFollow,
 		}
 		video := videoOperatorPb.Video{
 			Id:            uint64(videoInfo.ID),
@@ -135,15 +242,14 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 
 		//用户登录状态的话，查询用户是否点赞视频
 		if req.Token != "" {
-			userInfoReq.FromId = uint64(id)
-			userFavoResp, err := rpcClient.UserFavo.FavoStatus(context.Background(), &userFavoPb.FavoStatusReq{
-				UserId:  int64(id),
+			userFavoResp, err := rpcClient.UserFavo.FavoStatus(ctx, &userFavoPb.FavoStatusReq{
+				UserId:  int64(userId),
 				VideoId: int64(video.Id),
 			})
 			if err != nil {
 				return nil, err
 			}
-			video.IsFavorite = userFavoResp.IsFavorite
+			video.IsFavorite = userFavoResp.GetIsFavorite()
 		}
 
 		videoRespList = append(videoRespList, &video)
@@ -178,15 +284,8 @@ func extractCover(playUrl string) (string, error) {
 func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorPb.PublishListReq) (resp *videoOperatorPb.PublishListResp, err error) {
 	//1. 根据user_id,获取author的信息
 	authorId, userId := req.AuthorId, req.UserId
-	if err != nil {
-		resp = &videoOperatorPb.PublishListResp{
-			StatusCode: 1,
-			StatusMsg:  "user_id 格式错误",
-		}
-		return resp, nil
-	}
-
-	authorInfo, err := rpcClient.UserInfo.Info(ctx, &userInfoPb.UserInfoReq{ToId: authorId})
+	authInfoReq := userInfoPb.UserInfoReq{FromId: userId, ToId: authorId}
+	authorInfo, err := rpcClient.UserInfo.Info(ctx, &authInfoReq)
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
 			StatusCode: 1,
@@ -207,22 +306,22 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 	followCnt := authorInfo.User.GetFollowCount()
 	followerCnt := authorInfo.User.GetFollowerCount()
 	//3.需要判断用户是否关注该作者
-	isFollowResp, err := rpcClient.UserRelationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
-		FromId: userId,
-		ToId:   authorId,
-	})
-	if err != nil {
-		resp = &videoOperatorPb.PublishListResp{
-			StatusCode: 1,
-			StatusMsg:  "查询用户关注错误",
-		}
-		return resp, err
-	}
+	//isFollowResp, err := rpcClient.UserRelationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
+	//	FromId: userId,
+	//	ToId:   authorId,
+	//})
+	//if err != nil {
+	//	resp = &videoOperatorPb.PublishListResp{
+	//		StatusCode: 1,
+	//		StatusMsg:  "查询用户关注错误",
+	//	}
+	//	return resp, err
+	//}
 	author := &videoOperatorPb.User{
 		Id:            authorInfo.User.GetUserId(),
 		FollowCount:   followCnt,
 		FollowerCount: followerCnt,
-		IsFollow:      isFollowResp.IsFollow,
+		IsFollow:      authorInfo.User.IsFollow,
 	}
 
 	var videos []*videoOperatorPb.Video

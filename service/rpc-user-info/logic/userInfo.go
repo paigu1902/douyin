@@ -170,15 +170,25 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 	var userinfo models.UserInfo
 	var limitids []uint64
 	var userinfors []*models.UserInfo
-	countLimit := make(map[uint64]int)
-	respTmp := make(map[uint64]*userInfoPb.User)
+	countLimit := make(map[uint64]int, len(req.Batchids))
+	respTmp := make(map[uint64]*userInfoPb.User, len(req.Batchids))
 	resp = new(userInfoPb.BtachUserResp)
-	isfollows := make(map[uint64]bool)
+	isfollows := make(map[uint64]bool, len(req.Batchids))
 	batchIds := req.Batchids
-	isfollowresp, err := client.UserRelation.IsFollowList(ctx, &userRelationPb.IsFollowListReq{FromId: req.Fromid, ToId: batchIds})
-	for i, v := range isfollowresp.GetIsFollow() {
-		isfollows[uint64(i)] = v
+	if req.Fromid == 0 {
+		for _, v := range batchIds {
+			isfollows[v] = false
+		}
+	} else {
+		isfollowresp, err := client.UserRelation.IsFollowList(ctx, &userRelationPb.IsFollowListReq{FromId: req.Fromid, ToId: batchIds})
+		if err != nil {
+			return nil, err
+		}
+		for i, v := range isfollowresp.GetIsFollow() {
+			isfollows[uint64(i)] = v
+		}
 	}
+
 	for _, id := range batchIds {
 		u, err := cache.RDB.Get(ctx, "UserInfo:"+strconv.Itoa(int(id))).Result()
 		if err == nil {
@@ -215,7 +225,6 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 	for _, id := range batchIds {
 		resp.Batchusers = append(resp.Batchusers, respTmp[id])
 	}
-
 	resp.StatusCode = 0
 	resp.StatusMsg = "查询成功"
 	log.Info("resp", resp)

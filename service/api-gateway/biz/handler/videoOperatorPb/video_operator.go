@@ -119,10 +119,11 @@ func PublishListMethod(ctx context.Context, c *app.RequestContext) {
 	// 获取用户id
 	fromId, isOK := c.Get("from_id")
 	if !isOK {
-		c.JSON(400, "get current user_id error")
-		return
+		//c.JSON(400, "get current user_id error")
+		//未登录状态
+		fromId = req.AuthorId
 	}
-	req.UserId = uint64(fromId.(uint))
+	req.UserId = uint64(fromId.(uint64))
 	// 2.调用rpc
 	resp, err := rpcClient.VideoOpClient.PublishList(ctx, req.getGrpcReq())
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 )
 
 type Auth struct {
-	Token string `json:"token"`
+	Token string `json:"token" form:"token"`
 }
 
 func AuthUserCheck() app.HandlerFunc {

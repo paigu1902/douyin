@@ -53,6 +53,7 @@ func TestUserAction(t *testing.T) {
 	token := loginResp.Value("token").String().Raw()
 	userResp := e.GET("/douyin/user/").
 		WithQuery("token", token).
+		WithQuery("user_id", 1).
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
@@ -66,7 +67,7 @@ func TestUserAction(t *testing.T) {
 func TestPublish(t *testing.T) {
 	e := newExpect(t)
 
-	userId, token := getTestUserToken(testUserA, e)
+	userId, token := getTestUserToken(testUserB, e)
 
 	publishResp := e.POST("/douyin/publish/action/").
 		WithMultipart().
