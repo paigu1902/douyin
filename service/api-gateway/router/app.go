@@ -23,8 +23,8 @@ func Register(r *server.Hertz) {
 
 	publishGroup := r.Group("/douyin/publish/")
 	publishGroup.Use(middlewares.AccessLog())
-	publishGroup.Use(middlewares.AuthUserCheck())
 	publishGroup.GET("/list/", videoOperator.PublishListMethod)
+	publishGroup.Use(middlewares.AuthUserCheck())
 	publishGroup.POST("/action/", videoOperator.PublishActionMethod)
 
 	userMessageGroup := r.Group("/douyin/message/")
@@ -47,9 +47,9 @@ func Register(r *server.Hertz) {
 
 	favoriteGroup := r.Group("/douyin/favorite/")
 	favoriteGroup.Use(middlewares.AccessLog())
+	favoriteGroup.GET("/list/", userFavo.FavoListMethod)
 	favoriteGroup.Use(middlewares.AuthUserCheck())
 	favoriteGroup.POST("/action/", userFavo.FavoActionMethod, middlewares.LimitFavorAction())
-	favoriteGroup.GET("/list/", userFavo.FavoListMethod)
 
 	userCommGroup := r.Group("/douyin/comment/")
 	userCommGroup.Use(middlewares.AccessLog())

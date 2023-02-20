@@ -10,7 +10,6 @@ import (
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
-	"paigu1902/douyin/service/rpc-user-relation/kitex_gen/userRelationPb"
 	"paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"path/filepath"
 	"strings"
@@ -178,15 +177,8 @@ func extractCover(playUrl string) (string, error) {
 func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorPb.PublishListReq) (resp *videoOperatorPb.PublishListResp, err error) {
 	//1. 根据user_id,获取author的信息
 	authorId, userId := req.AuthorId, req.UserId
-	if err != nil {
-		resp = &videoOperatorPb.PublishListResp{
-			StatusCode: 1,
-			StatusMsg:  "user_id 格式错误",
-		}
-		return resp, nil
-	}
-
-	authorInfo, err := rpcClient.UserInfo.Info(ctx, &userInfoPb.UserInfoReq{ToId: authorId})
+	authInfoReq := userInfoPb.UserInfoReq{FromId: authorId, ToId: authorId}
+	authorInfo, err := rpcClient.UserInfo.Info(ctx, &authInfoReq)
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
 			StatusCode: 1,
@@ -207,22 +199,22 @@ func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorP
 	followCnt := authorInfo.User.GetFollowCount()
 	followerCnt := authorInfo.User.GetFollowerCount()
 	//3.需要判断用户是否关注该作者
-	isFollowResp, err := rpcClient.UserRelationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
-		FromId: userId,
-		ToId:   authorId,
-	})
-	if err != nil {
-		resp = &videoOperatorPb.PublishListResp{
-			StatusCode: 1,
-			StatusMsg:  "查询用户关注错误",
-		}
-		return resp, err
-	}
+	//isFollowResp, err := rpcClient.UserRelationClient.IsFollow(ctx, &userRelationPb.IsFollowReq{
+	//	FromId: userId,
+	//	ToId:   authorId,
+	//})
+	//if err != nil {
+	//	resp = &videoOperatorPb.PublishListResp{
+	//		StatusCode: 1,
+	//		StatusMsg:  "查询用户关注错误",
+	//	}
+	//	return resp, err
+	//}
 	author := &videoOperatorPb.User{
 		Id:            authorInfo.User.GetUserId(),
 		FollowCount:   followCnt,
 		FollowerCount: followerCnt,
-		IsFollow:      isFollowResp.IsFollow,
+		IsFollow:      authorInfo.User.IsFollow,
 	}
 
 	var videos []*videoOperatorPb.Video
