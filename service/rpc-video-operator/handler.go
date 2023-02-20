@@ -177,7 +177,7 @@ func extractCover(playUrl string) (string, error) {
 func (s *VideoOperatorImpl) PublishList(ctx context.Context, req *videoOperatorPb.PublishListReq) (resp *videoOperatorPb.PublishListResp, err error) {
 	//1. 根据user_id,获取author的信息
 	authorId, userId := req.AuthorId, req.UserId
-	authInfoReq := userInfoPb.UserInfoReq{FromId: authorId, ToId: authorId}
+	authInfoReq := userInfoPb.UserInfoReq{FromId: userId, ToId: authorId}
 	authorInfo, err := rpcClient.UserInfo.Info(ctx, &authInfoReq)
 	if err != nil {
 		resp = &videoOperatorPb.PublishListResp{
