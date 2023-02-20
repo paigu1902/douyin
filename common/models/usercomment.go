@@ -27,14 +27,14 @@ func InsertComment(comment *UserComm) error {
 		if err := tx.Create(comment).Error; err != nil {
 			return err
 		}
-		if err := tx.Model(&VideoInfo{}).UpdateColumn("comment_count", gorm.Expr("comment_count + ?", 1)).Error; err != nil {
+		if err := tx.Model(&VideoInfo{}).Where("id = ?", comment.VideoId).UpdateColumn("comment_count", gorm.Expr("comment_count + ?", 1)).Error; err != nil {
 			return err
 		}
 		return nil
 	})
 }
 
-func DeleteComment(CommentId int64) error {
+func DeleteComment(CommentId int64, videoId int64) error {
 	log.Println("running-Delete Comment:", CommentId)
 	return DB.Transaction(func(tx *gorm.DB) error {
 		result := UserComm{}
@@ -44,7 +44,7 @@ func DeleteComment(CommentId int64) error {
 		if err := tx.Model(&result).UpdateColumn("status", 0).Error; err != nil {
 			return err
 		}
-		if err := tx.Model(&VideoInfo{}).UpdateColumn("comment_count", gorm.Expr("comment_count - ?", 1)).Error; err != nil {
+		if err := tx.Model(&VideoInfo{}).Where("id = ?", videoId).UpdateColumn("comment_count", gorm.Expr("comment_count - ?", 1)).Error; err != nil {
 			return err
 		}
 		log.Println("Delete Comment success", CommentId)

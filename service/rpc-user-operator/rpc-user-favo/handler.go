@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/cloudwego/kitex/pkg/klog"
 	"log"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
@@ -21,22 +22,50 @@ type UserFavoRpcImpl struct{}
 // FavoAction implements the UserFavoRpcImpl interface. 执行点赞、取消赞操作 actionType==1->点赞 actionType==2->取消点赞
 func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoActionReq) (resp *userFavoPb.FavoActionResp, err error) {
 	// TODO: Your code here..
+	log.Println(req.Type)
+	// 首先查询点赞状态来判断操作是否合法
+	status_resp, err := s.FavoStatus(ctx, &userFavoPb.FavoStatusReq{
+		UserId:  req.UserId,
+		VideoId: req.VideoId,
+	})
+	if err != nil {
+		return &userFavoPb.FavoActionResp{
+			StatusCode: 1,
+			StatusMsg:  "Failed",
+		}, errors.New("query status error")
+	}
+	if req.Type == 1 && status_resp.IsFavorite {
+		return &userFavoPb.FavoActionResp{
+			StatusCode: 0,
+			StatusMsg:  "you have liked this video",
+		}, nil
+	}
+	if req.Type == 2 && !status_resp.IsFavorite {
+		return &userFavoPb.FavoActionResp{
+			StatusCode: 0,
+			StatusMsg:  "you have unliked this video",
+		}, nil
+	}
 	if req.Type != 1 && req.Type != 2 {
 		return &userFavoPb.FavoActionResp{
 			StatusCode: 1,
 			StatusMsg:  "Failed",
-		}, errors.New("FavoAction Parameters Error")
+		}, errors.New("favoAction Parameters Error")
 	}
 	user := strconv.FormatInt(req.UserId, 10)
 	video := strconv.FormatInt(req.VideoId, 10)
 	err1 := s.userFavoActionImpl(ctx, int(req.Type), user, video)
 	err2 := s.videoFavoActionImpl(ctx, int(req.Type), user, video)
+	_, err = cache.RDB.Del(ctx, "VideoInfo:"+strconv.Itoa(int(req.VideoId))).Result()
+	if err != nil {
+		klog.Error("del video redis error", req.VideoId)
+	}
 	if err1 != nil || err2 != nil {
 		return &userFavoPb.FavoActionResp{
 				StatusCode: 1,
 				StatusMsg:  "Failed",
 			},
-			errors.New("FavoAction Failed")
+			errors.New("favoAction Failed")
 	}
 	return &userFavoPb.FavoActionResp{
 			StatusCode: 0,

@@ -82,11 +82,11 @@ func UpdateFavoStatus(favoRecord *UserFavo) error {
 			return err
 		}
 		if favoRecord.Status == 1 {
-			if err := DB.Model(&VideoInfo{}).UpdateColumn("favorite_count", gorm.Expr("favorite_count + ?", 1)).Error; err != nil {
+			if err := DB.Model(&VideoInfo{}).Where("id = ?", favoRecord.VideoId).UpdateColumn("favorite_count", gorm.Expr("favorite_count + ?", 1)).Error; err != nil {
 				return err
 			}
 		} else {
-			if err := DB.Model(&VideoInfo{}).UpdateColumn("favorite_count", gorm.Expr("favorite_count - ?", 1)).Error; err != nil {
+			if err := DB.Model(&VideoInfo{}).Where("id = ?", favoRecord.VideoId).UpdateColumn("favorite_count", gorm.Expr("favorite_count - ?", 1)).Error; err != nil {
 				return err
 			}
 		}
@@ -101,7 +101,7 @@ func CreateFavoRecord(favoRecord *UserFavo) error {
 		log.Println(err.Error())
 		return errors.New("create Record Failed")
 	}
-	if err := DB.Model(&VideoInfo{}).UpdateColumn("favorite_count", gorm.Expr("favorite_count + ?", 1)).Error; err != nil {
+	if err := DB.Model(&VideoInfo{}).Where("id = ?", favoRecord.VideoId).UpdateColumn("favorite_count", gorm.Expr("favorite_count + ?", 1)).Error; err != nil {
 		return err
 	}
 	return nil
