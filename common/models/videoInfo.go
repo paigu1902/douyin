@@ -37,7 +37,7 @@ func CreateVideoInfo(videoInfo *VideoInfo) error {
 }
 
 func GetVideoInfo(latestTime string, limit int, videoList *[]VideoInfo) error {
-	return DB.Where("deleted_at is NULL and created_at<=?", latestTime).Limit(limit).Find(videoList).Error
+	return DB.Where("deleted_at is NULL and created_at<=?", latestTime).Order("created_at DESC").Limit(limit).Find(videoList).Error
 }
 
 func GetVideoListByAuthorId(authorId uint64, videoList *[]VideoInfo) error {
