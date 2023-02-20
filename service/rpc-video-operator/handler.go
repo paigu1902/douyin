@@ -104,7 +104,7 @@ func (s *VideoOperatorImpl) Upload(ctx context.Context, req *videoOperatorPb.Vid
 	}
 	redisKey := "VideoFeed"
 	writeVideoCache(ctx, redisKey, []models.VideoInfo{info})
-	return &videoOperatorPb.VideoUploadResp{Status: 1, StatusMsg: "成功"}, nil
+	return &videoOperatorPb.VideoUploadResp{Status: 0, StatusMsg: "成功"}, nil
 }
 
 // Feed implements the VideoOperatorImpl interface.
