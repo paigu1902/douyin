@@ -36,8 +36,8 @@ services:
     environment:
       TZ: Asia/Shanghai
     volumes:
-      - ../data:/data
-      - ../conf/redis.conf:/etc/redis/redis.conf
-      - ../logs:/logs
+      - ./data:/data
+      - ./conf/redis.conf:/etc/redis/redis.conf
+      - ./logs:/logs
     command: ["redis-server","/etc/redis/redis.conf"]
 

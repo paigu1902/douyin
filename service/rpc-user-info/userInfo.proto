@@ -31,11 +31,17 @@ message LoginResp {
 }
 
 message User {
-  uint64 userId = 1; //userId
-  string userName = 2; //name
-  int64 followCount = 3; //followCount
-  int64 followerCount = 4; //followerCount
-  bool isFollow=5;//isFollow
+  uint64 userId = 1; // 用户id
+  string userName = 2; // 用户名称
+  int64 follow_count = 3; // 关注总数
+  int64 follower_count = 4; // 粉丝总数
+  bool is_follow = 5; // true-已关注，false-未关注
+  string avatar = 6; //用户头像
+  string background_image = 7; //用户个人页顶部大图
+  string signature = 8; //个人简介
+  int64 total_favorited = 9; //获赞数量
+  int64 work_count = 10; //作品数量
+  int64 favorite_count = 11; //点赞数量
 }
 
 message UserInfoReq {
