@@ -5,7 +5,7 @@ stages:          # List of stages for jobs, and their order of execution
 
 build-job:       # This job runs in the build stage, which runs first.
   tags:
-    - gogo
+    - go-test
   stage: build
   script:
     - echo "Compiling the code..."
