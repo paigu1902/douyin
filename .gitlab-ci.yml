@@ -20,9 +20,9 @@ deploy-job:      # This job runs in the deploy stage.
   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
   
   script:
-    - /home/dy-build/dy-api-gateway
-    - /home/dy-build/dy-user-info
-    - /home/dy-build/dy-user-comm
-    - /home/dy-build/dy-user-favo
-    - /home/dy-build/dy-user-relation
-    - /home/dy-build/dy-video
+    - /home/dy-build/dy-api-gateway &
+    - /home/dy-build/dy-user-info &
+    - /home/dy-build/dy-user-comm &
+    - /home/dy-build/dy-user-favo &
+    - /home/dy-build/dy-user-relation &
+    - /home/dy-build/dy-video &
