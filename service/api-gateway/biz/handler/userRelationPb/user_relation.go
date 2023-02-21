@@ -54,11 +54,17 @@ func getUsers(users []*userRelationPb.User) []*UserHttp {
 	res := make([]*UserHttp, len(users))
 	for i, v := range users {
 		res[i] = &UserHttp{
-			UserId:        v.GetUserId(),
-			UserName:      v.GetUserName(),
-			FollowCount:   v.GetFollowCount(),
-			FollowerCount: v.GetFollowerCount(),
-			IsFollow:      v.GetIsFollow(),
+			UserId:          v.GetUserId(),
+			UserName:        v.GetUserName(),
+			FollowCount:     v.GetFollowCount(),
+			FollowerCount:   v.GetFollowerCount(),
+			IsFollow:        v.GetIsFollow(),
+			Avatar:          "https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c",
+			BackgroundImage: "https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c",
+			Signature:       "666",
+			TotalFavorited:  "0",
+			WorkCount:       0,
+			FavoriteCount:   0,
 		}
 	}
 	return res
