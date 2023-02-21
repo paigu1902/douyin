@@ -12,7 +12,7 @@ type UserInfo struct {
 	FollowCount    int64  `gorm:"not null;default:0"`
 	FollowedCount  int64  `gorm:"not null;default:0"`
 	VideoCount     int64  `gorm:"not null;default:0"`
-	TotalFavorited string `gorm:"not null;default:0"`
+	TotalFavorited int64  `gorm:"not null;default:0"`
 	FavoriteCount  int64  `gorm:"not null;default:0"`
 }
 

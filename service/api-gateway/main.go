@@ -5,13 +5,22 @@ package main
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/hertz-contrib/registry/nacos"
+	"os"
 	nacosClient "paigu1902/douyin/common/nacos"
 	"paigu1902/douyin/service/api-gateway/router"
 )
 
 func main() {
+	f, err := os.OpenFile("./api-gateway.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	hlog.SetOutput(f)
+
 	addr := "0.0.0.0:3002"
 	r := nacos.NewNacosRegistry(nacosClient.Cli)
 	h := server.Default(
