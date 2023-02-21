@@ -47,16 +47,21 @@ type VideoHttp struct {
 }
 
 func getVideoList(video []*videoOperatorPb.Video) []*VideoHttp {
+	var img = "https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"
 	res := make([]*VideoHttp, len(video))
 	for i, v := range video {
 		res[i] = &VideoHttp{
 			Id: v.GetId(),
 			Author: &AuthorHttp{
-				Id:            v.GetAuthor().GetId(),
-				Name:          v.GetAuthor().GetName(),
-				FollowCount:   v.GetAuthor().GetFollowCount(),
-				FollowerCount: v.GetAuthor().GetFollowerCount(),
-				IsFollow:      v.GetAuthor().GetIsFollow(),
+				Id:              v.GetAuthor().GetId(),
+				Name:            v.GetAuthor().GetName(),
+				FollowCount:     v.GetAuthor().GetFollowCount(),
+				FollowerCount:   v.GetAuthor().GetFollowerCount(),
+				IsFollow:        v.GetAuthor().GetIsFollow(),
+				Avatar:          img,
+				BackgroundImage: img,
+				Signature:       "666",
+				TotalFavorited:  "0",
 			},
 			PlayUrl:       v.GetPlayUrl(),
 			CoverUrl:      v.GetCoverUrl(),

@@ -142,12 +142,6 @@ func InfoMethod(ctx context.Context, c *app.RequestContext) {
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
 		"user":        getUserHttp(resp.GetUser()),
-		//"user": utils.H{
-		//	"id":             resp.GetUser().GetUserId(),
-		//	"name":           resp.GetUser().GetUserName(),
-		//	"follow_count":   resp.GetUser().GetFollowCount(),
-		//	"follower_count": resp.GetUser().GetFollowerCount(),
-		//},
 	},
 	)
 	return
