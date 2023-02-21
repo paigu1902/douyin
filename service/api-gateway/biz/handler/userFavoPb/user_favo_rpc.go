@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
+	"log"
 	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
@@ -69,10 +70,12 @@ func GetVideoList(ctx context.Context, videolist []*userFavoPb.Video, FromId int
 	for i, v := range videolist {
 		ids[i] = v.GetAuthor().GetId()
 	}
+	log.Println(ids)
 	Info_resp, err := rpcClient.UserInfo.BatchInfo(ctx, &userInfoPb.BatchUserReq{
 		Fromid:   uint64(FromId),
 		Batchids: ids,
 	})
+	log.Println(Info_resp)
 	if err != nil {
 		return res, err
 	}
