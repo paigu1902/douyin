@@ -6,7 +6,6 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
-	"log"
 	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
@@ -151,8 +150,8 @@ func FavoListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	log.Println("my video list", videoList)
-	log.Println("videolist in resp", resp.GetVideoList())
+	//log.Println("my video list", videoList)
+	//log.Println("videolist in resp", resp.GetVideoList())
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),

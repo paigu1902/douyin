@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/cloudwego/kitex/pkg/klog"
-	"log"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
@@ -95,14 +94,14 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 		for _, valI := range values {
 			err := json.Unmarshal([]byte(valI), &comm)
 			if err == nil {
-				log.Println(comm)
+				klog.Info(comm)
 				commentList = append(commentList, comm)
 				LimitCommentIds = append(LimitCommentIds, comm.ID)
 			}
 		}
 	}
 	var commentList1 []models.UserComm
-	log.Println(LimitCommentIds)
+	//log.Println(LimitCommentIds)
 	err = models.GetCommentsByVideo(videoId, &commentList1, &LimitCommentIds)
 	commentList = append(commentList, commentList1...)
 	if err != nil {
@@ -123,7 +122,7 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 	go func() {
 		cnt, err := cache.RdbUserOp.SCard(ctx, "VideoIdToComments:"+strconv.FormatInt(videoId, 10)).Result()
 		if err != nil {
-			log.Println("get cnt from VC error", err)
+			klog.Info("get cnt from VC error", err)
 		}
 		if cnt == int64(len(respCommentList)+1) {
 			// 正确，无需更新
@@ -132,14 +131,14 @@ func (s *UserCommRpcImpl) GetCommentsByVideo(ctx context.Context, req *UserCommP
 		cache.RdbUserOp.FlushAll(ctx)
 		_, err = cache.RdbUserOp.SAdd(ctx, "VideoIdToComments:"+strconv.Itoa(int(videoId)), -1).Result()
 		if err != nil {
-			log.Println("redis save -1 error")
+			klog.Error("redis save -1 error")
 			return
 		}
 		//设置key值过期时间
 		_, err2 := cache.RdbUserOp.Expire(ctx, "VideoIdToComments:"+strconv.Itoa(int(videoId)),
 			time.Duration(60*60*24*30)*time.Second).Result()
 		if err2 != nil {
-			log.Println("redis save one vId - c expire failed")
+			klog.Info("redis save one vId - c expire failed")
 		}
 		for _, comment := range commentList {
 			InsertRedisComment(ctx, videoId, comment.CommText)
@@ -158,7 +157,7 @@ func InsertRedisComment(ctx context.Context, videoId int64, CommentText string) 
 	// Redis update
 	_, err := cache.RdbUserOp.SAdd(ctx, "VideoIdToComments:"+strconv.FormatInt(videoId, 10), CommentText).Result()
 	if err != nil {
-		log.Println("redis save send: vId - cId failed, key deleted")
+		klog.Info("redis save send: vId - cId failed, key deleted")
 		cache.RdbUserOp.Del(ctx, "VideoIdToComments:"+strconv.FormatInt(videoId, 10))
 		return
 	}
@@ -223,7 +222,7 @@ func AddComment(ctx context.Context, comment *UserCommPb.Comment, videoId int64,
 	//将此发表的评论id存入redis
 	go func() {
 		InsertRedisComment(ctx, videoId, strconv.Itoa(int(commentTmp.ID)))
-		log.Println("send comment save in redis")
+		klog.Info("send comment save in redis")
 	}()
 	comment.Id = int64(commentTmp.ID)
 	return &UserCommPb.DouyinCommentActionResponse{
@@ -237,14 +236,14 @@ func DelComment(ctx context.Context, comment *UserCommPb.Comment, commentId int6
 	// 先对redis中去删除
 	n, err := cache.RdbUserOp.Exists(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
 	if err != nil {
-		log.Println(err)
+		klog.Info(err)
 	}
 	if n > 0 { // redis 有数据
 		del1, err := cache.RdbUserOp.Del(ctx, "CommentIdToVideoId:"+strconv.FormatInt(commentId, 10)).Result()
 		if err != nil {
-			log.Println("Del in CV table err", err)
+			klog.Info("Del in CV table err", err)
 		}
-		log.Println("del comment in Redis success:", del1)
+		klog.Info("del comment in Redis success:", del1)
 	}
 	err = models.DeleteComment(commentId, videoId)
 	_, err = cache.RDB.Del(ctx, "VideoInfo:"+strconv.Itoa(int(videoId))).Result()

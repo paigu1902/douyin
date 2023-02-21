@@ -164,16 +164,22 @@ func (s *VideoOperatorImpl) Feed(ctx context.Context, req *videoOperatorPb.FeedR
 			CommentCount:  int64(commentCount),
 		}
 	}
-	ids := make([]uint64, len(videoWithoutInfo))
-	for k, _ := range videoWithoutInfo {
-		ids = append(ids, k)
+
+	if len(videoWithoutInfo) > 0 {
+		ids := make([]uint64, len(videoWithoutInfo))
+		for k, _ := range videoWithoutInfo {
+			ids = append(ids, k)
+		}
+		var infos []models.VideoInfo
+		err = models.DB.Where("id in ?", ids).Find(&infos).Error
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range infos {
+			videoCacheList[videoWithoutInfo[uint64(v.ID)]] = v
+		}
+		writeVideoCache(ctx, redisKey, infos)
 	}
-	var infos []models.VideoInfo
-	err = models.DB.Where(ids).Find(&infos).Error
-	if err != nil {
-		return nil, err
-	}
-	writeVideoCache(ctx, redisKey, infos)
 
 	var latestTime string
 	if len(videoIds) == 0 {
