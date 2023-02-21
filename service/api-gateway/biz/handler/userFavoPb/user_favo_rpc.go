@@ -16,7 +16,7 @@ import (
 
 type FavoActionReq struct {
 	VideoId int64 `query:"video_id"`
-	Type    int32 `query:"type" `
+	Type    int32 `query:"action_type" `
 }
 
 type FavoListReq struct {

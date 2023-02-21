@@ -24,6 +24,7 @@ type UserFavoRpcImpl struct{}
 func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoActionReq) (resp *userFavoPb.FavoActionResp, err error) {
 	// TODO: Your code here..
 	// 首先查询点赞状态来判断操作是否合法
+	log.Println(req.Type)
 	status_resp, err := s.FavoStatus(ctx, &userFavoPb.FavoStatusReq{
 		UserId:  req.UserId,
 		VideoId: req.VideoId,
