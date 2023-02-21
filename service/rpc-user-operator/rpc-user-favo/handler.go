@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/cloudwego/kitex/pkg/klog"
-	"log"
 	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/rabbitmq"
@@ -24,7 +23,7 @@ type UserFavoRpcImpl struct{}
 func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoActionReq) (resp *userFavoPb.FavoActionResp, err error) {
 	// TODO: Your code here..
 	// 首先查询点赞状态来判断操作是否合法
-	log.Println(req.Type)
+	klog.Info(req.Type)
 	status_resp, err := s.FavoStatus(ctx, &userFavoPb.FavoStatusReq{
 		UserId:  req.UserId,
 		VideoId: req.VideoId,
@@ -75,7 +74,7 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 	//ext, err1 := cache.RDB.Exists(ctx, key).Result()
 	// TODO: 通过查询redis来查询Author ID
 	//if err1 != nil {
-	//	log.Println("function:FavoList call:Exists Error")
+	//	klog.Info("function:FavoList call:Exists Error")
 	//}
 	if err3 != nil {
 		return &userFavoPb.FavoActionResp{
@@ -108,13 +107,13 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 	// 1. 查询cache
 	ext, err1 := cache.RDB.Exists(ctx, key).Result()
 	if err1 != nil {
-		log.Println("function:FavoList call:Exists Error")
+		klog.Info("function:FavoList call:Exists Error")
 	}
 	// 2. cache中存在点赞用户信息 获取视频列表
 	if ext > 0 {
 		videoIdListStr, err2 := cache.RDB.SMembers(ctx, key).Result()
 		if err2 != nil {
-			log.Println("function:FavoList call:SMembers Error")
+			klog.Info("function:FavoList call:SMembers Error")
 		}
 		var videoIdList []uint64
 		for _, str := range videoIdListStr {
@@ -135,12 +134,12 @@ func (s *UserFavoRpcImpl) FavoList(ctx context.Context, req *userFavoPb.FavoList
 	// 3. cache中不存在用户信息 查询MySQL加入原有视频信息后更新
 	err4 := s.readRecordsToCache(ctx, 1, key, user, "")
 	if err4 != nil {
-		log.Println("function:FavoList call:readRecordsToCache Error")
+		klog.Info("function:FavoList call:readRecordsToCache Error")
 	}
 	// 4. 重新读取缓存中的video列表
 	videoIdListStr, err5 := cache.RDB.SMembers(ctx, key).Result()
 	if err5 != nil {
-		log.Println("function:FavoList call:SMembers Error")
+		klog.Info("function:FavoList call:SMembers Error")
 	}
 	var videoIdList []uint64
 	for _, str := range videoIdListStr {
@@ -169,39 +168,39 @@ func (s *UserFavoRpcImpl) FavoStatus(ctx context.Context, req *userFavoPb.FavoSt
 	// 1. 查询RDB(key:user, value:video)
 	ext1, err1 := cache.RDB.Exists(ctx, keyU).Result()
 	if err1 != nil {
-		log.Println("function:FavoStatus call:Exists-userid Error")
+		klog.Info("function:FavoStatus call:Exists-userid Error")
 	}
 	if ext1 > 0 {
 		res, err := cache.RDB.SIsMember(ctx, keyU, video).Result()
 		if err != nil {
-			log.Println("function:FavoStatus call:SIsMember-userid Error")
+			klog.Info("function:FavoStatus call:SIsMember-userid Error")
 		}
-		log.Println("1", res)
+		klog.Info("1", res)
 		return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, nil
 	}
 	// 2. 若RDB(key:user, value:video)中不存在点赞记录 查询RDB(key:video, value:user)
 	ext2, err2 := cache.RDB.Exists(ctx, keyV).Result()
 	if err2 != nil {
-		log.Println("function:FavoStatus call:Exists-videoid Error")
+		klog.Info("function:FavoStatus call:Exists-videoid Error")
 	}
 	if ext2 > 0 {
 		res, err := cache.RDB.SIsMember(ctx, keyV, user).Result()
 		if err != nil {
-			log.Println("function:FavoStatus call:SIsMember-videoid Error")
+			klog.Info("function:FavoStatus call:SIsMember-videoid Error")
 		}
 		return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, nil
 	}
 	//3. 若cache中不存在点赞记录 查询MySQL加入原有视频信息后更新 仅更新RDB(key:user, value:video)
 	err3 := s.readRecordsToCache(ctx, 1, keyU, user, video)
 	if err3 != nil {
-		log.Println("function:FavoStatus call:readRecordsToCache Error")
+		klog.Info("function:FavoStatus call:readRecordsToCache Error")
 	}
 	// 4. 再次查询cache
 	res, err := cache.RDB.SIsMember(ctx, keyU, video).Result()
 	if err != nil {
-		log.Println("function:FavoStatus call:SIsMember Error")
+		klog.Info("function:FavoStatus call:SIsMember Error")
 	}
-	log.Println("3", res)
+	klog.Info("3", res)
 	return &userFavoPb.FavoStatusResp{StatusCode: 0, StatusMsg: "Success", IsFavorite: res}, nil
 }
 
@@ -212,24 +211,24 @@ func (s *UserFavoRpcImpl) FavoCount(ctx context.Context, videoId int64) (int64, 
 	// 1. 查询RDB(key:video, value:user)
 	ext, err1 := cache.RDB.Exists(ctx, key).Result()
 	if err1 != nil {
-		log.Println("function:FavoCount call:Exists Error")
+		klog.Info("function:FavoCount call:Exists Error")
 	}
 	if ext > 0 {
 		res, err2 := cache.RDB.SCard(ctx, key).Result()
 		if err2 != nil {
-			log.Println("function:FavoCount call:SCard Error")
+			klog.Info("function:FavoCount call:SCard Error")
 		}
 		return res - 1, nil //减去 default value
 	}
 	// 2. 若cache中不存在点赞记录 查询MySQL加入原有视频信息后更新 仅更新RDB(key:video, value:user)
 	err3 := s.readRecordsToCache(ctx, 2, key, "", video)
 	if err3 != nil {
-		log.Println("function:FavoCount call:readRecordsToCache Error")
+		klog.Info("function:FavoCount call:readRecordsToCache Error")
 	}
 	// 3. 再次查询cache
 	res, err4 := cache.RDB.SCard(ctx, key).Result()
 	if err4 != nil {
-		log.Println("function:FavoCount call:SCard Error")
+		klog.Info("function:FavoCount call:SCard Error")
 	}
 	return res - 1, nil //减去 default value
 }
@@ -244,20 +243,20 @@ func (s *UserFavoRpcImpl) userFavoActionImpl(ctx context.Context, actionType int
 	// 1. 查询cache
 	ext, err0 := cache.RDB.Exists(ctx, key).Result()
 	if err0 != nil {
-		log.Println("function:userFavoActionImpl call:Exists Error")
+		klog.Info("function:userFavoActionImpl call:Exists Error")
 	}
 	// 2. 若cache中存在点赞用户信息 更新cache和数据库
 	if ext > 0 {
 		if actionType == 1 { //点赞
 			_, err1 := cache.RDB.SAdd(ctx, key, video).Result()
 			if err1 != nil {
-				log.Println("function:userFavoActionImpl call:SAdd-1 Error")
+				klog.Info("function:userFavoActionImpl call:SAdd-1 Error")
 			}
 			rabbitmq.RmqFavoAdd.Publish(msg.String())
 		} else { // 取消点赞
 			_, err2 := cache.RDB.SRem(ctx, key, video).Result()
 			if err2 != nil {
-				log.Println("function:userFavoActionImpl call:SRem-1 Error")
+				klog.Info("function:userFavoActionImpl call:SRem-1 Error")
 			}
 			rabbitmq.RmqFavoDel.Publish(msg.String())
 		}
@@ -266,20 +265,20 @@ func (s *UserFavoRpcImpl) userFavoActionImpl(ctx context.Context, actionType int
 	// 3. 若cache中不存在用户信息 查询MySQL加入原有视频信息后更新RDB(key:user, value:video)
 	err3 := s.readRecordsToCache(ctx, 1, key, user, video)
 	if err3 != nil {
-		log.Println("function:userFavoActionImpl call:readRecordsToCache Error")
+		klog.Info("function:userFavoActionImpl call:readRecordsToCache Error")
 	}
 	// 4. 将本次点赞操作更新到cache和数据库
 	if actionType == 1 { // 点赞
 		_, err4 := cache.RDB.SAdd(ctx, key, video).Result()
 		if err4 != nil {
 			cache.RDB.Del(ctx, key)
-			log.Println("function:userFavoActionImpl call:SAdd-2 Error")
+			klog.Info("function:userFavoActionImpl call:SAdd-2 Error")
 		}
 	} else if actionType == 2 { // 取消点赞
 		_, err5 := cache.RDB.SRem(ctx, key, video).Result()
 		if err5 != nil {
 			cache.RDB.Del(ctx, key)
-			log.Println("function:userFavoActionImpl call:SRem-2 Error")
+			klog.Info("function:userFavoActionImpl call:SRem-2 Error")
 		}
 	} else {
 		return errors.New("userFavoActionImpl Parameters Error")
@@ -299,26 +298,26 @@ func (s *UserFavoRpcImpl) videoFavoActionImpl(ctx context.Context, actionType in
 	// 1. 查询cache
 	ext, err0 := cache.RDB.Exists(ctx, key).Result()
 	if err0 != nil {
-		log.Println("function:videoFavoActionImpl call:Exists Error")
+		klog.Info("function:videoFavoActionImpl call:Exists Error")
 	}
 	// 2. 若cache中存在点赞用户信息 更新cache
 	if ext > 0 {
 		_, err1 := cache.RDB.SRem(ctx, key, user).Result()
 		if err1 != nil {
-			log.Println("function:videoFavoActionImpl call:SRem Error")
+			klog.Info("function:videoFavoActionImpl call:SRem Error")
 		}
 		return nil
 	}
 	// 3. 若cache中不存在用户信息 查询MySQL加入原有视频信息后更新RDB(key:video, value:user)
 	err2 := s.readRecordsToCache(ctx, 2, key, user, video)
 	if err2 != nil {
-		log.Println("function:videoFavoActionImpl call:readRecordsToCache Error")
+		klog.Info("function:videoFavoActionImpl call:readRecordsToCache Error")
 	}
 	// 4. 将本次点赞操作更新到cache
 	_, err3 := cache.RDB.SRem(ctx, key, user).Result()
 	if err3 != nil {
 		cache.RDB.Del(ctx, key)
-		log.Println("function:videoFavoActionImpl call:GetFavoUserId Error")
+		klog.Info("function:videoFavoActionImpl call:GetFavoUserId Error")
 	}
 	return nil
 }
@@ -329,39 +328,39 @@ func (s *UserFavoRpcImpl) readRecordsToCache(ctx context.Context, readType int, 
 	_, err1 := cache.RDB.SAdd(ctx, key, -1).Result()
 	if err1 != nil {
 		cache.RDB.Del(ctx, key)
-		log.Println("function:readRecordsToCache call:SAdd-1 Error")
+		klog.Info("function:readRecordsToCache call:SAdd-1 Error")
 	}
 	// 4. 设置数据有效期
 	_, err2 := cache.RDB.Expire(ctx, key, time.Duration(30)*time.Second).Result()
 	if err2 != nil {
 		cache.RDB.Del(ctx, key)
-		log.Println("function:readRecordsToCache call:Expire Error")
+		klog.Info("function:readRecordsToCache call:Expire Error")
 	}
 	// 5. 查询MySQL原有信息 加入cache
 	if readType == 1 { //读取视频信息 更新UserIdsToVideoIds
 		userId, _ := strconv.Atoi(user)
 		videoIdList, err3 := models.GetFavoVideoId(uint64(userId))
 		if err3 != nil {
-			log.Println("function:readRecordsToCache call:GetFavoVideoId Error")
+			klog.Info("function:readRecordsToCache call:GetFavoVideoId Error")
 		}
 		for _, favoVideoId := range videoIdList {
 			_, err := cache.RDB.SAdd(ctx, key, favoVideoId).Result()
 			if err != nil {
 				cache.RDB.Del(ctx, key)
-				log.Println("function:readRecordsToCache call:SAdd-2 Error")
+				klog.Info("function:readRecordsToCache call:SAdd-2 Error")
 			}
 		}
 	} else if readType == 2 { // 读取用户信息 更新VideoIdsToUserIds
 		videoId, _ := strconv.Atoi(video)
 		UserIdList, err4 := models.GetFavoUserId(uint64(videoId))
 		if err4 != nil {
-			log.Println("function:readRecordsToCache call:GetFavoUserId Error")
+			klog.Info("function:readRecordsToCache call:GetFavoUserId Error")
 		}
 		for _, favoUserId := range UserIdList {
 			_, err := cache.RDB.SAdd(ctx, key, favoUserId).Result()
 			if err != nil {
 				cache.RDB.Del(ctx, key)
-				log.Println("function:readRecordsToCache call:SAdd Error")
+				klog.Info("function:readRecordsToCache call:SAdd Error")
 			}
 		}
 	} else {

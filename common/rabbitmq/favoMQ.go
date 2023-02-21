@@ -2,8 +2,8 @@ package rabbitmq
 
 import (
 	"fmt"
+	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/streadway/amqp"
-	"log"
 	"paigu1902/douyin/common/models"
 	"strconv"
 	"strings"
@@ -46,7 +46,7 @@ func (favo *RabbitMQ) Publish(msg string) {
 			Body:        []byte(msg),
 		})
 	if errP != nil {
-		log.Println("Publish Message Failed", err)
+		klog.Info("Publish Message Failed", err)
 		return
 	}
 	return
@@ -64,7 +64,7 @@ func (favo *RabbitMQ) Consume() {
 		nil,   //额外属性
 	)
 	if err != nil {
-		log.Println("Declare Queue Failed", err)
+		klog.Info("Declare Queue Failed", err)
 		return
 	}
 	// 2. 接收消息
@@ -78,10 +78,10 @@ func (favo *RabbitMQ) Consume() {
 		nil,            // 额外属性
 	)
 	if err != nil {
-		log.Println("Consume Message Failed", err)
+		klog.Info("Consume Message Failed", err)
 		return
 	}
-	log.Println("Consume Consume")
+	klog.Info("Consume Consume")
 	ch := make(chan int) //无缓冲区channel
 	switch favo.QueueName {
 	case "favoAdd": //点赞
@@ -89,9 +89,9 @@ func (favo *RabbitMQ) Consume() {
 	case "favoDel": //取消赞
 		go favo.ConsumeFavoDel(messages)
 	default:
-		log.Println("RabbitMQ Actiontype Error")
+		klog.Info("RabbitMQ Actiontype Error")
 	}
-	log.Printf("[*] Waiting for messagees,To exit press CTRL+C")
+	klog.Info("[*] Waiting for messagees,To exit press CTRL+C")
 	<-ch //由协程从channel中pop一个值或阻塞
 }
 
@@ -105,7 +105,7 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 		// 2. 操作数据库 查询点赞记录并更新
 		favoRecord, err1 := models.GetFavoRecord(uint64(userId), uint64(videoId))
 		if err1 != nil && err1.Error() != "record not found" {
-			log.Printf("ConsumeFavoAdd Get FavoRecord Failed")
+			klog.Info("ConsumeFavoAdd Get FavoRecord Failed")
 			continue
 		}
 		// 3. 若数据库中不存在点赞记录 创建记录
@@ -113,13 +113,13 @@ func (favo *RabbitMQ) ConsumeFavoAdd(messages <-chan amqp.Delivery) {
 			record := models.UserFavo{UserId: uint64(userId), VideoId: uint64(videoId), Status: 1}
 			err2 := models.CreateFavoRecord(&record)
 			if err2 != nil {
-				log.Printf("Create FavoRecord Failed")
+				klog.Info("Create FavoRecord Failed")
 			}
 		} else { // 4. 若数据库中存在点赞记录 更新状态为1
 			req := models.UserFavo{UserId: uint64(userId), VideoId: uint64(videoId), Status: 1}
 			err3 := models.UpdateFavoStatus(&req)
 			if err3 != nil {
-				log.Printf("Update FavoRecord Failed")
+				klog.Info("Update FavoRecord Failed")
 			}
 		}
 	}
@@ -135,17 +135,17 @@ func (favo *RabbitMQ) ConsumeFavoDel(messages <-chan amqp.Delivery) {
 		// 2. 操作数据库 查询点赞记录并更新
 		favoRecord, err1 := models.GetFavoRecord(uint64(userId), uint64(videoId))
 		if err1 != nil && err1.Error() != "record not found" {
-			log.Printf("Get FavoRecord Failed")
+			klog.Info("Get FavoRecord Failed")
 			continue
 		}
 		// 3. 若数据库中不存在点赞记录
 		if favoRecord == (models.UserFavo{}) {
-			log.Printf("Find FavoRecord Failed")
+			klog.Info("Find FavoRecord Failed")
 		} else { // 4. 若数据库中存在点赞记录 更新状态为0
 			req := models.UserFavo{UserId: uint64(userId), VideoId: uint64(videoId), Status: 0}
 			err2 := models.UpdateFavoStatus(&req)
 			if err2 != nil {
-				log.Printf("Update FavoRecord Failed")
+				klog.Info("Update FavoRecord Failed")
 			}
 		}
 	}
