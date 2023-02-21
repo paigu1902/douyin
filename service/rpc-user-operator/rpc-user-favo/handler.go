@@ -23,7 +23,6 @@ type UserFavoRpcImpl struct{}
 // FavoAction implements the UserFavoRpcImpl interface. 执行点赞、取消赞操作 actionType==1->点赞 actionType==2->取消点赞
 func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoActionReq) (resp *userFavoPb.FavoActionResp, err error) {
 	// TODO: Your code here..
-	log.Println(req.Type)
 	// 首先查询点赞状态来判断操作是否合法
 	status_resp, err := s.FavoStatus(ctx, &userFavoPb.FavoStatusReq{
 		UserId:  req.UserId,
@@ -74,9 +73,9 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 	// 1. 查询cache
 	//ext, err1 := cache.RDB.Exists(ctx, key).Result()
 	// TODO: 通过查询redis来查询Author ID
-	if err1 != nil {
-		log.Println("function:FavoList call:Exists Error")
-	}
+	//if err1 != nil {
+	//	log.Println("function:FavoList call:Exists Error")
+	//}
 	if err3 != nil {
 		return &userFavoPb.FavoActionResp{
 			StatusCode: 1,
