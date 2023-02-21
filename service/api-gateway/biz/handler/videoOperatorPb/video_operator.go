@@ -121,7 +121,9 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	data, err := file2Byte(req.Data)
 	if err != nil {
-		panic(err)
+		hlog.Error(err)
+		c.JSON(400, "错误")
+		return
 	}
 	resp, err := rpcClient.VideoOperatorClient.Upload(ctx, &videoOperatorPb.VideoUploadReq{
 		Token: req.Token,
