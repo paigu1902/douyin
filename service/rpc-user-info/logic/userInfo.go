@@ -73,6 +73,7 @@ func Register(req *userInfoPb.RegisterReq) (resp *userInfoPb.RegisterResp, err e
 }
 
 func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.UserInfoResp, err error) {
+	var img = "https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"
 	resp = new(userInfoPb.UserInfoResp)
 	fromID := req.FromId
 	toId := req.ToId
@@ -84,7 +85,19 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 	}
 	resp.StatusCode = 0
 	resp.StatusMsg = "查询成功"
-	userDetail := &userInfoPb.User{UserId: uint64(user.ID), IsFollow: isFollow, UserName: user.UserName, FollowCount: user.FollowCount, FollowerCount: user.FollowedCount, WorkCount: user.VideoCount}
+	userDetail := &userInfoPb.User{
+		UserId:          uint64(user.ID),
+		UserName:        user.UserName,
+		FollowCount:     user.FollowCount,
+		FollowerCount:   user.FollowedCount,
+		IsFollow:        isFollow,
+		Avatar:          img,
+		BackgroundImage: img,
+		Signature:       "个人签名",
+		TotalFavorited:  user.TotalFavorited,
+		WorkCount:       user.VideoCount,
+		FavoriteCount:   user.FavoriteCount,
+	}
 	resp.User = userDetail
 	log.Info("resp", resp)
 	return resp, nil
