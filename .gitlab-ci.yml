@@ -8,21 +8,22 @@ build-job:       # This job runs in the build stage, which runs first.
     - go-test
   stage: build
   script:
-    - go build -o /home/build/dy-api-gateway ./service/api-gateway/.
-    - go build -o /home/build/dy-user-info ./service/rpc-user-info/.
-    - go build -o /home/build/dy-user-comm ./service/rpc-user-operator/rpc-user-comment/.
-    - go build -o /home/build/dy-user-favo ./service/rpc-user-operator/rpc-user-favo/.
-    - go build -o /home/build/dy-user-relation ./service/rpc-user-relation/.
-    - go build -o /home/build/dy-video ./service/rpc-video-operator/.
+    - go build -o /home/dy-build/dy-api-gateway ./service/api-gateway/.
+    - go build -o /home/dy-build/dy-user-info ./service/rpc-user-info/.
+    - go build -o /home/dy-build/dy-user-comm ./service/rpc-user-operator/rpc-user-comment/.
+    - go build -o /home/dy-build/dy-user-favo ./service/rpc-user-operator/rpc-user-favo/.
+    - go build -o /home/dy-build/dy-user-relation ./service/rpc-user-relation/.
+    - go build -o /home/dy-build/dy-video ./service/rpc-video-operator/.
 
 
 deploy-job:      # This job runs in the deploy stage.
   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
-  script:
+  before_script:
     - ps -ef | grep go | grep build | awk '{print "kill "$2}' | sh
-    - ./home/build/dy-api-gateway
-    - ./home/build/dy-user-info
-    - ./home/build/dy-user-comm
-    - ./home/build/dy-user-favo
-    - ./home/build/dy-user-relation
-    - ./home/build/dy-video
+  script:
+    - /home/dy-build/dy-api-gateway
+    - /home/dy-build/dy-user-info
+    - /home/dy-build/dy-user-comm
+    - /home/dy-build/dy-user-favo
+    - /home/dy-build/dy-user-relation
+    - /home/dy-build/dy-video
