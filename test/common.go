@@ -1,14 +1,16 @@
 package test
 
 import (
+	"fmt"
 	"github.com/gavv/httpexpect/v2"
 	"net/http"
 	"testing"
+	"time"
 )
 
 var serverAddr = "http://localhost:3002"
-var testUserA = "douyinTestUserA"
-var testUserB = "douyinTestUserB"
+var testUserA = "TestUserA" + fmt.Sprintf("%06d", time.Now().Unix()%1000000)
+var testUserB = "TestUserB" + fmt.Sprintf("%06d", time.Now().Unix()%1000000)
 
 func newExpect(t *testing.T) *httpexpect.Expect {
 	return httpexpect.WithConfig(httpexpect.Config{

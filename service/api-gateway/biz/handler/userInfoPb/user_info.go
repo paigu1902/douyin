@@ -25,21 +25,29 @@ type UserHttp struct {
 	FollowCount     int64  `json:"follow_count" default:"0"`
 	FollowerCount   int64  `json:"follower_count" default:"0"`
 	IsFollow        bool   `json:"is_follow" default:"false"`
-	Avatar          string `json:"avatar" default:""`
-	BackgroundImage string `json:"background_image" default:""`
-	Signature       string `json:"signature" default:""`
-	TotalFavorited  string `json:"total_favorited" default:""`
+	Avatar          string `json:"avatar" default:"https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"`
+	BackgroundImage string `json:"background_image" default:"https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"`
+	Signature       string `json:"signature" default:"666"`
+	TotalFavorited  string `json:"total_favorited" default:"0"`
 	WorkCount       int64  `json:"work_count" default:"0"`
 	FavoriteCount   int64  `json:"favorite_count" default:"0"`
 }
 
+var img = "https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"
+
 func getUserHttp(user *userInfoPb.User) *UserHttp {
+	test := &UserHttp{}
+	log.Println(test.WorkCount)
 	return &UserHttp{
-		UserId:        int64(user.GetUserId()),
-		UserName:      user.GetUserName(),
-		FollowCount:   user.GetFollowCount(),
-		FollowerCount: user.GetFollowerCount(),
-		IsFollow:      user.GetIsFollow(),
+		UserId:          int64(user.GetUserId()),
+		UserName:        user.GetUserName(),
+		FollowCount:     user.GetFollowCount(),
+		FollowerCount:   user.GetFollowerCount(),
+		IsFollow:        user.GetIsFollow(),
+		Avatar:          img,
+		BackgroundImage: img,
+		Signature:       "666",
+		TotalFavorited:  "0",
 	}
 }
 
@@ -135,13 +143,13 @@ func InfoMethod(ctx context.Context, c *app.RequestContext) {
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
-		//"user":        getUserHttp(resp.GetUser()),
-		"user": utils.H{
-			"id":             resp.GetUser().GetUserId(),
-			"name":           resp.GetUser().GetUserName(),
-			"follow_count":   resp.GetUser().GetFollowCount(),
-			"follower_count": resp.GetUser().GetFollowerCount(),
-		},
+		"user":        getUserHttp(resp.GetUser()),
+		//"user": utils.H{
+		//	"id":             resp.GetUser().GetUserId(),
+		//	"name":           resp.GetUser().GetUserName(),
+		//	"follow_count":   resp.GetUser().GetFollowCount(),
+		//	"follower_count": resp.GetUser().GetFollowerCount(),
+		//},
 	},
 	)
 	return

@@ -26,6 +26,7 @@ func NewServiceInfo() *kitex.ServiceInfo {
 		"Login":     kitex.NewMethodInfo(loginHandler, newLoginArgs, newLoginResult, false),
 		"Info":      kitex.NewMethodInfo(infoHandler, newInfoArgs, newInfoResult, false),
 		"ActionDB":  kitex.NewMethodInfo(actionDBHandler, newActionDBArgs, newActionDBResult, false),
+		"FavDB":     kitex.NewMethodInfo(favDBHandler, newFavDBArgs, newFavDBResult, false),
 		"BatchInfo": kitex.NewMethodInfo(batchInfoHandler, newBatchInfoArgs, newBatchInfoResult, false),
 	}
 	extra := map[string]interface{}{
@@ -622,6 +623,151 @@ func (p *ActionDBResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
+func favDBHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(userInfoPb.FavDBReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(userInfoPb.UserInfo).FavDB(ctx, req)
+		if err != nil {
+			return err
+		}
+		if err := st.SendMsg(resp); err != nil {
+			return err
+		}
+	case *FavDBArgs:
+		success, err := handler.(userInfoPb.UserInfo).FavDB(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*FavDBResult)
+		realResult.Success = success
+	}
+	return nil
+}
+func newFavDBArgs() interface{} {
+	return &FavDBArgs{}
+}
+
+func newFavDBResult() interface{} {
+	return &FavDBResult{}
+}
+
+type FavDBArgs struct {
+	Req *userInfoPb.FavDBReq
+}
+
+func (p *FavDBArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(userInfoPb.FavDBReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *FavDBArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *FavDBArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *FavDBArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, fmt.Errorf("No req in FavDBArgs")
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *FavDBArgs) Unmarshal(in []byte) error {
+	msg := new(userInfoPb.FavDBReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var FavDBArgs_Req_DEFAULT *userInfoPb.FavDBReq
+
+func (p *FavDBArgs) GetReq() *userInfoPb.FavDBReq {
+	if !p.IsSetReq() {
+		return FavDBArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *FavDBArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+type FavDBResult struct {
+	Success *userInfoPb.FavDBResp
+}
+
+var FavDBResult_Success_DEFAULT *userInfoPb.FavDBResp
+
+func (p *FavDBResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(userInfoPb.FavDBResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *FavDBResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *FavDBResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *FavDBResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, fmt.Errorf("No req in FavDBResult")
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *FavDBResult) Unmarshal(in []byte) error {
+	msg := new(userInfoPb.FavDBResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *FavDBResult) GetSuccess() *userInfoPb.FavDBResp {
+	if !p.IsSetSuccess() {
+		return FavDBResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *FavDBResult) SetSuccess(x interface{}) {
+	p.Success = x.(*userInfoPb.FavDBResp)
+}
+
+func (p *FavDBResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
 func batchInfoHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	switch s := arg.(type) {
 	case *streaming.Args:
@@ -812,6 +958,16 @@ func (p *kClient) ActionDB(ctx context.Context, Req *userInfoPb.ActionDBReq) (r 
 	_args.Req = Req
 	var _result ActionDBResult
 	if err = p.c.Call(ctx, "ActionDB", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) FavDB(ctx context.Context, Req *userInfoPb.FavDBReq) (r *userInfoPb.FavDBResp, err error) {
+	var _args FavDBArgs
+	_args.Req = Req
+	var _result FavDBResult
+	if err = p.c.Call(ctx, "FavDB", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

@@ -38,3 +38,9 @@ func (s *UserInfoImpl) BatchInfo(ctx context.Context, req *userInfoPb.BatchUserR
 	// TODO: Your code here...
 	return logic.BatchInfo(ctx, req)
 }
+
+// FavDB implements the UserInfoImpl interface.
+func (s *UserInfoImpl) FavDB(ctx context.Context, req *userInfoPb.FavDBReq) (resp *userInfoPb.FavDBResp, err error) {
+	// TODO: Your code here...
+	return logic.FavDB(ctx, req)
+}

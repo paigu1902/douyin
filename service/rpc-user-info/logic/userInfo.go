@@ -90,7 +90,7 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 	return resp, nil
 }
 
-func Actcion(ctx context.Context, fromId uint64, toId uint64, actionType string) error {
+func Actcion(ctx context.Context, fromId uint64, toId uint64, actionType string, funcType string) error {
 	var err error
 	err = cache.RDB.Del(ctx, "UserInfo:"+strconv.Itoa(int(fromId))).Err()
 	if err != nil {
@@ -107,18 +107,33 @@ func Actcion(ctx context.Context, fromId uint64, toId uint64, actionType string)
 			cache.RDB.Del(ctx, "UserInfo:"+strconv.Itoa(int(toId)))
 		}()
 	}()
-	err = models.DB.Transaction(func(tx *gorm.DB) error {
-		// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
-		if err := tx.Model(&models.UserInfo{}).Where("id", fromId).Update("follow_count", gorm.Expr("follow_count"+actionType+"?", 1)).Error; err != nil {
-			// 返回任何错误都会回滚事务
-			return err
-		}
-		if err := tx.Model(&models.UserInfo{}).Where("id", toId).Update("followed_count", gorm.Expr("followed_count"+actionType+"?", 1)).Error; err != nil {
-			return err
-		}
-		// 返回 nil 提交事务
-		return nil
-	})
+	if funcType == "action" {
+		err = models.DB.Transaction(func(tx *gorm.DB) error {
+			// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
+			if err := tx.Model(&models.UserInfo{}).Where("id", fromId).Update("follow_count", gorm.Expr("follow_count"+actionType+"?", 1)).Error; err != nil {
+				// 返回任何错误都会回滚事务
+				return err
+			}
+			if err := tx.Model(&models.UserInfo{}).Where("id", toId).Update("followed_count", gorm.Expr("followed_count"+actionType+"?", 1)).Error; err != nil {
+				return err
+			}
+			// 返回 nil 提交事务
+			return nil
+		})
+	} else if funcType == "fav" {
+		err = models.DB.Transaction(func(tx *gorm.DB) error {
+			// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
+			if err := tx.Model(&models.UserInfo{}).Where("id", fromId).Update("favorite_count", gorm.Expr("follow_count"+actionType+"?", 1)).Error; err != nil {
+				// 返回任何错误都会回滚事务
+				return err
+			}
+			if err := tx.Model(&models.UserInfo{}).Where("id", toId).Update("total_favorited", gorm.Expr("followed_count"+actionType+"?", 1)).Error; err != nil {
+				return err
+			}
+			// 返回 nil 提交事务
+			return nil
+		})
+	}
 	return err
 }
 
@@ -153,9 +168,9 @@ func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoP
 	actionType := req.Type
 	switch actionType {
 	case 0:
-		err = Actcion(ctx, fromId, toId, "-")
+		err = Actcion(ctx, fromId, toId, "-", "action")
 	case 1:
-		err = Actcion(ctx, fromId, toId, "+")
+		err = Actcion(ctx, fromId, toId, "+", "action")
 	default:
 		return nil, errors.New("用户操作异常")
 	}
@@ -163,7 +178,7 @@ func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoP
 		return nil, err
 	}
 	log.Info("操作成功", resp)
-	return &userInfoPb.ActionDBResp{StatusCode: 1, StatusMsg: "成功"}, nil
+	return &userInfoPb.ActionDBResp{StatusCode: 0, StatusMsg: "成功"}, nil
 }
 
 func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInfoPb.BtachUserResp, err error) {
@@ -229,4 +244,23 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 	resp.StatusMsg = "查询成功"
 	log.Info("resp", resp)
 	return resp, nil
+}
+
+func FavDB(ctx context.Context, req *userInfoPb.FavDBReq) (resp *userInfoPb.FavDBResp, err error) {
+	fromId := req.FromId
+	toId := req.ToId
+	actionType := req.Type
+	switch actionType {
+	case 1:
+		err = Actcion(ctx, fromId, toId, "+", "fav")
+	case 2:
+		err = Actcion(ctx, fromId, toId, "-", "fav")
+	default:
+		return nil, errors.New("用户操作异常")
+	}
+	if err != nil {
+		return nil, err
+	}
+	log.Info("操作成功", resp)
+	return &userInfoPb.FavDBResp{StatusCode: 0, StatusMsg: "成功"}, nil
 }
