@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/tool/internal_pkg/log"
 	"gorm.io/gorm"
 	"math/rand"
@@ -100,7 +101,7 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 		FavoriteCount:   user.FavoriteCount,
 	}
 	resp.User = userDetail
-	log.Info("resp", resp)
+	klog.Info("resp", resp)
 	return resp, nil
 }
 
@@ -191,7 +192,7 @@ func ActionDB(ctx context.Context, req *userInfoPb.ActionDBReq) (resp *userInfoP
 	if err != nil {
 		return nil, err
 	}
-	log.Info("操作成功", resp)
+	klog.Info("操作成功", resp)
 	return &userInfoPb.ActionDBResp{StatusCode: 0, StatusMsg: "成功"}, nil
 }
 
@@ -247,7 +248,7 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 		u, _ := json.Marshal(user)
 		err = cache.RDB.Set(ctx, "UserInfo:"+strconv.Itoa(int(user.ID)), string(u), 1000).Err()
 		if err != nil {
-			log.Warn("写入缓存失败")
+			klog.Warn("写入缓存失败")
 		}
 		respTmp[uint64(user.ID)] = &userInfoPb.User{
 			UserId:          uint64(user.ID),
@@ -258,9 +259,9 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 			Avatar:          img,
 			BackgroundImage: img,
 			Signature:       "这是我的个人签名",
-			TotalFavorited:  userinfo.TotalFavorited,
-			WorkCount:       userinfo.VideoCount,
-			FavoriteCount:   userinfo.FavoriteCount,
+			TotalFavorited:  user.TotalFavorited,
+			WorkCount:       user.VideoCount,
+			FavoriteCount:   user.FavoriteCount,
 		}
 	}
 	for _, id := range batchIds {
@@ -268,7 +269,7 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 	}
 	resp.StatusCode = 0
 	resp.StatusMsg = "查询成功"
-	log.Info("resp", resp)
+	klog.Info("resp", resp)
 	return resp, nil
 }
 
@@ -287,6 +288,6 @@ func FavDB(ctx context.Context, req *userInfoPb.FavDBReq) (resp *userInfoPb.FavD
 	if err != nil {
 		return nil, err
 	}
-	log.Info("操作成功", resp)
+	klog.Info("操作成功", resp)
 	return &userInfoPb.FavDBResp{StatusCode: 0, StatusMsg: "成功"}, nil
 }

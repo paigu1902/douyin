@@ -69,12 +69,6 @@ func (s *VideoOperatorImpl) Upload(ctx context.Context, req *videoOperatorPb.Vid
 	data := req.Data
 	claims, err := utils.AnalyseToken(token)
 	if err != nil {
-		// debug 专用
-		//claims = &utils.UserClaims{
-		//	ID:             0,
-		//	Name:           "wqxtest",
-		//	StandardClaims: jwt.StandardClaims{},
-		//}
 		return nil, err
 	}
 

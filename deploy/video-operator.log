@@ -1,0 +1,2 @@
+2023/02/21 11:32:36.997343 server.go:81: [Info] KITEX: server listen at addr=[::]:50053
+2023/02/21 13:50:50.774824 server.go:81: [Info] KITEX: server listen at addr=[::]:50053

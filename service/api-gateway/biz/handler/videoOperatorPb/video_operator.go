@@ -8,7 +8,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"io"
-	"log"
 	"mime/multipart"
 	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
@@ -20,6 +19,54 @@ type VideoReq struct {
 	Data  *multipart.FileHeader `form:"data"`
 	Token string                `form:"token"`
 	Title string                `form:"title"`
+}
+
+type AuthorHttp struct {
+	Id              uint64 `json:"id"`
+	Name            string `json:"name"`
+	FollowCount     int64  `json:"follow_count"`
+	FollowerCount   int64  `json:"follower_count"`
+	IsFollow        bool   `json:"is_follow"`
+	Avatar          string `json:"avatar" default:"https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"`
+	BackgroundImage string `json:"background_image" default:"https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"`
+	Signature       string `json:"signature" default:"666"`
+	TotalFavorited  string `json:"total_favorited" default:"0"`
+	WorkCount       int64  `json:"work_count" default:"0"`
+	FavoriteCount   int64  `json:"favorite_count" default:"0"`
+}
+
+type VideoHttp struct {
+	Id            uint64      `json:"id"`
+	Author        *AuthorHttp `json:"author"`
+	PlayUrl       string      `json:"play_url"`
+	CoverUrl      string      `json:"cover_url"`
+	FavoriteCount int         `json:"favorite_count"`
+	CommentCount  int         `json:"comment_count"`
+	IsFavorite    bool        `json:"is_favorite"`
+	Title         string      `json:"title"`
+}
+
+func getVideoList(video []*videoOperatorPb.Video) []*VideoHttp {
+	res := make([]*VideoHttp, len(video))
+	for i, v := range video {
+		res[i] = &VideoHttp{
+			Id: v.GetId(),
+			Author: &AuthorHttp{
+				Id:            v.GetAuthor().GetId(),
+				Name:          v.GetAuthor().GetName(),
+				FollowCount:   v.GetAuthor().GetFollowCount(),
+				FollowerCount: v.GetAuthor().GetFollowerCount(),
+				IsFollow:      v.GetAuthor().GetIsFollow(),
+			},
+			PlayUrl:       v.GetPlayUrl(),
+			CoverUrl:      v.GetCoverUrl(),
+			FavoriteCount: int(v.GetFavoriteCount()),
+			CommentCount:  int(v.GetCommentCount()),
+			IsFavorite:    v.GetIsFavorite(),
+			Title:         v.GetTitle(),
+		}
+	}
+	return res
 }
 
 // PublishListReq get 方法需要标注 query 参数
@@ -73,7 +120,9 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	data, err := file2Byte(req.Data)
 	if err != nil {
-		panic(err)
+		hlog.Error(err)
+		c.JSON(400, "错误")
+		return
 	}
 	resp, err := rpcClient.VideoOperatorClient.Upload(ctx, &videoOperatorPb.VideoUploadReq{
 		Token: req.Token,
@@ -81,9 +130,8 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 		Title: req.Title,
 	})
 	if err != nil {
-		log.Fatal(err)
+		hlog.Error(err)
 	}
-	log.Println("resp", resp)
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatus(),
 		"status_msg":  resp.GetStatusMsg(),
@@ -139,6 +187,10 @@ func PublishListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	c.JSON(200, resp)
+	c.JSON(200, utils.H{
+		"status_code": resp.GetStatusCode(),
+		"status_msg":  resp.GetStatusMsg(),
+		"video_list":  getVideoList(resp.GetVideoList()),
+	})
 	return
 }
