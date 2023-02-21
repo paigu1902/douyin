@@ -30,6 +30,7 @@ func getTestUserToken(user string, e *httpexpect.Expect) (int, string) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
+
 	userId := 0
 	token := registerResp.Value("token").String().Raw()
 	if len(token) == 0 {

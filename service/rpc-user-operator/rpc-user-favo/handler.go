@@ -9,6 +9,7 @@ import (
 	"paigu1902/douyin/common/models"
 	"paigu1902/douyin/common/rabbitmq"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
+	UserInfoPb "paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
 	VideoOptPb "paigu1902/douyin/service/rpc-video-operator/kitex_gen/videoOperatorPb"
 	"strconv"
@@ -62,16 +63,41 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 	}
 	if err1 != nil || err2 != nil {
 		return &userFavoPb.FavoActionResp{
-				StatusCode: 1,
-				StatusMsg:  "Failed",
-			},
-			errors.New("favoAction Failed")
+			StatusCode: 1,
+			StatusMsg:  "Failed",
+		}, errors.New("favoAction Failed")
+	}
+	myResp, err3 := rpcClient.VideoOpClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: []uint64{uint64(req.VideoId)}})
+	//myResp.VideoList[0].Author.Id,
+	//// 先从缓存中查询
+	//key := "VideoInfo:" + strconv.Itoa(req.VideoId)
+	// 1. 查询cache
+	//ext, err1 := cache.RDB.Exists(ctx, key).Result()
+	// TODO: 通过查询redis来查询Author ID
+	if err1 != nil {
+		log.Println("function:FavoList call:Exists Error")
+	}
+	if err3 != nil {
+		return &userFavoPb.FavoActionResp{
+			StatusCode: 1,
+			StatusMsg:  "Failed",
+		}, errors.New("find author id failed")
+	}
+	_, err4 := rpcClient.UserInfo.FavDB(ctx, &UserInfoPb.FavDBReq{
+		Type:   req.Type,
+		FromId: uint64(req.UserId),
+		ToId:   myResp.VideoList[0].Author.Id,
+	})
+	if err4 != nil {
+		return &userFavoPb.FavoActionResp{
+			StatusCode: 1,
+			StatusMsg:  "Failed",
+		}, err4
 	}
 	return &userFavoPb.FavoActionResp{
-			StatusCode: 0,
-			StatusMsg:  "Succeed",
-		},
-		nil
+		StatusCode: 0,
+		StatusMsg:  "Succeed",
+	}, nil
 }
 
 // FavoList implements the UserFavoRpcImpl interface. 获取用户的点赞视频列表
