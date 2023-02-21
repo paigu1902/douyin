@@ -14,11 +14,17 @@ import (
 )
 
 type UserHttp struct {
-	UserId        uint64 `json:"id"`
-	UserName      string `json:"name"`
-	FollowCount   int64  `json:"follow_count"`
-	FollowerCount int64  `json:"follower_count"`
-	IsFollow      bool   `json:"is_follow"`
+	UserId          uint64 `json:"id"`
+	UserName        string `json:"name"`
+	FollowCount     int64  `json:"follow_count"`
+	FollowerCount   int64  `json:"follower_count"`
+	IsFollow        bool   `json:"is_follow"`
+	Avatar          string `json:"avatar" default:"https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"`
+	BackgroundImage string `json:"background_image" default:"https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"`
+	Signature       string `json:"signature" default:"666"`
+	TotalFavorited  string `json:"total_favorited" default:"0"`
+	WorkCount       int64  `json:"work_count" default:"0"`
+	FavoriteCount   int64  `json:"favorite_count" default:"0"`
 }
 
 type MessageHttp struct {
