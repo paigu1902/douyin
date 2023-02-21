@@ -8,9 +8,9 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
+	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-comment/kitex_gen/UserCommPb"
 	"strconv"
-	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 )
 
 type CommentActionReq struct {
@@ -78,8 +78,8 @@ func getComments(ctx context.Context, comments []*UserCommPb.Comment, FromId int
 	}
 	for i, v := range comments {
 		res[i] = &CommentHttp{
-			Id: v.GetId(),
-			User: getUserHttp(Info_resp.GetBatchusers()[i]),
+			Id:         v.GetId(),
+			User:       getUserHttp(Info_resp.GetBatchusers()[i]),
 			Content:    v.GetContent(),
 			CreateDate: v.GetCreateDate(),
 		}
@@ -140,7 +140,7 @@ func CommentGetListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	commenList, err := getComments(ctx, resp.GetCommentList(), req.UserId)
+	commenList, err := getComments(ctx, resp.GetCommentList(), int64(id))
 	if err != nil {
 		c.JSON(400, err.Error())
 		return

@@ -96,7 +96,7 @@ func GetVideoList(ctx context.Context, videolist []*userFavoPb.Video, FromId int
 
 func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
 	req := new(FavoActionReq)
-	if err := c.Bind(req); err != nil {
+	if err := c.BindAndValidate(req); err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
@@ -105,8 +105,7 @@ func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	//log.Println(req.Type, id, c)
-	req.Type += 1
+	//log.Println(req, id, c)
 	resp, err := rpcClient.UserFavo.FavoAction(ctx, &userFavoPb.FavoActionReq{
 		UserId:  int64(id),
 		VideoId: req.VideId,
