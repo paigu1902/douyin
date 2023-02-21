@@ -18,6 +18,8 @@ import (
 	"time"
 )
 
+var img = "https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"
+
 func Login(req *userInfoPb.LoginReq) (resp *userInfoPb.LoginResp, err error) {
 	resp = new(userInfoPb.LoginResp)
 	user := models.UserInfo{}
@@ -84,7 +86,19 @@ func Info(ctx context.Context, req *userInfoPb.UserInfoReq) (resp *userInfoPb.Us
 	}
 	resp.StatusCode = 0
 	resp.StatusMsg = "查询成功"
-	userDetail := &userInfoPb.User{UserId: uint64(user.ID), IsFollow: isFollow, UserName: user.UserName, FollowCount: user.FollowCount, FollowerCount: user.FollowedCount, WorkCount: user.VideoCount}
+	userDetail := &userInfoPb.User{
+		UserId:          uint64(user.ID),
+		UserName:        user.UserName,
+		FollowCount:     user.FollowCount,
+		FollowerCount:   user.FollowedCount,
+		IsFollow:        isFollow,
+		Avatar:          img,
+		BackgroundImage: img,
+		Signature:       "个人签名",
+		TotalFavorited:  user.TotalFavorited,
+		WorkCount:       user.VideoCount,
+		FavoriteCount:   user.FavoriteCount,
+	}
 	resp.User = userDetail
 	log.Info("resp", resp)
 	return resp, nil
@@ -123,11 +137,11 @@ func Actcion(ctx context.Context, fromId uint64, toId uint64, actionType string,
 	} else if funcType == "fav" {
 		err = models.DB.Transaction(func(tx *gorm.DB) error {
 			// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
-			if err := tx.Model(&models.UserInfo{}).Where("id", fromId).Update("favorite_count", gorm.Expr("follow_count"+actionType+"?", 1)).Error; err != nil {
+			if err := tx.Model(&models.UserInfo{}).Where("id", fromId).Update("favorite_count", gorm.Expr("favorite_count"+actionType+"?", 1)).Error; err != nil {
 				// 返回任何错误都会回滚事务
 				return err
 			}
-			if err := tx.Model(&models.UserInfo{}).Where("id", toId).Update("total_favorited", gorm.Expr("followed_count"+actionType+"?", 1)).Error; err != nil {
+			if err := tx.Model(&models.UserInfo{}).Where("id", toId).Update("total_favorited", gorm.Expr("total_favorited"+actionType+"?", 1)).Error; err != nil {
 				return err
 			}
 			// 返回 nil 提交事务
@@ -210,11 +224,17 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 			err := json.Unmarshal([]byte(u), &userinfo)
 			if err == nil {
 				respTmp[id] = &userInfoPb.User{
-					UserId:        id,
-					UserName:      userinfo.UserName,
-					FollowCount:   userinfo.FollowCount,
-					FollowerCount: userinfo.FollowedCount,
-					IsFollow:      isfollows[id],
+					UserId:          uint64(userinfo.ID),
+					UserName:        userinfo.UserName,
+					FollowCount:     userinfo.FollowCount,
+					FollowerCount:   userinfo.FollowedCount,
+					IsFollow:        isfollows[id],
+					Avatar:          img,
+					BackgroundImage: img,
+					Signature:       "这是我的个人签名",
+					TotalFavorited:  userinfo.TotalFavorited,
+					WorkCount:       userinfo.VideoCount,
+					FavoriteCount:   userinfo.FavoriteCount,
 				}
 				continue
 			}
@@ -230,11 +250,17 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 			log.Warn("写入缓存失败")
 		}
 		respTmp[uint64(user.ID)] = &userInfoPb.User{
-			UserId:        uint64(user.ID),
-			UserName:      user.UserName,
-			FollowCount:   user.FollowCount,
-			FollowerCount: user.FollowedCount,
-			IsFollow:      isfollows[uint64(user.ID)],
+			UserId:          uint64(user.ID),
+			UserName:        user.UserName,
+			FollowCount:     user.FollowCount,
+			FollowerCount:   user.FollowedCount,
+			IsFollow:        isfollows[uint64(user.ID)],
+			Avatar:          img,
+			BackgroundImage: img,
+			Signature:       "这是我的个人签名",
+			TotalFavorited:  userinfo.TotalFavorited,
+			WorkCount:       userinfo.VideoCount,
+			FavoriteCount:   userinfo.FavoriteCount,
 		}
 	}
 	for _, id := range batchIds {

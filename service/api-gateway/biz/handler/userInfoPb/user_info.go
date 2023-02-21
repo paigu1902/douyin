@@ -33,21 +33,19 @@ type UserHttp struct {
 	FavoriteCount   int64  `json:"favorite_count" default:"0"`
 }
 
-var img = "https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"
-
 func getUserHttp(user *userInfoPb.User) *UserHttp {
-	test := &UserHttp{}
-	log.Println(test.WorkCount)
 	return &UserHttp{
 		UserId:          int64(user.GetUserId()),
 		UserName:        user.GetUserName(),
 		FollowCount:     user.GetFollowCount(),
 		FollowerCount:   user.GetFollowerCount(),
 		IsFollow:        user.GetIsFollow(),
-		Avatar:          img,
-		BackgroundImage: img,
-		Signature:       "666",
-		TotalFavorited:  "0",
+		Avatar:          user.GetAvatar(),
+		BackgroundImage: user.GetBackgroundImage(),
+		Signature:       user.GetSignature(),
+		TotalFavorited:  strconv.Itoa(int(user.GetTotalFavorited())),
+		FavoriteCount:   user.GetFavoriteCount(),
+		WorkCount:       user.GetWorkCount(),
 	}
 }
 
