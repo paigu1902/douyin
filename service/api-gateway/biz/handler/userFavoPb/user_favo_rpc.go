@@ -8,7 +8,9 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
+	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"paigu1902/douyin/service/rpc-user-operator/rpc-user-favo/kitex_gen/userFavoPb"
+	"strconv"
 )
 
 type FavoActionReq struct {
@@ -21,15 +23,15 @@ type FavoListReq struct {
 }
 
 type UserHttp struct {
-	UserId          uint64 `json:"id"`
+	UserId          int64  `json:"id"`
 	UserName        string `json:"name"`
-	FollowCount     int64  `json:"follow_count"`
-	FollowerCount   int64  `json:"follower_count"`
-	IsFollow        bool   `json:"is_follow"`
-	Avatar          string `json:"avatar" default:""`
-	BackgroundImage string `json:"background_image" default:""`
-	Signature       string `json:"signature" default:""`
-	TotalFavorited  string `json:"total_favorited" default:""`
+	FollowCount     int64  `json:"follow_count" default:"0"`
+	FollowerCount   int64  `json:"follower_count" default:"0"`
+	IsFollow        bool   `json:"is_follow" default:"false"`
+	Avatar          string `json:"avatar" default:"https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"`
+	BackgroundImage string `json:"background_image" default:"https://img0.baidu.com/it/u=1705694933,4002952892&fm=253&app=138&size=w931&n=0&f=JPEG&fmt=auto?sec=1677085200&t=327023c8f454fb913a8a32d5485f403c"`
+	Signature       string `json:"signature" default:"666"`
+	TotalFavorited  string `json:"total_favorited" default:"0"`
 	WorkCount       int64  `json:"work_count" default:"0"`
 	FavoriteCount   int64  `json:"favorite_count" default:"0"`
 }
@@ -45,18 +47,39 @@ type VideoListHttp struct {
 	Title         string    `json:"title"`
 }
 
-func GetVideoList(videolist []*userFavoPb.Video) []*VideoListHttp {
+func getUserHttp(user *userInfoPb.User) *UserHttp {
+	return &UserHttp{
+		UserId:          int64(user.GetUserId()),
+		UserName:        user.GetUserName(),
+		FollowCount:     user.GetFollowCount(),
+		FollowerCount:   user.GetFollowerCount(),
+		IsFollow:        user.GetIsFollow(),
+		Avatar:          user.GetAvatar(),
+		BackgroundImage: user.GetBackgroundImage(),
+		Signature:       user.GetSignature(),
+		TotalFavorited:  strconv.Itoa(int(user.GetTotalFavorited())),
+		FavoriteCount:   user.GetFavoriteCount(),
+		WorkCount:       user.GetWorkCount(),
+	}
+}
+
+func GetVideoList(ctx context.Context, videolist []*userFavoPb.Video, FromId int64) ([]*VideoListHttp, error) {
 	res := make([]*VideoListHttp, len(videolist))
+	ids := make([]uint64, len(videolist))
+	for i, v := range videolist {
+		ids[i] = v.GetAuthor().GetId()
+	}
+	Info_resp, err := rpcClient.UserInfo.BatchInfo(ctx, &userInfoPb.BatchUserReq{
+		Fromid:   uint64(FromId),
+		Batchids: ids,
+	})
+	if err != nil {
+		return res, err
+	}
 	for i, v := range videolist {
 		res[i] = &VideoListHttp{
-			Id: v.Id,
-			User: &UserHttp{
-				UserId:        v.GetAuthor().GetId(),
-				UserName:      v.GetAuthor().GetName(),
-				FollowCount:   v.GetAuthor().GetFollowCount(),
-				FollowerCount: v.GetAuthor().GetFollowerCount(),
-				IsFollow:      v.GetAuthor().GetIsFollow(),
-			},
+			Id:            v.Id,
+			User:          getUserHttp(Info_resp.GetBatchusers()[i]),
 			PlayUrl:       v.GetPlayUrl(),
 			CoverUrl:      v.GetCoverUrl(),
 			FavoriteCount: v.GetFavoriteCount(),
@@ -65,7 +88,7 @@ func GetVideoList(videolist []*userFavoPb.Video) []*VideoListHttp {
 			Title:         v.GetTitle(),
 		}
 	}
-	return res
+	return res, nil
 }
 
 func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
@@ -109,10 +132,15 @@ func FavoListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+	videoList, err := GetVideoList(ctx, resp.GetVideoList(), req.UserId)
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
-		"video_list":  GetVideoList(resp.GetVideoList()),
+		"video_list":  videoList,
 	})
 	return
 }
