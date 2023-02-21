@@ -66,6 +66,16 @@ message actionDBResp {
   string status_msg = 2; //返回状态描述
 }
 
+message favDBReq{
+  int32 type = 1; // 操作类型，1-喜欢，2-取消
+  uint64 fromId = 2; //点击喜欢的用户id
+  uint64 toId = 3; //被喜欢的用户id
+}
+
+message favDBResp{
+  int32 status_code = 1; //状态码，0-成功，其他值-失败
+  string status_msg = 2; //返回状态描述
+}
 message BatchUserReq {
   repeated uint64 batchids = 1; //批量id切片
   uint64 fromid = 2; //请求id
@@ -82,5 +92,6 @@ service UserInfo {
   rpc Login(LoginReq) returns (LoginResp);
   rpc Info(UserInfoReq) returns (UserInfoResp);
   rpc ActionDB(actionDBReq) returns (actionDBResp);
+  rpc FavDB(favDBReq) returns (favDBResp);
   rpc BatchInfo(BatchUserReq) returns (BtachUserResp);
 }

@@ -33,17 +33,11 @@ type CommentHttp struct {
 }
 
 type UserHttp struct {
-	UserId          int64  `json:"id"`
-	UserName        string `json:"name"`
-	FollowCount     int64  `json:"follow_count"`
-	FollowerCount   int64  `json:"follower_count"`
-	IsFollow        bool   `json:"is_follow"`
-	Avatar          string `json:"avatar" default:""`
-	BackgroundImage string `json:"background_image" default:""`
-	Signature       string `json:"signature" default:""`
-	TotalFavorited  string `json:"total_favorited" default:""`
-	WorkCount       int64  `json:"work_count" default:"0"`
-	FavoriteCount   int64  `json:"favorite_count" default:"0"`
+	UserId        int64  `json:"id"`
+	UserName      string `json:"name"`
+	FollowCount   int64  `json:"follow_count"`
+	FollowerCount int64  `json:"follower_count"`
+	IsFollow      bool   `json:"is_follow"`
 }
 
 func getComments(comments []*UserCommPb.Comment) []*CommentHttp {

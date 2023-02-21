@@ -482,6 +482,86 @@ func (x *ActionDBResp) fastReadField2(buf []byte, _type int8) (offset int, err e
 	return offset, err
 }
 
+func (x *FavDBReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_FavDBReq[number], err)
+}
+
+func (x *FavDBReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Type, offset, err = fastpb.ReadInt32(buf, _type)
+	return offset, err
+}
+
+func (x *FavDBReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.FromId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *FavDBReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.ToId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *FavDBResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_FavDBResp[number], err)
+}
+
+func (x *FavDBResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.StatusCode, offset, err = fastpb.ReadInt32(buf, _type)
+	return offset, err
+}
+
+func (x *FavDBResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.StatusMsg, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
 func (x *BatchUserReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -936,6 +1016,65 @@ func (x *ActionDBResp) fastWriteField2(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *FavDBReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	return offset
+}
+
+func (x *FavDBReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Type == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 1, x.Type)
+	return offset
+}
+
+func (x *FavDBReq) fastWriteField2(buf []byte) (offset int) {
+	if x.FromId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.FromId)
+	return offset
+}
+
+func (x *FavDBReq) fastWriteField3(buf []byte) (offset int) {
+	if x.ToId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 3, x.ToId)
+	return offset
+}
+
+func (x *FavDBResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *FavDBResp) fastWriteField1(buf []byte) (offset int) {
+	if x.StatusCode == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 1, x.StatusCode)
+	return offset
+}
+
+func (x *FavDBResp) fastWriteField2(buf []byte) (offset int) {
+	if x.StatusMsg == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.StatusMsg)
+	return offset
+}
+
 func (x *BatchUserReq) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -1362,6 +1501,65 @@ func (x *ActionDBResp) sizeField2() (n int) {
 	return n
 }
 
+func (x *FavDBReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	return n
+}
+
+func (x *FavDBReq) sizeField1() (n int) {
+	if x.Type == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(1, x.Type)
+	return n
+}
+
+func (x *FavDBReq) sizeField2() (n int) {
+	if x.FromId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(2, x.FromId)
+	return n
+}
+
+func (x *FavDBReq) sizeField3() (n int) {
+	if x.ToId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(3, x.ToId)
+	return n
+}
+
+func (x *FavDBResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *FavDBResp) sizeField1() (n int) {
+	if x.StatusCode == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(1, x.StatusCode)
+	return n
+}
+
+func (x *FavDBResp) sizeField2() (n int) {
+	if x.StatusMsg == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.StatusMsg)
+	return n
+}
+
 func (x *BatchUserReq) Size() (n int) {
 	if x == nil {
 		return n
@@ -1484,6 +1682,17 @@ var fieldIDToName_ActionDBReq = map[int32]string{
 }
 
 var fieldIDToName_ActionDBResp = map[int32]string{
+	1: "StatusCode",
+	2: "StatusMsg",
+}
+
+var fieldIDToName_FavDBReq = map[int32]string{
+	1: "Type",
+	2: "FromId",
+	3: "ToId",
+}
+
+var fieldIDToName_FavDBResp = map[int32]string{
 	1: "StatusCode",
 	2: "StatusMsg",
 }

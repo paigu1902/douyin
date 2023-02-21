@@ -37,7 +37,6 @@ func HistoryMessage(req *userRelationPb.HistoryMessageReq) (resp *userRelationPb
 			CreateTime: v.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 	}
-
 	resp.StatusCode = 0
 	resp.StatusMsg = "查询成功"
 	resp.MessageList = ms
