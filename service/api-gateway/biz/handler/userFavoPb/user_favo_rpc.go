@@ -15,12 +15,13 @@ import (
 )
 
 type FavoActionReq struct {
-	VideId int64 `query:"videoId"`
-	Type   int32 `query:"type" `
+	VideoId int64 `query:"video_id"`
+	Type    int32 `query:"action_type" `
 }
 
 type FavoListReq struct {
-	UserId int64 `query:"user_id"`
+	UserId int64  `query:"user_id"`
+	Token  string `query:"token"`
 }
 
 type UserHttp struct {
@@ -70,12 +71,12 @@ func GetVideoList(ctx context.Context, videolist []*userFavoPb.Video, FromId int
 	for i, v := range videolist {
 		ids[i] = v.GetAuthor().GetId()
 	}
-	log.Println(ids)
+	//log.Println(ids)
 	Info_resp, err := rpcClient.UserInfo.BatchInfo(ctx, &userInfoPb.BatchUserReq{
 		Fromid:   uint64(FromId),
 		Batchids: ids,
 	})
-	log.Println(Info_resp)
+	//log.Println(Info_resp)
 	if err != nil {
 		return res, err
 	}
@@ -105,10 +106,9 @@ func FavoActionMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
-	//log.Println(req, id, c)
 	resp, err := rpcClient.UserFavo.FavoAction(ctx, &userFavoPb.FavoActionReq{
 		UserId:  int64(id),
-		VideoId: req.VideId,
+		VideoId: req.VideoId,
 		Type:    req.Type,
 	})
 	if err != nil {
@@ -128,18 +128,31 @@ func FavoListMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(400, err.Error())
 		return
 	}
+	user, err := dyUtils.AnalyseToken(req.Token)
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+	id := user.ID
+	//log.Println(id, user)
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
 	resp, err := rpcClient.UserFavo.FavoList(ctx, &userFavoPb.FavoListReq{
-		UserId: req.UserId,
+		UserId: int64(id),
 	})
 	if err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
-	videoList, err := GetVideoList(ctx, resp.GetVideoList(), req.UserId)
+	videoList, err := GetVideoList(ctx, resp.GetVideoList(), int64(id))
 	if err != nil {
 		c.JSON(400, err.Error())
 		return
 	}
+	log.Println("my video list", videoList)
+	log.Println("videolist in resp", resp.GetVideoList())
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
