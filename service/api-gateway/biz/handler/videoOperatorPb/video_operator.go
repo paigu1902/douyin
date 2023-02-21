@@ -8,7 +8,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"io"
-	"log"
 	"mime/multipart"
 	dyUtils "paigu1902/douyin/common/utils"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
@@ -121,7 +120,9 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 	}
 	data, err := file2Byte(req.Data)
 	if err != nil {
-		panic(err)
+		hlog.Error(err)
+		c.JSON(400, "错误")
+		return
 	}
 	resp, err := rpcClient.VideoOperatorClient.Upload(ctx, &videoOperatorPb.VideoUploadReq{
 		Token: req.Token,
@@ -129,9 +130,8 @@ func PublishActionMethod(ctx context.Context, c *app.RequestContext) {
 		Title: req.Title,
 	})
 	if err != nil {
-		log.Fatal(err)
+		hlog.Error(err)
 	}
-	log.Println("resp", resp)
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatus(),
 		"status_msg":  resp.GetStatusMsg(),
