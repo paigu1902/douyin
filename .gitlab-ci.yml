@@ -27,4 +27,4 @@ deploy-job:      # This job runs in the deploy stage.
     - /home/dy-build/dy-user-relation &
     - /home/dy-build/dy-video &
     - echo Finish
-    - exit
+    - exit 0
