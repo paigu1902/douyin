@@ -1,2 +1,66 @@
 2023/02/21 11:32:35.045519 server.go:81: [Info] KITEX: server listen at addr=[::]:12346
 2023/02/21 13:50:49.140156 server.go:81: [Info] KITEX: server listen at addr=[::]:12346
+2023/02/21 14:57:25.656069 server.go:81: [Info] KITEX: server listen at addr=[::]:12346
+2023/02/21 15:04:13.452014 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:58553, error=biz error: favoAction Parameters Error
+2023/02/21 15:07:09.291954 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:59106, error=biz error: favoAction Parameters Error
+2023/02/21 15:07:11.185509 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:59134, error=biz error: favoAction Parameters Error
+2023/02/21 15:07:16.849888 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:59140, error=biz error: favoAction Parameters Error
+2023/02/21 15:07:17.383375 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:59160, error=biz error: favoAction Parameters Error
+2023/02/21 15:07:17.937052 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:59164, error=biz error: favoAction Parameters Error
+2023/02/21 16:51:28.674382 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:60489, error=biz error: favoAction Parameters Error
+2023/02/21 16:59:56.892931 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:61987, error=biz error: favoAction Parameters Error
+2023/02/21 17:00:31.853444 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62098, error=biz error: favoAction Parameters Error
+2023/02/21 17:01:18.076814 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62249, error=biz error: favoAction Parameters Error
+2023/02/21 17:01:27.318700 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62276, error=biz error: favoAction Parameters Error
+2023/02/21 17:01:27.418856 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62277, error=biz error: favoAction Parameters Error
+2023/02/21 17:01:27.589208 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62278, error=biz error: favoAction Parameters Error
+2023/02/21 17:01:27.759132 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62279, error=biz error: favoAction Parameters Error
+2023/02/21 17:01:27.917733 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62280, error=biz error: favoAction Parameters Error
+2023/02/21 17:01:28.099526 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62281, error=biz error: favoAction Parameters Error
+2023/02/21 17:01:28.237635 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62283, error=biz error: favoAction Parameters Error
+2023/02/21 17:02:50.004482 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62511, error=biz error: favoAction Parameters Error
+2023/02/21 17:02:53.026150 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:62541, error=biz error: favoAction Parameters Error
+2023/02/21 17:05:34.892953 server.go:81: [Info] KITEX: server listen at addr=[::]:12346
+2023/02/21 17:05:41.683903 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:63025, error=biz error: favoAction Parameters Error
+2023/02/21 17:09:24.422529 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:63592, error=biz error: favoAction Parameters Error
+2023/02/21 17:10:22.824178 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:63765, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:38.916215 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64173, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:42.704084 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64186, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:44.076024 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64190, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:44.229496 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64191, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:44.397046 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64195, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:44.860659 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64198, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:45.045216 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64199, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:45.209645 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64200, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:45.419862 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64201, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:45.560179 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64205, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:45.743261 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64206, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:45.925593 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64207, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:46.109538 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64208, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:46.296184 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64209, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:47.862850 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64216, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:48.879129 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64217, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:49.010451 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64221, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:49.193739 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64222, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:49.374073 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64223, error=biz error: favoAction Parameters Error
+2023/02/21 17:12:53.491826 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64233, error=biz error: favoAction Parameters Error
+2023/02/21 17:16:05.068420 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64786, error=biz error: favoAction Parameters Error
+2023/02/21 17:16:06.232464 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64796, error=biz error: favoAction Parameters Error
+2023/02/21 17:16:06.458233 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64761, error=biz error: favoAction Parameters Error
+2023/02/21 17:16:06.926706 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64802, error=biz error: favoAction Parameters Error
+2023/02/21 17:16:07.235312 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64804, error=biz error: favoAction Parameters Error
+2023/02/21 17:16:10.312446 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64814, error=biz error: favoAction Parameters Error
+2023/02/21 17:16:11.321603 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:64815, error=biz error: favoAction Parameters Error
+2023/02/21 17:17:47.831958 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:65075, error=biz error: favoAction Parameters Error
+2023/02/21 17:18:46.280323 server.go:81: [Info] KITEX: server listen at addr=[::]:12346
+2023/02/21 17:18:49.191296 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:65268, error=biz error: favoAction Parameters Error
+2023/02/21 17:18:53.212188 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:65279, error=biz error: favoAction Parameters Error
+2023/02/21 17:18:53.854884 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:65283, error=biz error: favoAction Parameters Error
+2023/02/21 17:18:54.045613 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:65284, error=biz error: favoAction Parameters Error
+2023/02/21 17:18:54.218275 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:65287, error=biz error: favoAction Parameters Error
+2023/02/21 17:18:54.419410 default_server_handler.go:223: [Error] KITEX: processing request error, remoteService=, remoteAddr=192.168.2.5:65288, error=biz error: favoAction Parameters Error
+2023/02/22 00:54:44.380562 server.go:81: [Info] KITEX: server listen at addr=[::]:12346
+2023/02/22 00:54:44.401555 favoMQ.go:84: [Info] Consume Consume
+2023/02/22 00:54:44.401663 favoMQ.go:94: [Info] [*] Waiting for messagees,To exit press CTRL+C
+2023/02/22 00:54:45.395179 server.go:238: [Error] KITEX: received error and exit: error=register instance error: retry3times request failed,err=Post "http://127.0.0.1:8848/nacos/v1/ns/instance": EOF
+2023/02/22 00:59:59.282335 server.go:81: [Info] KITEX: server listen at addr=[::]:12346

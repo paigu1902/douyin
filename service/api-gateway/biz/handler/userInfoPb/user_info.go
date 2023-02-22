@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server/binding"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
-	"log"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"strconv"
@@ -79,7 +79,7 @@ func LoginMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	// 4.正常返回
-	log.Println("resp", resp)
+	hlog.Info("resp", resp)
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
@@ -108,7 +108,7 @@ func RegisterMethod(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	// 4.正常返回
-	log.Println("resp", resp)
+	hlog.Info("resp", resp)
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
@@ -137,17 +137,11 @@ func InfoMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, respErr)
 		return
 	}
-	log.Println("resp", resp)
+	hlog.Info("resp", resp)
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
 		"user":        getUserHttp(resp.GetUser()),
-		//"user": utils.H{
-		//	"id":             resp.GetUser().GetUserId(),
-		//	"name":           resp.GetUser().GetUserName(),
-		//	"follow_count":   resp.GetUser().GetFollowCount(),
-		//	"follower_count": resp.GetUser().GetFollowerCount(),
-		//},
 	},
 	)
 	return

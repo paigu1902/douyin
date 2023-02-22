@@ -170,7 +170,7 @@ func InfoRDB(ctx context.Context, fromId uint64, toId uint64) (*models.UserInfo,
 		return nil, false, errors.New("用户不存在")
 	}
 	u, _ := json.Marshal(userinfo)
-	err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(userinfo.ID)), 1000, string(u)).Err()
+	err = cache.RDB.Do(ctx, "setex", "UserInfo:"+strconv.Itoa(int(userinfo.ID)), time.Second*1000, string(u)).Err()
 	if err != nil {
 		log.Warn("缓存写入异常")
 	}
@@ -243,10 +243,12 @@ func BatchInfo(ctx context.Context, req *userInfoPb.BatchUserReq) (resp *userInf
 		limitids = append(limitids, id)
 		countLimit[id] = 1
 	}
-	err = models.DB.Where("id IN ?", limitids).Find(&userinfors).Error
+	if len(limitids) > 0 {
+		err = models.DB.Where("id IN ?", limitids).Find(&userinfors).Error
+	}
 	for _, user := range userinfors {
 		u, _ := json.Marshal(user)
-		err = cache.RDB.Set(ctx, "UserInfo:"+strconv.Itoa(int(user.ID)), string(u), 1000).Err()
+		err = cache.RDB.Set(ctx, "UserInfo:"+strconv.Itoa(int(user.ID)), string(u), time.Second*1000).Err()
 		if err != nil {
 			klog.Warn("写入缓存失败")
 		}

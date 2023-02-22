@@ -71,6 +71,14 @@ func TestChat(t *testing.T) {
 		JSON().Object()
 	messageResp.Value("status_code").Number().IsEqual(0)
 
+	messageRespB := e.POST("/douyin/message/action/").
+		WithQuery("token", tokenB).WithQuery("to_user_id", userIdA).WithQuery("action_type", 1).WithQuery("content", "Send to UserA").
+		WithFormField("token", tokenB).WithFormField("to_user_id", userIdA).WithFormField("action_type", 1).WithQuery("content", "Send to UserA").
+		Expect().
+		Status(http.StatusOK).
+		JSON().Object()
+	messageRespB.Value("status_code").Number().IsEqual(0)
+
 	chatResp := e.GET("/douyin/message/chat/").
 		WithQuery("token", tokenA).WithQuery("to_user_id", userIdB).
 		WithFormField("token", tokenA).WithFormField("to_user_id", userIdB).
