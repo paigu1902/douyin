@@ -4,8 +4,11 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/go-redis/redis/v8"
 	"net/http"
+	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/common/utils"
+	"strconv"
 )
 
 type Auth struct {
@@ -32,6 +35,16 @@ func AuthUserCheck() app.HandlerFunc {
 			return
 		}
 		if userClaim == nil {
+			c.AbortWithMsg("Unauthorized Authorization", http.StatusUnauthorized)
+			return
+		}
+
+		forbiddenKey := "ForbiddenToken:" + strconv.Itoa(int(userClaim.ID))
+		time, err := cache.RDB.Get(ctx, forbiddenKey).Int64()
+		if err != nil && err != redis.Nil {
+			hlog.Warn("Redis Error")
+		} else if err != redis.Nil && time > userClaim.ExpiresAt {
+			hlog.Warn("Unauthorized Authorization")
 			c.AbortWithMsg("Unauthorized Authorization", http.StatusUnauthorized)
 			return
 		}

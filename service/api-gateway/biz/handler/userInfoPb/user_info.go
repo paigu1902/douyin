@@ -9,9 +9,12 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/binding"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/go-redis/redis/v8"
+	"paigu1902/douyin/common/cache"
 	"paigu1902/douyin/service/api-gateway/biz/rpcClient"
 	"paigu1902/douyin/service/rpc-user-info/kitex_gen/userInfoPb"
 	"strconv"
+	"time"
 )
 
 type LoginReq struct {
@@ -67,19 +70,41 @@ func LoginMethod(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, respErr)
 		return
 	}
+	ForbiddenKey := "Forbidden:" + req.UserName
+	_, err = cache.RDB.Get(ctx, ForbiddenKey).Result()
+	if err != nil {
+		respErr := &userInfoPb.LoginResp{StatusMsg: "错误过多，请10分钟后再试", StatusCode: 1}
+		c.JSON(200, respErr)
+		return
+	}
+
 	// 2.调用rpc
 	resp, err := rpcClient.UserInfo.Login(ctx, &userInfoPb.LoginReq{
 		UserName: req.UserName,
 		Password: req.Password,
 	})
+	countKey := "PasswordError:" + req.UserName
 	// 3.异常处理
 	if err != nil {
+		result, err := cache.RDB.Get(ctx, countKey).Int()
+		if err == redis.Nil {
+			cache.RDB.Set(ctx, countKey, 1, time.Minute*3)
+		} else if err != nil {
+			hlog.Error("redis 错误")
+		} else if result <= 2 {
+			cache.RDB.Incr(ctx, countKey)
+		} else {
+			cache.RDB.Set(ctx, ForbiddenKey, 1, time.Minute*10)
+		}
 		respErr := &userInfoPb.LoginResp{StatusMsg: err.Error(), StatusCode: 1}
 		c.JSON(200, respErr)
 		return
 	}
 	// 4.正常返回
 	hlog.Info("resp", resp)
+	cache.RDB.Del(ctx, ForbiddenKey)
+	cache.RDB.Del(ctx, countKey)
+
 	c.JSON(200, utils.H{
 		"status_code": resp.GetStatusCode(),
 		"status_msg":  resp.GetStatusMsg(),
