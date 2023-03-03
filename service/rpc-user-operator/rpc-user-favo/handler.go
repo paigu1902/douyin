@@ -66,32 +66,53 @@ func (s *UserFavoRpcImpl) FavoAction(ctx context.Context, req *userFavoPb.FavoAc
 			StatusMsg:  "Failed",
 		}, errors.New("favoAction Failed")
 	}
-	myResp, err3 := rpcClient.VideoOpClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: []uint64{uint64(req.VideoId)}})
-	//myResp.VideoList[0].Author.Id,
 	//// 先从缓存中查询
-	//key := "VideoInfo:" + strconv.Itoa(req.VideoId)
-	// 1. 查询cache
-	//ext, err1 := cache.RDB.Exists(ctx, key).Result()
-	// TODO: 通过查询redis来查询Author ID
-	//if err1 != nil {
-	//	klog.Info("function:FavoList call:Exists Error")
-	//}
-	if err3 != nil {
-		return &userFavoPb.FavoActionResp{
-			StatusCode: 1,
-			StatusMsg:  "Failed",
-		}, errors.New("find author id failed")
+	key := "VideoInfo:" + strconv.Itoa(int(req.VideoId))
+	//1. 查询cache
+	videoHash, err := cache.RDB.HGetAll(ctx, key).Result()
+	if err != nil {
+		klog.Error("redis缓存错误")
 	}
-	_, err4 := rpcClient.UserInfo.FavDB(ctx, &UserInfoPb.FavDBReq{
-		Type:   req.Type,
-		FromId: uint64(req.UserId),
-		ToId:   myResp.VideoList[0].Author.Id,
-	})
-	if err4 != nil {
-		return &userFavoPb.FavoActionResp{
-			StatusCode: 1,
-			StatusMsg:  "Failed",
-		}, err4
+	authorId, err := strconv.Atoi(videoHash["AuthorId"])
+	if err != nil {
+		klog.Error("缓存错误")
+	}
+	// 缓存查询不到
+	if err != nil {
+		myResp, err3 := rpcClient.VideoOpClient.VideoList(ctx, &VideoOptPb.VideoListReq{VideoId: []uint64{uint64(req.VideoId)}})
+		//myResp.VideoList[0].Author.Id,
+		if err3 != nil {
+			return &userFavoPb.FavoActionResp{
+				StatusCode: 1,
+				StatusMsg:  "Failed",
+			}, errors.New("find author id failed")
+		}
+		//authorId := myResp.VideoList[0].Author.Id
+		aid := myResp.VideoList[0].Author.Id
+		_, err4 := rpcClient.UserInfo.FavDB(ctx, &UserInfoPb.FavDBReq{
+			Type:   req.Type,
+			FromId: uint64(req.UserId),
+			ToId:   aid,
+		})
+		if err4 != nil {
+			return &userFavoPb.FavoActionResp{
+				StatusCode: 1,
+				StatusMsg:  "Failed",
+			}, err4
+		}
+	} else {
+		// 缓存查询到啦hh
+		_, err4 := rpcClient.UserInfo.FavDB(ctx, &UserInfoPb.FavDBReq{
+			Type:   req.Type,
+			FromId: uint64(req.UserId),
+			ToId:   uint64(authorId),
+		})
+		if err4 != nil {
+			return &userFavoPb.FavoActionResp{
+				StatusCode: 1,
+				StatusMsg:  "Failed",
+			}, err4
+		}
 	}
 	return &userFavoPb.FavoActionResp{
 		StatusCode: 0,
